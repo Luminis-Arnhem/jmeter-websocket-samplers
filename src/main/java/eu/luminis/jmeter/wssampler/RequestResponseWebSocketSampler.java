@@ -48,6 +48,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         WebSocketClient wsClient = new WebSocketClient();
 
         result.setSampleLabel(getTitle());
+        result.setSamplerData("Connect URL:\nws://" + getServer() + ":" + getPort() + getPath() + "\n\nRequest data:\n" + getRequestData() + "\n");
 
         Map<String, String> additionalHeaders = Collections.EMPTY_MAP;
         if (headerManager != null) {
