@@ -10,6 +10,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Random;
 
 public class WebSocketClient {
@@ -18,6 +20,10 @@ public class WebSocketClient {
     private Random randomGenerator = new Random();
 
     public void connect(URL wsURL) throws IOException {
+        connect(wsURL, Collections.EMPTY_MAP);
+    }
+
+    public void connect(URL wsURL, Map<String, String> headers) throws IOException {
         wsSocket = new Socket();
         int connectTimeout = 5000;
         wsSocket.connect(new InetSocketAddress(wsURL.getHost(), wsURL.getPort()), connectTimeout);
@@ -27,6 +33,15 @@ public class WebSocketClient {
         PrintWriter httpWriter = new PrintWriter(ostream);
         httpWriter.println("GET / HTTP/1.1\r");
         httpWriter.println("Host: " + wsURL.getHost() + "\r");
+        for (Map.Entry<String, String> header: headers.entrySet()) {
+            String headerLine = header.getKey() + ": " + header.getValue();
+            // Ensure header line does _not_ contain new line
+            if (! headerLine.contains("\r") && ! headerLine.contains("\n"))
+                httpWriter.println(headerLine + "\r");
+            else {
+                throw new IllegalArgumentException("Invalid header; contains new line.");
+            }
+        }
         httpWriter.println("Upgrade: websocket\r");
         httpWriter.println("Connection: Upgrade\r");
         byte[] nonce = new byte[16];

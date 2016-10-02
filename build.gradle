@@ -12,6 +12,10 @@ dependencies {
         transitive = false    // Just avoid downloading half the internet
     }
 
+    compile('org.apache.jmeter:ApacheJMeter_http:3.0') {
+        transitive = false    // Just avoid downloading half the internet
+    }
+
     // https://mvnrepository.com/artifact/org.apache.jmeter/jorphan
     compile('org.apache.jmeter:jorphan:3.0') {
         transitive = false

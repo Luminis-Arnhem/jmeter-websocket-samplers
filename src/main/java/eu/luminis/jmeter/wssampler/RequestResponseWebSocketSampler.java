@@ -1,5 +1,7 @@
 package eu.luminis.jmeter.wssampler;
 
+import org.apache.jmeter.protocol.http.control.Header;
+import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -10,10 +12,15 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
+    private HeaderManager headerManager;
 
 
     public RequestResponseWebSocketSampler() {
@@ -42,10 +49,15 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
         result.setSampleLabel(getTitle());
 
+        Map<String, String> additionalHeaders = Collections.EMPTY_MAP;
+        if (headerManager != null) {
+            additionalHeaders = convertHeaders(headerManager);
+            result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
+        }
         // Here we go!
         result.sampleStart(); // Start timing
         try {
-            wsClient.connect(new URL("http", getServer(), getPort(), getPath()));
+            wsClient.connect(new URL("http", getServer(), getPort(), getPath()), additionalHeaders);
             wsClient.sendTextFrame(getRequestData());
             response = wsClient.receiveText();
             result.sampleEnd(); // End timimg
@@ -71,6 +83,23 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
         result.setSuccessful(isOK);
         return result;
+    }
+
+    public void addTestElement(TestElement el) {
+        if (el instanceof HeaderManager) {
+            headerManager = (HeaderManager) el;
+        } else {
+            super.addTestElement(el);
+        }
+    }
+
+    private Map<String,String> convertHeaders(HeaderManager headerManager) {
+        Map<String, String> headers = new HashMap<>();
+        for (int i = 0; i < headerManager.size(); i++) {
+            Header header = headerManager.get(i);
+            headers.put(header.getName(), header.getValue());
+        }
+        return headers;
     }
 
     private String getTitle() {
