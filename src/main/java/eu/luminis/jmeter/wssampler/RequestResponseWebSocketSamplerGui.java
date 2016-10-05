@@ -5,6 +5,9 @@ import org.apache.jmeter.testelement.TestElement;
 
 import java.awt.BorderLayout;
 
+import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.BINARY;
+import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.TEXT;
+
 public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
 
     private RequestResponseWebSocketSamplerGuiPanel settingsPanel;
@@ -55,6 +58,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.serverField.setText(sampler.getServer());
             settingsPanel.portField.setText("" + sampler.getPort());
             settingsPanel.pathField.setText("" + sampler.getPath());
+            settingsPanel.typeSelector.setSelectedItem(sampler.getBinary()? BINARY: TEXT);
             settingsPanel.requestDataField.setText(sampler.getRequestData());
         }
     }
@@ -67,6 +71,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setServer(settingsPanel.serverField.getText());
             sampler.setPort(getInt(settingsPanel.portField.getText(), 80));
             sampler.setPath(settingsPanel.pathField.getText());
+            sampler.setBinary(settingsPanel.typeSelector.getSelectedItem() == BINARY);
             sampler.setRequestData(settingsPanel.requestDataField.getText());
         }
     }

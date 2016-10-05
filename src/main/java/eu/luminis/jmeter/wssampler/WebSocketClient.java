@@ -65,8 +65,16 @@ public class WebSocketClient {
         wsSocket.getOutputStream().write(createTextFrame(requestData));
     }
 
+    public void sendBinaryFrame(byte[] requestData) throws IOException {
+        wsSocket.getOutputStream().write(createBinaryFrame(requestData));
+    }
+
     public String receiveText() throws IOException {
         // TODO: check that received frame is text-frame indeed.
+        return new String(parseFrame(wsSocket.getInputStream()));
+    }
+
+    public byte[] receiveBinaryData() throws IOException {
         return parseFrame(wsSocket.getInputStream());
     }
 
@@ -89,12 +97,31 @@ public class WebSocketClient {
         return frame;
     }
 
-    private String parseFrame(InputStream istream) throws IOException {
+    private byte[] createBinaryFrame(byte[] data) {
+        byte length = (byte) data.length;
+        int maskedLength = 0x80 | length;
+
+        byte[] mask = new byte[4];
+        randomGenerator.nextBytes(mask);
+        byte[] payload = data;
+        byte[] masked = new byte[payload.length];
+        for (int i = 0; i < payload.length; i++) {
+            masked[i] = (byte) (payload[i] ^ mask[i%4]);
+        }
+        byte[] frame = new byte[payload.length + 2 + 4];
+        frame[0] = (byte) (0x80 | 0x02);
+        frame[1] = (byte) (0x80 | maskedLength);
+        System.arraycopy(mask, 0, frame, 2, 4);
+        System.arraycopy(masked, 0, frame, 6, payload.length);
+        return frame;
+    }
+
+    private byte[] parseFrame(InputStream istream) throws IOException {
         int opCode = istream.read() & 0x0f;
         int length = istream.read() & 0x7f;
         byte[] payload = new byte[length];
         istream.read(payload);
-        return new String(payload);
+        return payload;
     }
 
 }

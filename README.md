@@ -10,7 +10,9 @@ Copy the jar to <jmeter-home>/lib/ext and start JMeter.
 
 Currently, there is only one sampler: the request-response sampler. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. This sampler does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
 
-For examples, see the JMeter .jmx files in the samples directory!
+The request-response sampler supports both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There are two possible solutions: use a "Save Responses to a file" listener (see sample) or check the jmeter log.
+
+For examples, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
 ## Status
 

@@ -43,7 +43,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     public SampleResult sample(Entry entry) {
         SampleResult result = new SampleResult();
         boolean isOK = false; // Did sample succeed?
-        String response = null;
+        Object response = null;
 
         WebSocketClient wsClient = new WebSocketClient();
 
@@ -59,13 +59,22 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         result.sampleStart(); // Start timing
         try {
             wsClient.connect(new URL("http", getServer(), getPort(), getPath()), additionalHeaders);
-            wsClient.sendTextFrame(getRequestData());
-            response = wsClient.receiveText();
+            if (getBinary())
+                wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
+            else
+                wsClient.sendTextFrame(getRequestData());
+            response = getBinary()? wsClient.receiveBinaryData(): wsClient.receiveText();
             result.sampleEnd(); // End timimg
 
-            log.info("Received text: '" + response + "'");
-            result.setResponseData(response, null);
-            result.setDataType(SampleResult.TEXT);
+            if (getBinary()) {
+                result.setResponseData((byte[]) response);
+                log.info("Received binary data: " + formatBinary((byte[]) response));
+            }
+            else {
+                result.setResponseData((String) response, null);
+                log.info("Received text: '" + response + "'");
+            }
+            result.setDataType(getBinary()? SampleResult.BINARY: SampleResult.TEXT);
 
             result.setResponseCodeOK();
             result.setResponseMessage("OK");
@@ -84,6 +93,13 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
         result.setSuccessful(isOK);
         return result;
+    }
+
+    private String formatBinary(byte[] data) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b: data)
+            builder.append(String.format("%#x ", b));
+        return builder.toString();
     }
 
     public void addTestElement(TestElement el) {
@@ -139,6 +155,13 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         setProperty("requestData", requestData);
     }
 
+    public boolean getBinary() {
+        return getPropertyAsBoolean("binaryPayload");
+    }
+
+    public void setBinary(boolean binary) {
+        setProperty("binaryPayload", binary);
+    }
     public String toString() {
         return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
     }
