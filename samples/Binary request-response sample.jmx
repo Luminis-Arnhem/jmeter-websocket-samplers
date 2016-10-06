@@ -11,6 +11,21 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="bin_data" elementType="Argument">
+            <stringProp name="Argument.name">bin_data</stringProp>
+            <stringProp name="Argument.value">0xca 0xfe 0xba 0xbe</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="invalid_bin_data" elementType="Argument">
+            <stringProp name="Argument.name">invalid_bin_data</stringProp>
+            <stringProp name="Argument.value">0xfg</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
@@ -39,7 +54,15 @@
           <intProp name="port">80</intProp>
           <stringProp name="path">/whatever</stringProp>
           <boolProp name="binaryPayload">true</boolProp>
-          <stringProp name="requestData">0xca 0xfe 0xba 0xbe</stringProp>
+          <stringProp name="requestData">${bin_data}</stringProp>
+        </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
+        <hashTree/>
+        <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="3rd WebSocket request-response Sampler" enabled="true">
+          <stringProp name="server">echo.websocket.org</stringProp>
+          <intProp name="port">80</intProp>
+          <stringProp name="path">/whatever</stringProp>
+          <boolProp name="binaryPayload">true</boolProp>
+          <stringProp name="requestData">${invalid_bin_data}</stringProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree/>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">

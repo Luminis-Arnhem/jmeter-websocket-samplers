@@ -1,6 +1,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -11,7 +12,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
+import java.util.regex.Pattern;
 
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
@@ -27,6 +28,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
     JTextField pathField;
     JComboBox typeSelector;
     private JLabel messageField;
+    public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{\\w+\\}");
 
     public RequestResponseWebSocketSamplerGuiPanel() {
         init();
@@ -58,16 +60,22 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         JPanel dataPanel = new JPanel();
         dataPanel.setBorder(BorderFactory.createTitledBorder("Data"));
         dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.Y_AXIS));
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel topBar = new JPanel();
+        topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
         String[] typeOptions = {TEXT, BINARY};
         typeSelector = new JComboBox(typeOptions);
+        typeSelector.setMaximumSize(typeSelector.getMinimumSize());
         typeSelector.addActionListener(e -> {
             checkBinary();
         });
         topBar.add(typeSelector);
+        topBar.add(Box.createHorizontalStrut(10));
         messageField = new JLabel();
+        messageField.setBackground(Color.YELLOW);
         messageField.setForeground(Color.RED);
         topBar.add(messageField);
+        topBar.add(Box.createHorizontalGlue());
+
         dataPanel.add(topBar);
         JPanel dataZone = new JPanel();
         dataZone.setLayout(new BoxLayout(dataZone, X_AXIS));
@@ -100,16 +108,20 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
     private void checkBinary() {
         if (typeSelector.getSelectedItem() == BINARY) {
             try {
-                BinaryUtils.parseBinaryString(requestDataField.getText());
+                BinaryUtils.parseBinaryString(stripJMeterVariables(requestDataField.getText()));
                 messageField.setText("");
             }
             catch (NumberFormatException notNumber) {
-                messageField.setText("Error: request data is not in binary format; use format like '0xca 0xfe' or 'ba be'.");
+                messageField.setText("Error: request data is not in binary format; use format like '0xca 0xfe' or 'ba be' (JMeter variables like ${var} are allowed).");
             }
         }
         else {
             messageField.setText("");
         }
+    }
+
+    private String stripJMeterVariables(String data) {
+        return DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
 
 

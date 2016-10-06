@@ -80,12 +80,20 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             result.setResponseMessage("OK");
             isOK = true;
 
-        } catch (MalformedURLException e) {
+        }
+        catch (MalformedURLException e) {
             // Impossible
             throw new RuntimeException(e);
-        } catch (IOException ioExc) {
+        }
+        catch (NumberFormatException noNumber) {
+            // Thrown by BinaryUtils.parseBinaryString
             result.sampleEnd(); // End timimg
-
+            log.error("Request data is not binary: " + getRequestData());
+            result.setResponseCode("Sampler Error");
+            result.setResponseMessage("Request data is not binary: " + getRequestData());
+        }
+        catch (IOException ioExc) {
+            result.sampleEnd(); // End timimg
             log.error("Error during sampling", ioExc);
             result.setResponseCode("500");
             result.setResponseMessage(ioExc.toString());
