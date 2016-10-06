@@ -1,5 +1,7 @@
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.HttpUpgradeException;
+import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -91,6 +93,12 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             log.error("Request data is not binary: " + getRequestData());
             result.setResponseCode("Sampler Error");
             result.setResponseMessage("Request data is not binary: " + getRequestData());
+        }
+        catch (HttpUpgradeException upgradeError) {
+            result.sampleEnd(); // End timimg
+            log.error("Http upgrade error", upgradeError);
+            result.setResponseCode(upgradeError.getStatusCode());
+            result.setResponseMessage(upgradeError.getMessage());
         }
         catch (IOException ioExc) {
             result.sampleEnd(); // End timimg
