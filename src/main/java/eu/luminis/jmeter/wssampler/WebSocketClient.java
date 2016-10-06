@@ -30,8 +30,11 @@ public class WebSocketClient {
         InputStream istream = wsSocket.getInputStream();
         OutputStream ostream = wsSocket.getOutputStream();
 
+        String path = wsURL.getPath();
+        if (path == null || path.trim().length() == 0)
+            path = "/";
         PrintWriter httpWriter = new PrintWriter(ostream);
-        httpWriter.println("GET / HTTP/1.1\r");
+        httpWriter.println("GET " + path + " HTTP/1.1\r");
         httpWriter.println("Host: " + wsURL.getHost() + "\r");
         for (Map.Entry<String, String> header: headers.entrySet()) {
             String headerLine = header.getKey() + ": " + header.getValue();
