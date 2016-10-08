@@ -19,9 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
+
+    private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
+
     private HeaderManager headerManager;
 
 
@@ -47,20 +51,28 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         boolean isOK = false; // Did sample succeed?
         Object response = null;
 
-        WebSocketClient wsClient = new WebSocketClient();
+        WebSocketClient wsClient = threadLocalCachedConnection.get();
 
         result.setSampleLabel(getTitle());
-        result.setSamplerData("Connect URL:\nws://" + getServer() + ":" + getPort() + getPath() + "\n\nRequest data:\n" + getRequestData() + "\n");
+        result.setSamplerData("Connect URL:\nws://" + getServer() + ":" + getPort() + getPath()
+                + (wsClient != null? "\n(using existing connection)": "")
+                + "\n\nRequest data:\n" + getRequestData() + "\n");
 
         Map<String, String> additionalHeaders = Collections.EMPTY_MAP;
         if (headerManager != null) {
             additionalHeaders = convertHeaders(headerManager);
             result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
         }
+
+        boolean connected = false;
         // Here we go!
         result.sampleStart(); // Start timing
         try {
-            wsClient.connect(new URL("http", getServer(), getPort(), getPath()), additionalHeaders);
+            if (wsClient == null) {
+                wsClient = new WebSocketClient();
+                wsClient.connect(new URL("http", getServer(), getPort(), getPath()), additionalHeaders);
+                connected = true;
+            }
             if (getBinary())
                 wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
             else
@@ -106,6 +118,9 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             result.setResponseCode("500");
             result.setResponseMessage(ioExc.toString());
         }
+
+        if (connected)
+            threadLocalCachedConnection.set(wsClient);
 
         result.setSuccessful(isOK);
         return result;
@@ -178,8 +193,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     public void setBinary(boolean binary) {
         setProperty("binaryPayload", binary);
     }
+
     public String toString() {
         return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
     }
-
 }
