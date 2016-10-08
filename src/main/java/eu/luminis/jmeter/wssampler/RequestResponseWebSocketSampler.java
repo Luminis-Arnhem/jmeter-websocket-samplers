@@ -24,7 +24,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
-    private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
+    private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = SharedContext.threadLocalCachedConnection;
 
     private HeaderManager headerManager;
 

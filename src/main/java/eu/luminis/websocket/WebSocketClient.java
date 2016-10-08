@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
@@ -18,6 +19,9 @@ import java.util.regex.Pattern;
 
 public class WebSocketClient {
 
+    // TODO: status: when closed / closing, don't accept anything.
+
+    public static final int OPCODE_CLOSE = 0x08;
     private Socket wsSocket;
     private Random randomGenerator = new Random();
 
@@ -81,6 +85,19 @@ public class WebSocketClient {
                     wsSocket.close();
             }
         }
+    }
+
+    /**
+     * Close the websocket connection property, i.e. send a close frame and wait for a close confirm.
+     */
+    public CloseFrame close(int status, String requestData) throws IOException {
+        wsSocket.getOutputStream().write(createCloseFrame(status, requestData));
+        return receiveClose();
+    }
+
+    public CloseFrame receiveClose() throws IOException {
+        // TODO: frame read may of other type ;-)
+        return (CloseFrame) Frame.parseFrame(wsSocket.getInputStream());
     }
 
     public void sendTextFrame(String requestData) throws IOException {
@@ -156,6 +173,28 @@ public class WebSocketClient {
         else
             throw new HttpProtocolException("Invalid status line");
     }
+
+    private byte[] createCloseFrame(int statusCode, String requestData) {
+        byte[] mask = new byte[4];
+        randomGenerator.nextBytes(mask);
+
+        byte[] data =  requestData.getBytes(StandardCharsets.UTF_8);
+        byte[] payload = new byte[2 + data.length];
+        System.arraycopy(data, 0, payload, 2, data.length);
+        byte[] masked = new byte[payload.length];
+        payload[0] = (byte) (statusCode >> 8);
+        payload[1] = (byte) (statusCode & 0xff);
+        for (int i = 0; i < payload.length; i++) {
+            masked[i] = (byte) (payload[i] ^ mask[i%4]);
+        }
+        byte[] frame = new byte[payload.length + 2 + 4];
+        frame[0] = (byte) (0x80 | OPCODE_CLOSE);
+        frame[1] = (byte) (0x80 | payload.length);
+        System.arraycopy(mask, 0, frame, 2, 4);
+        System.arraycopy(masked, 0, frame, 6, payload.length);
+        return frame;
+    }
+
 }
 
 
