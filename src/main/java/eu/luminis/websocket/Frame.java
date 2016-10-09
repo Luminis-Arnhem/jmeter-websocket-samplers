@@ -27,8 +27,33 @@ public abstract class Frame {
             throw new EndOfStreamException("end of stream");
 
         int opCode = byte1 & 0x0f;
-        int length = byte2 & 0x7f;
-        byte[] payload = new byte[length];
+        int firstLengthByte = byte2 & 0x7f;
+        int length;
+        if (firstLengthByte < 126)
+            length = firstLengthByte;
+        else if (firstLengthByte == 126) {
+            byte1 = istream.read();
+            if (byte1 == -1)
+                throw new EndOfStreamException("end of stream");
+            byte2 = istream.read();
+            if (byte2 == -1)
+                throw new EndOfStreamException("end of stream");
+            length = ((byte1 & 0xff) << 8) | (byte2 & 0xff);
+        }
+        else {
+            byte[] lengthBytes = new byte[8];
+            int bytesRead = istream.read(lengthBytes);
+            if (bytesRead != lengthBytes.length)
+                throw new EndOfStreamException("WebSocket protocol error: expected " + lengthBytes.length + " length bytes, but can only read " + bytesRead + " bytes");
+            // If most signicifant word (32 bytes) of length are non-zero, it results in an unsupported length (must fit in a Java int)
+            if (lengthBytes[0] != 0  || lengthBytes[1] != 0  || lengthBytes[2] != 0  || lengthBytes[3] != 0 )
+                throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
+            // Must check for most significant bit on least significant word set to avoid negative array size
+            if ( (lengthBytes[4] & 0x80) == 128)
+                throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
+            length = ( (lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
+        }
+        byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
         int bytesRead = istream.read(payload);
         if (bytesRead == -1)
             throw new EndOfStreamException("end of stream");
@@ -55,16 +80,43 @@ public abstract class Frame {
         randomGenerator.nextBytes(mask);
         // Mask payload
         byte[] payload = getPayload();
+        byte[] lengthBytes;
+        if (payload.length <= 125) {
+            lengthBytes = new byte[1];
+            lengthBytes[0] = (byte) payload.length;
+        }
+        else if (payload.length < 65536) {  // 2 ^ 16 = 65536
+            lengthBytes = new byte[3];
+            lengthBytes[0] = (byte) 126;
+            lengthBytes[1] = (byte) (payload.length >> 8);
+            lengthBytes[2] = (byte) (payload.length >> 0);
+        }
+        else {
+            // In Java, a byte[] cannot be larger than max-int (which is 2 ^ 31 - 1), which fits in 4 bytes
+            // So, the most significant 4 bytes in the 8-byte length are never used.
+            lengthBytes = new byte[9];
+            lengthBytes[0] = (byte) 127;
+            lengthBytes[1] = 0;
+            lengthBytes[2] = 0;
+            lengthBytes[3] = 0;
+            lengthBytes[4] = 0;
+            lengthBytes[5] = (byte) (payload.length >> 24);
+            lengthBytes[6] = (byte) (payload.length >> 16);
+            lengthBytes[7] = (byte) (payload.length >> 8);
+            lengthBytes[8] = (byte) (payload.length >> 0);
+        }
+
         byte[] masked = new byte[payload.length];
         for (int i = 0; i < payload.length; i++) {
             masked[i] = (byte) (payload[i] ^ mask[i%4]);
         }
         // Create frame bytes
-        byte[] frame = new byte[payload.length + 2 + 4];
+        byte[] frame = new byte[1 + lengthBytes.length + 4 + payload.length];
         frame[0] = (byte) (FIN_BIT_ON | getOpCode());
-        frame[1] = (byte) (MASK_BIT_MASKED | payload.length);
-        System.arraycopy(mask, 0, frame, 2, 4);
-        System.arraycopy(masked, 0, frame, 6, payload.length);
+        frame[1] = (byte) (MASK_BIT_MASKED | lengthBytes[0]);
+        System.arraycopy(lengthBytes, 1, frame, 2, lengthBytes.length - 1);
+        System.arraycopy(mask, 0, frame, 1 + lengthBytes.length, 4);
+        System.arraycopy(masked, 0, frame, 1 + lengthBytes.length + 4, payload.length);
         return frame;
     }
 
