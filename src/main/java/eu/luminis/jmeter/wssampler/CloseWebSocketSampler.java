@@ -1,6 +1,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.CloseFrame;
+import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -37,10 +38,18 @@ public class CloseWebSocketSampler extends AbstractSampler {
                 result.setResponseCode(frame.getCloseStatus().toString());
                 result.setResponseData("" + frame.getCloseStatus() + ": " + frame.getCloseReason(), StandardCharsets.UTF_8.name());
                 result.setDataType(SampleResult.TEXT);
-
-        } catch (IOException e) {
+            }
+            catch (IOException e) {
                 result.sampleEnd();
                 log.error(e.toString());
+                result.setResponseCode("WebSocket error.");
+                result.setResponseMessage("WebSocket error: " + e);
+            }
+            catch (UnexpectedFrameException e) {
+                result.sampleEnd();
+                log.error("Close request was not answered with close response, but " + e.getReceivedFrame());
+                result.setResponseCode("WebSocket error: unsuccesful close.");
+                result.setResponseMessage("WebSocket error: received not a close frame, but " + e.getReceivedFrame());
             }
             threadLocalCachedConnection.set(null);
         }

@@ -1,6 +1,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.HttpUpgradeException;
+import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -95,6 +96,12 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             isOK = true;
 
         }
+        catch (UnexpectedFrameException e) {
+            result.sampleEnd(); // End timimg
+            log.error("Unexpected frame type received: " + e.getReceivedFrame());
+            result.setResponseCode("Sampler error: unexpected frame type.");
+            result.setResponseMessage("Received: " + e.getReceivedFrame());
+        }
         catch (MalformedURLException e) {
             // Impossible
             throw new RuntimeException(e);
@@ -115,8 +122,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         catch (IOException ioExc) {
             result.sampleEnd(); // End timimg
             log.error("Error during sampling", ioExc);
-            result.setResponseCode("500");
-            result.setResponseMessage(ioExc.toString());
+            result.setResponseCode("Websocket error");
+            result.setResponseMessage("WebSocket error: " + ioExc);
         }
 
         if (connected)

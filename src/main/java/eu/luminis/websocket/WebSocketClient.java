@@ -9,7 +9,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
@@ -90,77 +89,41 @@ public class WebSocketClient {
     /**
      * Close the websocket connection property, i.e. send a close frame and wait for a close confirm.
      */
-    public CloseFrame close(int status, String requestData) throws IOException {
-        wsSocket.getOutputStream().write(createCloseFrame(status, requestData));
+    public CloseFrame close(int status, String requestData) throws IOException, UnexpectedFrameException {
+        wsSocket.getOutputStream().write(new CloseFrame(status, requestData).getFrameBytes());
         return receiveClose();
     }
 
-    public CloseFrame receiveClose() throws IOException {
-        // TODO: frame read may of other type ;-)
-        return (CloseFrame) Frame.parseFrame(wsSocket.getInputStream());
+    public CloseFrame receiveClose() throws IOException, UnexpectedFrameException {
+        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        if (frame.isClose())
+            return (CloseFrame) frame;
+        else
+            throw new UnexpectedFrameException(frame);
     }
 
     public void sendTextFrame(String requestData) throws IOException {
-        wsSocket.getOutputStream().write(createTextFrame(requestData));
+        wsSocket.getOutputStream().write(new TextFrame(requestData).getFrameBytes());
     }
 
     public void sendBinaryFrame(byte[] requestData) throws IOException {
-        wsSocket.getOutputStream().write(createBinaryFrame(requestData));
+        wsSocket.getOutputStream().write(new BinaryFrame(requestData).getFrameBytes());
     }
 
-    public String receiveText() throws IOException {
-        // TODO: check that received frame is text-frame indeed.
-        return new String(parseFrame(wsSocket.getInputStream()));
+    public String receiveText() throws IOException, UnexpectedFrameException {
+        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        if (frame.isText())
+            return ((TextFrame) frame).getText();
+        else
+            throw new UnexpectedFrameException(frame);
     }
 
-    public byte[] receiveBinaryData() throws IOException {
-        return parseFrame(wsSocket.getInputStream());
-    }
-
-    private byte[] createTextFrame(String text) {
-        byte length = (byte) text.length();
-        int maskedLength = 0x80 | length;
-
-        byte[] mask = new byte[4];
-        randomGenerator.nextBytes(mask);
-        byte[] payload = text.getBytes();
-        byte[] masked = new byte[payload.length];
-        for (int i = 0; i < payload.length; i++) {
-            masked[i] = (byte) (payload[i] ^ mask[i%4]);
-        }
-        byte[] frame = new byte[payload.length + 2 + 4];
-        frame[0] = (byte) (0x80 | 0x01);
-        frame[1] = (byte) (0x80 | maskedLength);
-        System.arraycopy(mask, 0, frame, 2, 4);
-        System.arraycopy(masked, 0, frame, 6, payload.length);
-        return frame;
-    }
-
-    private byte[] createBinaryFrame(byte[] data) {
-        byte length = (byte) data.length;
-        int maskedLength = 0x80 | length;
-
-        byte[] mask = new byte[4];
-        randomGenerator.nextBytes(mask);
-        byte[] payload = data;
-        byte[] masked = new byte[payload.length];
-        for (int i = 0; i < payload.length; i++) {
-            masked[i] = (byte) (payload[i] ^ mask[i%4]);
-        }
-        byte[] frame = new byte[payload.length + 2 + 4];
-        frame[0] = (byte) (0x80 | 0x02);
-        frame[1] = (byte) (0x80 | maskedLength);
-        System.arraycopy(mask, 0, frame, 2, 4);
-        System.arraycopy(masked, 0, frame, 6, payload.length);
-        return frame;
-    }
-
-    private byte[] parseFrame(InputStream istream) throws IOException {
-        int opCode = istream.read() & 0x0f;
-        int length = istream.read() & 0x7f;
-        byte[] payload = new byte[length];
-        istream.read(payload);
-        return payload;
+    public byte[] receiveBinaryData() throws IOException, UnexpectedFrameException {
+        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        if (frame.isBinary())
+            return ((BinaryFrame) frame).getData();
+        else
+            throw new UnexpectedFrameException(frame);
     }
 
     private void checkHttpStatus(String statusLine, int expectedStatusCode) throws HttpException {
@@ -173,28 +136,6 @@ public class WebSocketClient {
         else
             throw new HttpProtocolException("Invalid status line");
     }
-
-    private byte[] createCloseFrame(int statusCode, String requestData) {
-        byte[] mask = new byte[4];
-        randomGenerator.nextBytes(mask);
-
-        byte[] data =  requestData.getBytes(StandardCharsets.UTF_8);
-        byte[] payload = new byte[2 + data.length];
-        System.arraycopy(data, 0, payload, 2, data.length);
-        byte[] masked = new byte[payload.length];
-        payload[0] = (byte) (statusCode >> 8);
-        payload[1] = (byte) (statusCode & 0xff);
-        for (int i = 0; i < payload.length; i++) {
-            masked[i] = (byte) (payload[i] ^ mask[i%4]);
-        }
-        byte[] frame = new byte[payload.length + 2 + 4];
-        frame[0] = (byte) (0x80 | OPCODE_CLOSE);
-        frame[1] = (byte) (0x80 | payload.length);
-        System.arraycopy(mask, 0, frame, 2, 4);
-        System.arraycopy(masked, 0, frame, 6, payload.length);
-        return frame;
-    }
-
 }
 
 
