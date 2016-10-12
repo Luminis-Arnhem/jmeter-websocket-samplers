@@ -10,9 +10,9 @@ import java.io.ByteArrayInputStream;
 public class FrameTest {
 
     @Rule
-    public ExpectedException thrown= ExpectedException.none();
-    @Test
+    public ExpectedException thrown = ExpectedException.none();
 
+    @Test
     public void parseLargestJavaFramePossible() throws Exception {
         try {
             byte[] bytes = new byte[1024];  // dummy, not possible to create a byte array with length 2147483647 or larger....

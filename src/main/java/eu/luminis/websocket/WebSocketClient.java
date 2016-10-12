@@ -9,8 +9,11 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -60,18 +63,13 @@ public class WebSocketClient {
             httpWriter.println("Connection: Upgrade\r");
             byte[] nonce = new byte[16];
             randomGenerator.nextBytes(nonce);
-            httpWriter.println("Sec-WebSocket-Key: " + new String(Base64.getEncoder().encode(nonce)) + "\r");
+            String encodeNonce = new String(Base64.getEncoder().encode(nonce));
+            httpWriter.println("Sec-WebSocket-Key: " + encodeNonce + "\r");
             httpWriter.println("Sec-WebSocket-Version: 13\r");
             httpWriter.println("\r");
             httpWriter.flush();
 
-            BufferedReader httpReader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = httpReader.readLine();
-            checkHttpStatus(line, 101);
-            do {
-                line = httpReader.readLine();
-            }
-            while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
+            checkServerResponse(inputStream, encodeNonce);
             connected = true;
         }
         finally {
@@ -124,6 +122,43 @@ public class WebSocketClient {
             return ((BinaryFrame) frame).getData();
         else
             throw new UnexpectedFrameException(frame);
+    }
+
+    protected void checkServerResponse(InputStream inputStream, String nonce) throws IOException {
+        BufferedReader httpReader = new BufferedReader(new InputStreamReader(inputStream));
+        String line = httpReader.readLine();
+        checkHttpStatus(line, 101);
+
+        Map<String, String> serverHeaders = new HashMap<>();
+        do {
+            line = httpReader.readLine();
+            if (line != null) {
+                String[] values = line.split(": ");
+                if (values.length > 1)
+                    serverHeaders.put(values[0], values[1]);
+            }
+        }
+        while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
+
+        // Check server response for mandatory headers
+        if (! "websocket".equals(serverHeaders.get("Upgrade").toLowerCase()))  // Specification is not clear about whether the check should be case-insensative...
+            throw new HttpUpgradeException("Server response should contain 'Upgrade' header with value 'websocket'");
+        if (! "Upgrade".equals(serverHeaders.get("Connection")))
+            throw new HttpUpgradeException("Server response should contain 'Connection' header with value 'Upgrade'");
+        if (! serverHeaders.containsKey("Sec-WebSocket-Accept"))
+            throw new HttpUpgradeException("Server response should contain 'Sec-WebSocket-Accept' header");
+
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+            String expectedAcceptHeaderValue = new String(Base64.getEncoder().encode(md.digest((nonce + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes())));
+            if (! serverHeaders.get("Sec-WebSocket-Accept").equals(expectedAcceptHeaderValue))
+                throw new HttpUpgradeException("Server response header 'Sec-WebSocket-Accept' has incorrect value.");
+        }
+        catch (NoSuchAlgorithmException e) {
+            // Impossible
+        }
+        // If it gets here, server response is ok.
     }
 
     private void checkHttpStatus(String statusLine, int expectedStatusCode) throws HttpException {
