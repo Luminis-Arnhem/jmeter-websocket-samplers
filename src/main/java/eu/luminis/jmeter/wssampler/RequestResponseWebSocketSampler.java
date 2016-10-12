@@ -83,11 +83,11 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
             if (getBinary()) {
                 result.setResponseData((byte[]) response);
-                log.info("Received binary data: " + formatBinary((byte[]) response));
+                log.debug("Received binary data: " + formatBinary((byte[]) response));
             }
             else {
                 result.setResponseData((String) response, null);
-                log.info("Received text: '" + response + "'");
+                log.debug("Received text: '" + response + "'");
             }
             result.setDataType(getBinary()? SampleResult.BINARY: SampleResult.TEXT);
 
