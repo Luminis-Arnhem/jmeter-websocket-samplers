@@ -21,23 +21,33 @@ import java.util.regex.Pattern;
 
 public class WebSocketClient {
 
-    // TODO: status: when closed / closing, don't accept anything.
+    enum WebSocketState {
+        CLOSED,
+        CLOSING,
+        CONNECTED,
+        CONNECTING
+    }
 
     private Socket wsSocket;
     private Random randomGenerator = new Random();
+    private volatile WebSocketState state = WebSocketState.CLOSED;
 
     public void connect(URL wsURL) throws IOException, HttpException {
         connect(wsURL, Collections.EMPTY_MAP);
     }
 
     public void connect(URL wsURL, Map<String, String> headers) throws IOException, HttpException {
+        if (state != WebSocketState.CLOSED) {
+            throw new IllegalStateException("Cannot connect when state is " + state);
+        }
+        state = WebSocketState.CONNECTING;
+
         boolean connected = false;
         wsSocket = new Socket();
         InputStream inputStream = null;
         OutputStream outputStream = null;
 
         try {
-
             int connectTimeout = 5000;
             wsSocket.connect(new InetSocketAddress(wsURL.getHost(), wsURL.getPort()), connectTimeout);
             inputStream = wsSocket.getInputStream();
@@ -70,6 +80,7 @@ public class WebSocketClient {
 
             checkServerResponse(inputStream, encodeNonce);
             connected = true;
+            state = WebSocketState.CONNECTED;
         }
         finally {
             if (! connected) {
@@ -79,6 +90,7 @@ public class WebSocketClient {
                     outputStream.close();
                 if (wsSocket != null)
                     wsSocket.close();
+                state = WebSocketState.CLOSED;
             }
         }
     }
@@ -87,27 +99,45 @@ public class WebSocketClient {
      * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
      */
     public CloseFrame close(int status, String requestData) throws IOException, UnexpectedFrameException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot close when state is " + state);
+        }
+        state = WebSocketState.CLOSED;
         wsSocket.getOutputStream().write(new CloseFrame(status, requestData).getFrameBytes());
         return receiveClose();
     }
 
     public CloseFrame receiveClose() throws IOException, UnexpectedFrameException {
         Frame frame = Frame.parseFrame(wsSocket.getInputStream());
-        if (frame.isClose())
+        if (frame.isClose()) {
+            state = WebSocketState.CLOSED;
             return (CloseFrame) frame;
+        }
         else
             throw new UnexpectedFrameException(frame);
     }
 
     public void sendTextFrame(String requestData) throws IOException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot send data frame when state is " + state);
+        }
+
         wsSocket.getOutputStream().write(new TextFrame(requestData).getFrameBytes());
     }
 
     public void sendBinaryFrame(byte[] requestData) throws IOException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot send data frame when state is " + state);
+        }
+
         wsSocket.getOutputStream().write(new BinaryFrame(requestData).getFrameBytes());
     }
 
     public String receiveText() throws IOException, UnexpectedFrameException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot receive data frame when state is " + state);
+        }
+
         Frame frame = Frame.parseFrame(wsSocket.getInputStream());
         if (frame.isText())
             return ((TextFrame) frame).getText();
@@ -116,6 +146,10 @@ public class WebSocketClient {
     }
 
     public byte[] receiveBinaryData() throws IOException, UnexpectedFrameException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot receive data frame when state is " + state);
+        }
+
         Frame frame = Frame.parseFrame(wsSocket.getInputStream());
         if (frame.isBinary())
             return ((BinaryFrame) frame).getData();
@@ -140,7 +174,7 @@ public class WebSocketClient {
         while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
 
         // Check server response for mandatory headers
-        if (! "websocket".equals(serverHeaders.get("Upgrade").toLowerCase()))  // Specification is not clear about whether the check should be case-insensative...
+        if (! "websocket".equals(getLowerCase(serverHeaders.get("Upgrade"))))  // Specification is not clear about whether the check should be case-insensative...
             throw new HttpUpgradeException("Server response should contain 'Upgrade' header with value 'websocket'");
         if (! "Upgrade".equals(serverHeaders.get("Connection")))
             throw new HttpUpgradeException("Server response should contain 'Connection' header with value 'Upgrade'");
@@ -169,6 +203,12 @@ public class WebSocketClient {
         }
         else
             throw new HttpProtocolException("Invalid status line");
+    }
+
+    private String getLowerCase(String value) {
+        if (value != null)
+            return value.toLowerCase();
+        else return null;
     }
 }
 

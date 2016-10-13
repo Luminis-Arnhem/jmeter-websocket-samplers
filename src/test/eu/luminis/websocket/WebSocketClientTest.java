@@ -6,8 +6,10 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 public class WebSocketClientTest {
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -72,4 +74,33 @@ public class WebSocketClientTest {
         new WebSocketClient().checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testSendOnClosedConnection() throws IOException {
+        new WebSocketClient().sendTextFrame("illegal");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDoubleCloseConnection() throws IOException, UnexpectedFrameException {
+        WebSocketClient client = new WebSocketClient();
+        setPrivateClientState(client, WebSocketClient.WebSocketState.CLOSING);
+        client.close(1000, "illegal close");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testReceiveOnClosedConnection() throws IOException, UnexpectedFrameException {
+        new WebSocketClient().receiveText();
+    }
+
+    private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
+        Field field = null;
+        try {
+            field = WebSocketClient.class.getDeclaredField("state");
+            field.setAccessible(true);
+            field.set(client, newState);
+        } catch (NoSuchFieldException e) {
+            // Impossible
+        } catch (IllegalAccessException e) {
+            // Impossible
+        }
+    }
 }
