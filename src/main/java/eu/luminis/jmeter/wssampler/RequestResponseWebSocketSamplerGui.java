@@ -24,9 +24,6 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
         add(settingsPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clearGui() {
         super.clearGui();

@@ -102,7 +102,11 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
     }
 
     void clearGui() {
-        // TODO: clear all input fields
+        serverField.setText("");
+        portField.setText("");
+        requestDataField.setText("");
+        pathField.setText("");
+        messageField.setText("");
     }
 
     private void checkBinary() {

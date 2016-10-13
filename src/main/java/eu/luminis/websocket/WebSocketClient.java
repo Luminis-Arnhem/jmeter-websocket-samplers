@@ -23,7 +23,6 @@ public class WebSocketClient {
 
     // TODO: status: when closed / closing, don't accept anything.
 
-    public static final int OPCODE_CLOSE = 0x08;
     private Socket wsSocket;
     private Random randomGenerator = new Random();
 
@@ -85,7 +84,7 @@ public class WebSocketClient {
     }
 
     /**
-     * Close the websocket connection property, i.e. send a close frame and wait for a close confirm.
+     * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
      */
     public CloseFrame close(int status, String requestData) throws IOException, UnexpectedFrameException {
         wsSocket.getOutputStream().write(new CloseFrame(status, requestData).getFrameBytes());
