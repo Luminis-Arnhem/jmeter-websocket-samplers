@@ -53,9 +53,9 @@ public class WebSocketClient {
             inputStream = wsSocket.getInputStream();
             outputStream = wsSocket.getOutputStream();
 
-            String path = wsURL.getPath();
-            if (path == null || path.trim().length() == 0)
-                path = "/";
+            String path = wsURL.getFile();  // getFile includes path and query string
+            if (path == null || !path.trim().startsWith("/"))
+                path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(outputStream);
             httpWriter.println("GET " + path + " HTTP/1.1\r");
             httpWriter.println("Host: " + wsURL.getHost() + "\r");
