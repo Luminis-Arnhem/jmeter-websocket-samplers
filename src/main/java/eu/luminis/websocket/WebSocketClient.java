@@ -172,7 +172,10 @@ public class WebSocketClient {
     protected void checkServerResponse(InputStream inputStream, String nonce) throws IOException {
         BufferedReader httpReader = new BufferedReader(new InputStreamReader(inputStream));
         String line = httpReader.readLine();
-        checkHttpStatus(line, 101);
+        if (line != null)
+            checkHttpStatus(line, 101);
+        else
+            throw new HttpProtocolException("Missing status line in response");
 
         Map<String, String> serverHeaders = new HashMap<>();
         do {
