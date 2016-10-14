@@ -95,6 +95,18 @@ public class WebSocketClient {
         }
     }
 
+    public void dispose() {
+        try {
+            if (wsSocket.getInputStream() != null)
+                wsSocket.getInputStream().close();
+            if (wsSocket.getOutputStream() != null)
+                wsSocket.getOutputStream().close();
+            if (wsSocket != null)
+                wsSocket.close();
+            state = WebSocketState.CLOSED;
+        } catch (IOException e) {}
+    }
+
     /**
      * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
      */

@@ -32,6 +32,7 @@
           <stringProp name="path">/whatever</stringProp>
           <stringProp name="requestData">Please echo this!</stringProp>
           <stringProp name="TestPlan.comments"> basic websocket example, sending a text message and receiving the echo&apos;d response</stringProp>
+          <boolProp name="binaryPayload">false</boolProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree/>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">

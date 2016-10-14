@@ -14,6 +14,10 @@ The request-response sampler supports both text and binary frames. Unfortunately
 
 For examples, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
+### Connections
+
+Each JMeter (ThreadGroup) thread can have at most one active WebSocket connection. In the sampler, you can indicate whether you want to (re) use the current connection, or create a new one. If you create a new one, the current connection is closed at TCP level, but no WebSocket close frames are sent. If you want to close the connection properly (i.e. send a WebSocket close frame and wait for the close response), use the WebSocket Close sampler. 
+
 ## Status
 
 This project is only just started. It's functional, but don't expect it to be very robust. For example, large payloads are not yet handled correctly, and neither are unexpected server responses. If something unexpected happens, check the JMeter log file.

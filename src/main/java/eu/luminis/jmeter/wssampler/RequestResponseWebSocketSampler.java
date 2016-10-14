@@ -32,6 +32,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     public RequestResponseWebSocketSampler() {
         super.setName("Request-Response WebSocket Sampler");
+        // Set defaults that have non-default values by default
+        setCreateNewConnection(true);
     }
 
     @Override
@@ -49,12 +51,25 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     @Override
     public SampleResult sample(Entry entry) {
         SampleResult result = new SampleResult();
+        result.setSampleLabel(getTitle());
         boolean isOK = false; // Did sample succeed?
         Object response = null;
 
-        WebSocketClient wsClient = threadLocalCachedConnection.get();
+        WebSocketClient wsClient;
+        if (getCreateNewConnection()) {
+            wsClient = null;
+            dispose(threadLocalCachedConnection.get());
+        }
+        else {
+            wsClient = threadLocalCachedConnection.get();
+            if (wsClient == null) {
+                log.error("There is no connection to re-use");
+                result.setResponseCode("Sampler error");
+                result.setResponseMessage("Sampler configured for using existing connection, but there is no connection");
+                return result;
+            }
+        }
 
-        result.setSampleLabel(getTitle());
         result.setSamplerData("Connect URL:\nws://" + getServer() + ":" + getPort() + getPath()
                 + (wsClient != null? "\n(using existing connection)": "")
                 + "\n\nRequest data:\n" + getRequestData() + "\n");
@@ -128,9 +143,18 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
         if (connected)
             threadLocalCachedConnection.set(wsClient);
+        else if (getCreateNewConnection())
+            threadLocalCachedConnection.set(null);
 
         result.setSuccessful(isOK);
         return result;
+    }
+
+    private void dispose(WebSocketClient webSocketClient) {
+        if (webSocketClient != null) {
+            log.debug("Closing streams for existing websocket connection");
+            webSocketClient.dispose();
+        }
     }
 
     private String formatBinary(byte[] data) {
@@ -203,5 +227,13 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     public String toString() {
         return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
+    }
+
+    public boolean getCreateNewConnection() {
+        return getPropertyAsBoolean("createNewConnection");
+    }
+
+    public void setCreateNewConnection(boolean value) {
+        setProperty("createNewConnection", value);
     }
 }

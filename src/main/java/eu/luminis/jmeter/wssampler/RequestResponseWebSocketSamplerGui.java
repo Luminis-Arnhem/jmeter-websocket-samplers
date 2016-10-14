@@ -52,6 +52,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof RequestResponseWebSocketSampler) {
             RequestResponseWebSocketSampler sampler = (RequestResponseWebSocketSampler) element;
+            settingsPanel.setCreateNewConnection(sampler.getCreateNewConnection());
             settingsPanel.serverField.setText(sampler.getServer());
             settingsPanel.portField.setText("" + sampler.getPort());
             settingsPanel.pathField.setText("" + sampler.getPath());
@@ -70,6 +71,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setPath(settingsPanel.pathField.getText());
             sampler.setBinary(settingsPanel.typeSelector.getSelectedItem() == BINARY);
             sampler.setRequestData(settingsPanel.requestDataField.getText());
+            sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
         }
     }
 
