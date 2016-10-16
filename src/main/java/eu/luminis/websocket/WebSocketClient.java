@@ -28,15 +28,24 @@ public class WebSocketClient {
         CONNECTING
     }
 
+    private final URL connectUrl;
     private Socket wsSocket;
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
 
-    public void connect(URL wsURL) throws IOException, HttpException {
-        connect(wsURL, Collections.EMPTY_MAP);
+    public WebSocketClient(URL wsURL) {
+        connectUrl = wsURL;
     }
 
-    public void connect(URL wsURL, Map<String, String> headers) throws IOException, HttpException {
+    public URL getConnectUrl() {
+        return connectUrl;
+    }
+
+    public void connect() throws IOException, HttpException {
+        connect(Collections.EMPTY_MAP);
+    }
+
+    public void connect(Map<String, String> headers) throws IOException, HttpException {
         if (state != WebSocketState.CLOSED) {
             throw new IllegalStateException("Cannot connect when state is " + state);
         }
@@ -49,16 +58,16 @@ public class WebSocketClient {
 
         try {
             int connectTimeout = 5000;
-            wsSocket.connect(new InetSocketAddress(wsURL.getHost(), wsURL.getPort()), connectTimeout);
+            wsSocket.connect(new InetSocketAddress(connectUrl.getHost(), connectUrl.getPort()), connectTimeout);
             inputStream = wsSocket.getInputStream();
             outputStream = wsSocket.getOutputStream();
 
-            String path = wsURL.getFile();  // getFile includes path and query string
+            String path = connectUrl.getFile();  // getFile includes path and query string
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(outputStream);
             httpWriter.println("GET " + path + " HTTP/1.1\r");
-            httpWriter.println("Host: " + wsURL.getHost() + "\r");
+            httpWriter.println("Host: " + connectUrl.getHost() + "\r");
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 String headerLine = header.getKey() + ": " + header.getValue();
                 // Ensure header line does _not_ contain new line

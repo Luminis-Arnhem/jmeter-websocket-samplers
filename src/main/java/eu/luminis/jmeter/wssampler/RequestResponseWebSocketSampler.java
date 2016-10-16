@@ -54,15 +54,24 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         result.setSampleLabel(getTitle());
         boolean isOK = false; // Did sample succeed?
         Object response = null;
+        URL url = null;
 
         WebSocketClient wsClient;
         if (getCreateNewConnection()) {
+            try {
+                url = new URL("http", getServer(), getPort(), getPath());   // java.net.URL does not support "ws" protocol....
+            } catch (MalformedURLException e) {
+                // Impossible
+            }
             wsClient = null;
             dispose(threadLocalCachedConnection.get());
         }
         else {
             wsClient = threadLocalCachedConnection.get();
-            if (wsClient == null) {
+            if (wsClient != null) {
+                url = wsClient.getConnectUrl();
+            }
+            else {
                 log.error("There is no connection to re-use");
                 result.setResponseCode("Sampler error");
                 result.setResponseMessage("Sampler configured for using existing connection, but there is no connection");
@@ -70,7 +79,10 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             }
         }
 
-        result.setSamplerData("Connect URL:\nws://" + getServer() + ":" + getPort() + getPath()
+        String path = url.getFile();
+        if (! path.startsWith("/"))
+            path = "/" + path;
+        result.setSamplerData("Connect URL:\nws://" + url.getHost() + ":" + url.getPort() + path
                 + (wsClient != null? "\n(using existing connection)": "")
                 + "\n\nRequest data:\n" + getRequestData() + "\n");
 
@@ -85,8 +97,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         result.sampleStart(); // Start timing
         try {
             if (wsClient == null) {
-                wsClient = new WebSocketClient();
-                wsClient.connect(new URL("http", getServer(), getPort(), getPath()), additionalHeaders);
+                wsClient = new WebSocketClient(url);
+                wsClient.connect(additionalHeaders);
                 connected = true;
             }
             if (getBinary())
