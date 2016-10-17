@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FrameTest {
 
@@ -74,5 +76,23 @@ public class FrameTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
         Frame.parseFrame(new ByteArrayInputStream(bytes));
+    }
+
+    @Test
+    public void testReadFromStreamBlocking() throws IOException {
+
+        byte[] buffer = new byte[256];
+        for (int i = 0; i < 256; i++)
+            buffer[i] = (byte) i;
+
+        InputStream input = new ByteArrayInputStream(buffer) {
+            @Override
+            public synchronized int read(byte[] b, int off, int len) {
+                // For the test: do not return all bytes, but just a few
+                return super.read(b, off, 21);
+            }
+        };
+
+        Assert.assertEquals(buffer.length, Frame.readFromStream(input, buffer));
     }
 }

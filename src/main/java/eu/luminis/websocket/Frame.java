@@ -42,7 +42,7 @@ public abstract class Frame {
         }
         else {
             byte[] lengthBytes = new byte[8];
-            int bytesRead = istream.read(lengthBytes);
+            int bytesRead = readFromStream(istream, lengthBytes);
             if (bytesRead != lengthBytes.length)
                 throw new EndOfStreamException("WebSocket protocol error: expected " + lengthBytes.length + " length bytes, but can only read " + bytesRead + " bytes");
             // If most signicifant word (32 bytes) of length are non-zero, it results in an unsupported length (must fit in a Java int)
@@ -54,7 +54,7 @@ public abstract class Frame {
             length = ( (lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
         }
         byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
-        int bytesRead = istream.read(payload);
+        int bytesRead = readFromStream(istream, payload);
         if (bytesRead == -1)
             throw new EndOfStreamException("end of stream");
         if (bytesRead != length)
@@ -118,6 +118,34 @@ public abstract class Frame {
         System.arraycopy(mask, 0, frame, 1 + lengthBytes.length, 4);
         System.arraycopy(masked, 0, frame, 1 + lengthBytes.length + 4, payload.length);
         return frame;
+    }
+
+    /**
+     *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
+     *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     */
+    protected static int readFromStream(InputStream stream, byte[] buffer) throws IOException {
+        return readFromStream(stream, buffer, 0, buffer.length);
+    }
+
+    /**
+     *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
+     *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     */
+    protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected) throws IOException {
+        int toRead = expected;
+        int totalRead = 0;
+        do {
+            int bytesRead = stream.read(buffer, offset, toRead);
+            if (bytesRead < 0)  // -1: Stream is at end of file
+                return totalRead;
+            if (bytesRead == 0)   // Should not happen according to Javadoc, but just in case... avoid endless loop
+                return totalRead;
+            totalRead += bytesRead;
+            toRead = expected - totalRead;
+        }
+        while (totalRead < expected);
+        return totalRead;
     }
 
     public boolean isText() {
