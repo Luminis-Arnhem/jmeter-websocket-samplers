@@ -29,7 +29,7 @@
         <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="Basic WebSocket Sample" enabled="true">
           <stringProp name="server">echo.websocket.org</stringProp>
           <intProp name="port">80</intProp>
-          <stringProp name="path">/whatever</stringProp>
+          <stringProp name="path">/</stringProp>
           <stringProp name="requestData">Please echo this!</stringProp>
           <stringProp name="TestPlan.comments"> basic websocket example, sending a text message and receiving the echo&apos;d response</stringProp>
           <boolProp name="binaryPayload">false</boolProp>
