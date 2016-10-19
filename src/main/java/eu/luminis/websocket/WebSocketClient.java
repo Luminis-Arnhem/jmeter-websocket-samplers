@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 
 public class WebSocketClient {
 
+
     enum WebSocketState {
         CLOSED,
         CLOSING,
@@ -30,8 +31,11 @@ public class WebSocketClient {
 
     private final URL connectUrl;
     private Socket wsSocket;
+    private InputStream socketInputStream;
+    private OutputStream socketOutputStream;
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
+
 
     public WebSocketClient(URL wsURL) {
         connectUrl = wsURL;
@@ -53,19 +57,17 @@ public class WebSocketClient {
 
         boolean connected = false;
         wsSocket = new Socket();
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
 
         try {
             int connectTimeout = 5000;
             wsSocket.connect(new InetSocketAddress(connectUrl.getHost(), connectUrl.getPort()), connectTimeout);
-            inputStream = wsSocket.getInputStream();
-            outputStream = wsSocket.getOutputStream();
+            socketInputStream = wsSocket.getInputStream();
+            socketOutputStream = wsSocket.getOutputStream();
 
             String path = connectUrl.getFile();  // getFile includes path and query string
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
-            PrintWriter httpWriter = new PrintWriter(outputStream);
+            PrintWriter httpWriter = new PrintWriter(socketOutputStream);
             httpWriter.println("GET " + path + " HTTP/1.1\r");
             httpWriter.println("Host: " + connectUrl.getHost() + "\r");
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -87,16 +89,16 @@ public class WebSocketClient {
             httpWriter.println("\r");
             httpWriter.flush();
 
-            checkServerResponse(inputStream, encodeNonce);
+            checkServerResponse(socketInputStream, encodeNonce);
             connected = true;
             state = WebSocketState.CONNECTED;
         }
         finally {
             if (! connected) {
-                if (inputStream != null)
-                    inputStream.close();
-                if (outputStream != null)
-                    outputStream.close();
+                if (socketInputStream != null)
+                    socketInputStream.close();
+                if (socketOutputStream != null)
+                    socketOutputStream.close();
                 if (wsSocket != null)
                     wsSocket.close();
                 state = WebSocketState.CLOSED;
@@ -106,10 +108,10 @@ public class WebSocketClient {
 
     public void dispose() {
         try {
-            if (wsSocket.getInputStream() != null)
-                wsSocket.getInputStream().close();
-            if (wsSocket.getOutputStream() != null)
-                wsSocket.getOutputStream().close();
+            if (socketInputStream != null)
+                socketInputStream.close();
+            if (socketOutputStream != null)
+                socketOutputStream.close();
             if (wsSocket != null)
                 wsSocket.close();
             state = WebSocketState.CLOSED;
@@ -124,12 +126,12 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot close when state is " + state);
         }
         state = WebSocketState.CLOSED;
-        wsSocket.getOutputStream().write(new CloseFrame(status, requestData).getFrameBytes());
+        socketOutputStream.write(new CloseFrame(status, requestData).getFrameBytes());
         return receiveClose();
     }
 
     public CloseFrame receiveClose() throws IOException, UnexpectedFrameException {
-        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isClose()) {
             state = WebSocketState.CLOSED;
             return (CloseFrame) frame;
@@ -143,7 +145,7 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot send data frame when state is " + state);
         }
 
-        wsSocket.getOutputStream().write(new TextFrame(requestData).getFrameBytes());
+        socketOutputStream.write(new TextFrame(requestData).getFrameBytes());
     }
 
     public void sendBinaryFrame(byte[] requestData) throws IOException {
@@ -151,7 +153,7 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot send data frame when state is " + state);
         }
 
-        wsSocket.getOutputStream().write(new BinaryFrame(requestData).getFrameBytes());
+        socketOutputStream.write(new BinaryFrame(requestData).getFrameBytes());
     }
 
     public String receiveText() throws IOException, UnexpectedFrameException {
@@ -171,7 +173,7 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
-        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isBinary())
             return ((BinaryFrame) frame).getData();
         else
