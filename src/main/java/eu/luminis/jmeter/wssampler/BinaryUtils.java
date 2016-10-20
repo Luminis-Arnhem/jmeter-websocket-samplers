@@ -5,7 +5,7 @@ import java.util.List;
 
 public class BinaryUtils {
 
-    static byte[] parseBinaryString(String data) {
+    public static byte[] parseBinaryString(String data) {
         if (data.trim().length() > 0) {
             String[] bytes = data.split(" ");
             List<Byte> result = new ArrayList<>();
@@ -23,6 +23,13 @@ public class BinaryUtils {
         }
         else
             return new byte[0];
+    }
+
+    public static String formatBinary(byte[] data) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b: data)
+            builder.append(String.format("%#x ", b));
+        return builder.toString();
     }
 
     private static byte[] toByteArray(List<Byte> bytes) {

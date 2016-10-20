@@ -124,7 +124,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
             if (getBinary()) {
                 result.setResponseData((byte[]) response);
-                log.debug("Received binary data: " + formatBinary((byte[]) response));
+                log.debug("Received binary data: " + BinaryUtils.formatBinary((byte[]) response));
             }
             else {
                 result.setResponseData((String) response, null);
@@ -216,13 +216,6 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         }
 
         return null;
-    }
-
-    private String formatBinary(byte[] data) {
-        StringBuilder builder = new StringBuilder();
-        for (byte b: data)
-            builder.append(String.format("%#x ", b));
-        return builder.toString();
     }
 
     public void addTestElement(TestElement el) {
