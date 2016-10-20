@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 
 public class WebSocketClient {
 
+    public static int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
+    public static int DEFAULT_READ_TIMEOUT = 6 * 1000;
 
     enum WebSocketState {
         CLOSED,
@@ -46,10 +48,15 @@ public class WebSocketClient {
     }
 
     public void connect() throws IOException, HttpException {
-        connect(Collections.EMPTY_MAP);
+        connect(Collections.EMPTY_MAP, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     public void connect(Map<String, String> headers) throws IOException, HttpException {
+            connect(headers, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    }
+
+    public void connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
+
         if (state != WebSocketState.CLOSED) {
             throw new IllegalStateException("Cannot connect when state is " + state);
         }
@@ -59,8 +66,8 @@ public class WebSocketClient {
         wsSocket = new Socket();
 
         try {
-            int connectTimeout = 5000;
             wsSocket.connect(new InetSocketAddress(connectUrl.getHost(), connectUrl.getPort()), connectTimeout);
+            wsSocket.setSoTimeout(readTimeout);
             socketInputStream = wsSocket.getInputStream();
             socketOutputStream = wsSocket.getOutputStream();
 
@@ -121,16 +128,19 @@ public class WebSocketClient {
     /**
      * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
      */
-    public CloseFrame close(int status, String requestData) throws IOException, UnexpectedFrameException {
+    public CloseFrame close(int status, String requestData, int readTimeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot close when state is " + state);
         }
         state = WebSocketState.CLOSED;
         socketOutputStream.write(new CloseFrame(status, requestData).getFrameBytes());
-        return receiveClose();
+        return receiveClose(readTimeout);
     }
 
-    public CloseFrame receiveClose() throws IOException, UnexpectedFrameException {
+    public CloseFrame receiveClose(int timeout) throws IOException, UnexpectedFrameException {
+
+        wsSocket.setSoTimeout(timeout);
+
         Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isClose()) {
             state = WebSocketState.CLOSED;
@@ -156,24 +166,29 @@ public class WebSocketClient {
         socketOutputStream.write(new BinaryFrame(requestData).getFrameBytes());
     }
 
-    public String receiveText() throws IOException, UnexpectedFrameException {
+    public String receiveText(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
-        Frame frame = Frame.parseFrame(wsSocket.getInputStream());
+        wsSocket.setSoTimeout(timeout);
+
+        Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isText())
             return ((TextFrame) frame).getText();
         else
             throw new UnexpectedFrameException(frame);
     }
 
-    public byte[] receiveBinaryData() throws IOException, UnexpectedFrameException {
+    public byte[] receiveBinaryData(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
         Frame frame = Frame.parseFrame(socketInputStream);
+
+        wsSocket.setSoTimeout(timeout);
+
         if (frame.isBinary())
             return ((BinaryFrame) frame).getData();
         else

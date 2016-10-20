@@ -31,7 +31,7 @@ public class CloseWebSocketSampler extends AbstractSampler {
         if (wsClient != null) {
             try {
                 result.sampleStart();
-                CloseFrame frame = wsClient.close(closeStatus, reason);
+                CloseFrame frame = wsClient.close(closeStatus, reason, getReadTimeout());
                 result.sampleEnd();
                 result.setSuccessful(true);
                 result.setResponseMessage("Connection closed.");
@@ -60,5 +60,13 @@ public class CloseWebSocketSampler extends AbstractSampler {
         }
 
         return result;
+    }
+
+    public int getReadTimeout() {
+        return getPropertyAsInt("readTimeout", WebSocketClient.DEFAULT_READ_TIMEOUT);
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 }

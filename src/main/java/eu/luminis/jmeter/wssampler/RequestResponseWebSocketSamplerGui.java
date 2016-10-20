@@ -56,8 +56,10 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.serverField.setText(sampler.getServer());
             settingsPanel.portField.setText("" + sampler.getPort());
             settingsPanel.pathField.setText("" + sampler.getPath());
+            settingsPanel.connectionTimeoutField.setText("" + sampler.getConnectTimeout());
             settingsPanel.typeSelector.setSelectedItem(sampler.getBinary()? BINARY: TEXT);
             settingsPanel.requestDataField.setText(sampler.getRequestData());
+            settingsPanel.readTimeoutField.setText("" + sampler.getReadTimeout());
         }
     }
 
@@ -69,9 +71,13 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setServer(settingsPanel.serverField.getText());
             sampler.setPort(getInt(settingsPanel.portField.getText(), 80));
             sampler.setPath(settingsPanel.pathField.getText());
+            if (getInt(settingsPanel.connectionTimeoutField.getText(), -1) != -1)
+                sampler.setConnectTimeout(getInt(settingsPanel.connectionTimeoutField.getText(), 10));
             sampler.setBinary(settingsPanel.typeSelector.getSelectedItem() == BINARY);
             sampler.setRequestData(settingsPanel.requestDataField.getText());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
+            if (getInt(settingsPanel.readTimeoutField.getText(), -1) != -1)
+                sampler.setReadTimeout(getInt(settingsPanel.readTimeoutField.getText(), 10));
         }
     }
 

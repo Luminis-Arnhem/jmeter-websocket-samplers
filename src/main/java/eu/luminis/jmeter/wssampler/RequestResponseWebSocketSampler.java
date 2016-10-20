@@ -98,14 +98,14 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         try {
             if (wsClient == null) {
                 wsClient = new WebSocketClient(url);
-                wsClient.connect(additionalHeaders);
+                wsClient.connect(additionalHeaders, getConnectTimeout(), getReadTimeout());
                 connected = true;
             }
             if (getBinary())
                 wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
             else
                 wsClient.sendTextFrame(getRequestData());
-            response = getBinary()? wsClient.receiveBinaryData(): wsClient.receiveText();
+            response = getBinary() ? wsClient.receiveBinaryData(getReadTimeout()) : wsClient.receiveText(getReadTimeout());
             result.sampleEnd(); // End timimg
 
             if (getBinary()) {
@@ -116,7 +116,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
                 result.setResponseData((String) response, null);
                 log.debug("Received text: '" + response + "'");
             }
-            result.setDataType(getBinary()? SampleResult.BINARY: SampleResult.TEXT);
+            result.setDataType(getBinary() ? SampleResult.BINARY : SampleResult.TEXT);
 
             result.setResponseCodeOK();
             result.setResponseMessage("OK");
@@ -247,5 +247,21 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     public void setCreateNewConnection(boolean value) {
         setProperty("createNewConnection", value);
+    }
+
+    public int getConnectTimeout() {
+        return getPropertyAsInt("connectTimeout", WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        setProperty("connectTimeout", connectTimeout, WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+    }
+
+    public int getReadTimeout() {
+        return getPropertyAsInt("readTimeout", WebSocketClient.DEFAULT_READ_TIMEOUT);
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 }

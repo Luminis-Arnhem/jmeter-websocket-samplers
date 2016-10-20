@@ -39,7 +39,9 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
     private JLabel messageField;
     JRadioButton reuseConnection;
     JRadioButton newConnection;
-    List<JComponent> serverUrlParts = new ArrayList<>();
+    List<JComponent> connectionRelatedSettings = new ArrayList<>();
+    JTextField connectionTimeoutField;
+    JTextField readTimeoutField;
 
     public RequestResponseWebSocketSamplerGuiPanel() {
         init();
@@ -72,69 +74,102 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         JPanel urlPanel = new JPanel();
         urlPanel.setLayout(new BoxLayout(urlPanel, X_AXIS));
         connectionPanel.add(urlPanel);
-        urlPanel.setBorder(BorderFactory.createTitledBorder("Server"));
+        urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5,0,0,0),
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3,5,5,0))));
         JLabel serverLabel = new JLabel("Server name or IP:");
         urlPanel.add(serverLabel);
-        serverUrlParts.add(serverLabel);
-        serverUrlParts.add(urlPanel);
+        connectionRelatedSettings.add(serverLabel);
+        connectionRelatedSettings.add(urlPanel);
         serverField = new JTextField();
         serverField.setColumns(20);
         urlPanel.add(serverField);
         JLabel portLabel = new JLabel("Port:");
         urlPanel.add(portLabel);
-        serverUrlParts.add(portLabel);
-        serverUrlParts.add(serverField);
+        connectionRelatedSettings.add(portLabel);
+        connectionRelatedSettings.add(serverField);
         portField = new JTextField();
         portField.setColumns(5);
         portField.setMaximumSize(portField.getPreferredSize());
-        serverUrlParts.add(portField);
+        connectionRelatedSettings.add(portField);
         urlPanel.add(portField);
         JLabel pathLabel = new JLabel("Path:");
         urlPanel.add(pathLabel);
-        serverUrlParts.add(pathLabel);
+        connectionRelatedSettings.add(pathLabel);
         pathField = new JTextField();
         pathField.setColumns(20);
         urlPanel.add(pathField);
-        serverUrlParts.add(pathField);
+        connectionRelatedSettings.add(pathField);
+        JPanel connectionTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        connectionTimeoutPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
+        {
+            JLabel connectionTimeoutLabel = new JLabel("Connection timeout (ms):");
+            connectionTimeoutPanel.add(connectionTimeoutLabel);
+            connectionTimeoutField = new JTextField();
+            connectionTimeoutField.setColumns(5);
+            connectionTimeoutPanel.add(connectionTimeoutField);
+            connectionRelatedSettings.add(connectionTimeoutLabel);
+            connectionRelatedSettings.add(connectionTimeoutField);
+        }
+        connectionPanel.add(connectionTimeoutPanel);
 
         JPanel dataPanel = new JPanel();
-        dataPanel.setBorder(BorderFactory.createTitledBorder("Data"));
-        dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.Y_AXIS));
-        JPanel topBar = new JPanel();
-        topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
-        String[] typeOptions = {TEXT, BINARY};
-        typeSelector = new JComboBox(typeOptions);
-        typeSelector.setMaximumSize(typeSelector.getMinimumSize());
-        typeSelector.addActionListener(e -> {
-            checkBinary();
-        });
-        topBar.add(typeSelector);
-        topBar.add(Box.createHorizontalStrut(10));
-        messageField = new JLabel();
-        messageField.setBackground(Color.YELLOW);
-        messageField.setForeground(Color.RED);
-        topBar.add(messageField);
-        topBar.add(Box.createHorizontalGlue());
+        {
+            dataPanel.setBorder(BorderFactory.createTitledBorder("Data"));
+            dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.Y_AXIS));
 
-        dataPanel.add(topBar);
-        JPanel dataZone = new JPanel();
-        dataZone.setLayout(new BoxLayout(dataZone, X_AXIS));
-        dataZone.add(new JLabel("Request data: "));
-        requestDataField = new JTextField();
-        requestDataField.setColumns(40);
-        // Add a simple (huhuh!) on-change handler....
-        requestDataField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                checkBinary();
+            JPanel topBar = new JPanel();
+            {
+                topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
+                String[] typeOptions = {TEXT, BINARY};
+                typeSelector = new JComboBox(typeOptions);
+                typeSelector.setMaximumSize(typeSelector.getMinimumSize());
+                typeSelector.addActionListener(e -> {
+                    checkBinary();
+                });
+                topBar.add(typeSelector);
+                topBar.add(Box.createHorizontalStrut(10));
+                messageField = new JLabel();
+                messageField.setBackground(Color.YELLOW);
+                messageField.setForeground(Color.RED);
+                topBar.add(messageField);
+                topBar.add(Box.createHorizontalGlue());
             }
-            public void removeUpdate(DocumentEvent e) {
-                checkBinary();
+            dataPanel.add(topBar);
+
+            JPanel dataZone = new JPanel();
+            {
+                dataZone.setLayout(new BoxLayout(dataZone, X_AXIS));
+                dataZone.add(Box.createHorizontalStrut(5));
+                dataZone.add(new JLabel("Request data: "));
+                requestDataField = new JTextField();
+                requestDataField.setColumns(40);
+                // Add a simple (huhuh!) on-change handler....
+                requestDataField.getDocument().addDocumentListener(new DocumentListener() {
+                    public void changedUpdate(DocumentEvent e) {
+                        checkBinary();
+                    }
+
+                    public void removeUpdate(DocumentEvent e) {
+                        checkBinary();
+                    }
+
+                    public void insertUpdate(DocumentEvent e) {
+                        checkBinary();
+                    }
+                });
+                dataZone.add(requestDataField);
             }
-            public void insertUpdate(DocumentEvent e) {
-                checkBinary();
-            }});
-        dataZone.add(requestDataField);
-        dataPanel.add(dataZone);
+            dataPanel.add(dataZone);
+
+            JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
+                readTimeoutField = new JTextField();
+                readTimeoutField.setColumns(5);
+                requestSettingsPanel.add(readTimeoutField);
+            }
+            dataPanel.add(requestSettingsPanel);
+        }
         boxPanel.add(dataPanel);
 
         setLayout(new BorderLayout());
@@ -143,7 +178,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
 
     private void handleConnectionRadio(ActionEvent e) {
         boolean enabled = e.getSource() == newConnection;
-        for (JComponent c: serverUrlParts)
+        for (JComponent c: connectionRelatedSettings)
             c.setEnabled(enabled);
     }
 

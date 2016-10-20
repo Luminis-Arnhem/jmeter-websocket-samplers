@@ -84,12 +84,12 @@ public class WebSocketClientTest {
     public void testDoubleCloseConnection() throws IOException, UnexpectedFrameException {
         WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
         setPrivateClientState(client, WebSocketClient.WebSocketState.CLOSING);
-        client.close(1000, "illegal close");
+        client.close(1000, "illegal close", 3000);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testReceiveOnClosedConnection() throws IOException, UnexpectedFrameException {
-        new WebSocketClient(new URL("http://nowhere")).receiveText();
+        new WebSocketClient(new URL("http://nowhere")).receiveText(3000);
     }
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
