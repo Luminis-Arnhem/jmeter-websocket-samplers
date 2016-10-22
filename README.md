@@ -4,15 +4,17 @@ JMeter add-on that defines a number of samplers for load testing WebSocket appli
 
 ## Usage
 
-Copy the jar to <jmeter-home>/lib/ext and start JMeter.
+Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads) dir, copy it to <jmeter-home>/lib/ext and start JMeter. That's all.
 
 ## Features
 
 Currently, there is only one sampler: the request-response sampler. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. This sampler does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
 
-The request-response sampler supports both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There are two possible solutions: use a "Save Responses to a file" listener (see sample) or check the jmeter log.
+![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
-For examples, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
+The request-response sampler supports both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There is a work around however: use a "Save Responses to a file" listener (see sample).
+
+For examples of how to use the sampler, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
 ### Connections
 
@@ -20,7 +22,7 @@ Each JMeter (ThreadGroup) thread can have at most one active WebSocket connectio
 
 ## Status
 
-This project is only just started. It's functional, but don't expect it to be very robust. For example, large payloads are not yet handled correctly, and neither are unexpected server responses. If something unexpected happens, check the JMeter log file.
+Even though the project is fairly new, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
 
 ## Building
 
