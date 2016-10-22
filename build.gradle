@@ -6,7 +6,6 @@ repositories {
 }
 
 dependencies {
-
     testCompile 'junit:junit:4.12'
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/ApacheJMeter_core
@@ -28,3 +27,35 @@ dependencies {
         transitive = false
     }
 }
+
+version = 'dev'
+
+task determineVersion << {
+    def proc = "git describe --exact-match HEAD".execute()
+    proc.waitFor()
+    if (proc.exitValue()) {
+        logger.info("Building development version.")
+    }
+    else {
+        def versionTag = proc.in.readLines()[0]
+        // Check that tag matches format like v0.1.2.beta or 1.0 (OSGi version syntax)
+        if (versionTag ==~ /v?[0-9]+(\.\d+){1,2}(\.[\w\d_-]+)?/ ) {
+            if (versionTag.startsWith("v")) {
+                versionTag = versionTag[1..-1]
+            }
+            logger.info("Building version ${versionTag}.")
+            project.version = versionTag
+
+            ext.classesDir = new File("${buildDir}/classes/main")
+            ext.versionDir = new File(classesDir, "eu/luminis/jmeter/wssampler")
+            versionDir.mkdirs()
+
+            new File(versionDir, "version.properties").text = versionTag
+        }
+        else {
+            logger.error("Version tag '${versionTag}' does not contain a valid version.");
+        }
+    }
+}
+
+compileJava.dependsOn determineVersion
