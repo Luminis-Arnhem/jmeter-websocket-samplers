@@ -32,6 +32,21 @@ public class BinaryUtils {
         return builder.toString();
     }
 
+    public static boolean contains(byte[] source, byte[] value) {
+        for (int i = 0; i < source.length; i++) {
+            if (value[0] == source[i]) {
+                boolean equal = true;
+                for (int j = 0; equal && j < value.length; j++) {
+                    if (i+j >= source.length || value[j] != source[i+j])
+                        equal = false;
+                }
+                if (equal)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     private static byte[] toByteArray(List<Byte> bytes) {
         byte[] result = new byte[bytes.size()];
         for (int i = 0; i < bytes.size(); i++)

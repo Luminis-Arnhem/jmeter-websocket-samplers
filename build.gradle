@@ -26,6 +26,10 @@ dependencies {
     compile('logkit:logkit:2.0') {
         transitive = false
     }
+
+    compile('org.mockito:mockito-core:2.2.15')
+
+    testCompile('avalon-framework:avalon-framework:4.1.4')
 }
 
 version = 'dev'

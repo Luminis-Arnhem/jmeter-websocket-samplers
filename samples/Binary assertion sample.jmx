@@ -50,29 +50,28 @@
           <stringProp name="requestData">0xca 0xfe 0xba 0xbe</stringProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree>
-          <eu.luminis.jmeter.assertions.BinaryContentAssertion guiclass="eu.luminis.jmeter.assertions.BinaryContentAssertionGUI" testclass="eu.luminis.jmeter.assertions.BinaryContentAssertion" testname="Binary Response Assertion" enabled="true">
-            <stringProp name="compareValue">0xca 0xfe</stringProp>
+          <eu.luminis.jmeter.assertions.BinaryContentAssertion guiclass="eu.luminis.jmeter.assertions.BinaryContentAssertionGUI" testclass="eu.luminis.jmeter.assertions.BinaryContentAssertion" testname="Response equals Assertion" enabled="true">
+            <stringProp name="compareValue">0xca 0xfe 0xba 0xbe</stringProp>
+            <stringProp name="comparisonType">Equals</stringProp>
+            <stringProp name="TestPlan.comments">Checks that the response equals 0xca 0xfe 0xba 0xbe</stringProp>
+          </eu.luminis.jmeter.assertions.BinaryContentAssertion>
+          <hashTree/>
+          <eu.luminis.jmeter.assertions.BinaryContentAssertion guiclass="eu.luminis.jmeter.assertions.BinaryContentAssertionGUI" testclass="eu.luminis.jmeter.assertions.BinaryContentAssertion" testname="Response does-not-equal Assertion" enabled="true">
+            <stringProp name="compareValue">cafebabe</stringProp>
+            <stringProp name="comparisonType">NotEquals</stringProp>
+          </eu.luminis.jmeter.assertions.BinaryContentAssertion>
+          <hashTree/>
+          <eu.luminis.jmeter.assertions.BinaryContentAssertion guiclass="eu.luminis.jmeter.assertions.BinaryContentAssertionGUI" testclass="eu.luminis.jmeter.assertions.BinaryContentAssertion" testname="Response contains Assertion" enabled="true">
+            <stringProp name="compareValue">fe 0xba</stringProp>
+            <stringProp name="comparisonType">Contains</stringProp>
+          </eu.luminis.jmeter.assertions.BinaryContentAssertion>
+          <hashTree/>
+          <eu.luminis.jmeter.assertions.BinaryContentAssertion guiclass="eu.luminis.jmeter.assertions.BinaryContentAssertionGUI" testclass="eu.luminis.jmeter.assertions.BinaryContentAssertion" testname="Response does-not-contain Assertion" enabled="true">
+            <stringProp name="compareValue">feba</stringProp>
+            <stringProp name="comparisonType">NotContains</stringProp>
           </eu.luminis.jmeter.assertions.BinaryContentAssertion>
           <hashTree/>
         </hashTree>
-        <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="2nd WebSocket request-response Sampler" enabled="true">
-          <boolProp name="createNewConnection">true</boolProp>
-          <stringProp name="server">echo.websocket.org</stringProp>
-          <stringProp name="port">80</stringProp>
-          <stringProp name="path">/</stringProp>
-          <boolProp name="binaryPayload">true</boolProp>
-          <stringProp name="requestData">${bin_data}</stringProp>
-        </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
-        <hashTree/>
-        <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="3rd WebSocket request-response Sampler" enabled="true">
-          <boolProp name="createNewConnection">true</boolProp>
-          <stringProp name="server">echo.websocket.org</stringProp>
-          <stringProp name="port">80</stringProp>
-          <stringProp name="path">/</stringProp>
-          <boolProp name="binaryPayload">true</boolProp>
-          <stringProp name="requestData">${invalid_bin_data}</stringProp>
-        </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
-        <hashTree/>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>

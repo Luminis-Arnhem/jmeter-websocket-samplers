@@ -2,7 +2,7 @@ package eu.luminis.jmeter.wssampler;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 public class BinaryUtilsTest {
 
@@ -51,6 +51,36 @@ public class BinaryUtilsTest {
     public void testParseWhitespaceString() throws Exception {
         byte[] result = test.parseBinaryString(" ");
         assertArrayEquals(new byte[0], result);
+    }
+
+    @Test
+    public void testContainsOnEqualValues() {
+        assertTrue(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }));
+    }
+
+    @Test
+    public void testContainsOnOverlappingValues() {
+        assertTrue(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xfe, (byte) 0xba }));
+    }
+
+    @Test
+    public void testContainsOnOverlappingValuesMatchAtEnd() {
+        assertTrue(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xba, (byte) 0xbe }));
+    }
+
+    @Test
+    public void testContainsOnOverlappingValuesPastEnd() {
+        assertFalse(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xba, (byte) 0xbe, (byte) 0xff }));
+    }
+
+    @Test
+    public void testDoesNotContain() {
+        assertFalse(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xcc }));
+    }
+
+    @Test
+    public void testDoesNotContainAtEnd() {
+        assertFalse(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xbe, (byte) 0xcc }));
     }
 
 }
