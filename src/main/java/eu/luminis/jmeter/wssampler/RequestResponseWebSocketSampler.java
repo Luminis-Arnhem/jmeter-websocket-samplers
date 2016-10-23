@@ -26,6 +26,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     private static final Logger log = LoggingManager.getLoggerForClass();
 
     private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = SharedContext.threadLocalCachedConnection;
+    private static final int DEFAULT_WS_PORT = 80;
 
     private HeaderManager headerManager;
 
@@ -152,6 +153,12 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
             result.setResponseCode("Websocket error");
             result.setResponseMessage("WebSocket error: " + ioExc);
         }
+        catch (Exception error) {
+            result.sampleEnd(); // End timimg
+            log.error("Unhandled error during sampling", error);
+            result.setResponseCode("Sampler error");
+            result.setResponseMessage("Sampler error: " + error);
+        }
 
         if (connected)
             threadLocalCachedConnection.set(wsClient);
@@ -206,7 +213,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     public int getPort() {
-        return getPropertyAsInt("port");
+        return getPropertyAsInt("port", DEFAULT_WS_PORT);
     }
 
     public String getPath() {
@@ -218,7 +225,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     public void setPort(int port) {
-        setProperty("port", port);
+        if (port > 0)
+            setProperty("port", port);
     }
 
     public String getRequestData() {
@@ -254,7 +262,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     public void setConnectTimeout(int connectTimeout) {
-        setProperty("connectTimeout", connectTimeout, WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+        if (connectTimeout > 0)
+            setProperty("connectTimeout", connectTimeout, WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
     }
 
     public int getReadTimeout() {
@@ -262,6 +271,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     public void setReadTimeout(int readTimeout) {
-        setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
+        if (readTimeout > 0)
+            setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 }
