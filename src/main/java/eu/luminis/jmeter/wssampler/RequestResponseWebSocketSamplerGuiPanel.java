@@ -13,6 +13,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -88,6 +90,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         connectionRelatedSettings.add(portLabel);
         connectionRelatedSettings.add(serverField);
         portField = new JTextField();
+        addIntegerRangeCheck(portField, 1, 65535);
         portField.setColumns(5);
         portField.setMaximumSize(portField.getPreferredSize());
         connectionRelatedSettings.add(portField);
@@ -107,6 +110,10 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
             connectionTimeoutField = new JTextField();
             connectionTimeoutField.setColumns(5);
             connectionTimeoutPanel.add(connectionTimeoutField);
+            JLabel connectionTimeoutErrorLabel = new JLabel();
+            connectionTimeoutErrorLabel.setForeground(Color.RED);
+            addIntegerRangeCheck(connectionTimeoutField, 1, 999999, connectionTimeoutErrorLabel);
+            connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
             connectionRelatedSettings.add(connectionTimeoutLabel);
             connectionRelatedSettings.add(connectionTimeoutField);
         }
@@ -166,7 +173,11 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
                 requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
                 readTimeoutField = new JTextField();
                 readTimeoutField.setColumns(5);
+                JLabel readTimeoutErrorField = new JLabel();
+                readTimeoutErrorField.setForeground(Color.RED);
+                addIntegerRangeCheck(readTimeoutField, 0, 999999, readTimeoutErrorField);
                 requestSettingsPanel.add(readTimeoutField);
+                requestSettingsPanel.add(readTimeoutErrorField);
             }
             dataPanel.add(requestSettingsPanel);
         }
@@ -210,6 +221,62 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         else {
             messageField.setText("");
         }
+    }
+
+    private void addIntegerRangeCheck(final JTextField input, int min, int max) {
+        addIntegerRangeCheck(input, min, max, null);
+    }
+
+    private void addIntegerRangeCheck(final JTextField input, int min, int max, JLabel errorMsgField) {
+        input.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
+            }
+        });
+    }
+
+    private boolean checkIntegerInRange(Document doc, int min, int max, JTextField field, JLabel errorMsgField) {
+        boolean ok = false;
+        boolean isNumber = false;
+
+        try {
+            String content = doc.getText(0, doc.getLength());
+            if (content.trim().length() > 0) {
+                int value = Integer.parseInt(content.trim());
+                ok = value >= min && value <= max;
+                isNumber = true;
+            } else {
+                ok = true;
+            }
+        }
+        catch (NumberFormatException nfe) {
+        }
+        catch (BadLocationException e) {
+            // Impossible
+        }
+        if (field != null)
+            if (ok) {
+                field.setForeground(Color.BLACK);
+                if (errorMsgField != null)
+                    errorMsgField.setText("");
+            }
+            else {
+                field.setForeground(Color.RED);
+                if (isNumber && errorMsgField != null)
+                    errorMsgField.setText("Value must >= " + min + " and <= " + max);
+            }
+        return ok;
     }
 
     private String stripJMeterVariables(String data) {
