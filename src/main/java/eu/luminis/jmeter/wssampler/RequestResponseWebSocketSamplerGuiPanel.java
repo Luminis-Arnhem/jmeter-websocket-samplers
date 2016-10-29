@@ -251,12 +251,13 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         boolean isNumber = false;
 
         try {
-            String content = doc.getText(0, doc.getLength());
-            if (content.trim().length() > 0) {
-                int value = Integer.parseInt(content.trim());
+            String literalContent = stripJMeterVariables(doc.getText(0, doc.getLength()));
+            if (literalContent.trim().length() > 0) {
+                int value = Integer.parseInt(literalContent);
                 ok = value >= min && value <= max;
                 isNumber = true;
             } else {
+                // Could be just a JMeter variable (e.g. ${port}), which should not be refused!
                 ok = true;
             }
         }

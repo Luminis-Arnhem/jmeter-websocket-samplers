@@ -44,7 +44,7 @@
         <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="WebSocket request-response Sampler" enabled="true">
           <boolProp name="createNewConnection">true</boolProp>
           <stringProp name="server">echo.websocket.org</stringProp>
-          <intProp name="port">80</intProp>
+          <stringProp name="port">80</stringProp>
           <stringProp name="path">/</stringProp>
           <boolProp name="binaryPayload">true</boolProp>
           <stringProp name="requestData">0xca 0xfe 0xba 0xbe</stringProp>
@@ -53,7 +53,7 @@
         <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="2nd WebSocket request-response Sampler" enabled="true">
           <boolProp name="createNewConnection">true</boolProp>
           <stringProp name="server">echo.websocket.org</stringProp>
-          <intProp name="port">80</intProp>
+          <stringProp name="port">80</stringProp>
           <stringProp name="path">/</stringProp>
           <boolProp name="binaryPayload">true</boolProp>
           <stringProp name="requestData">${bin_data}</stringProp>
@@ -62,7 +62,7 @@
         <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="3rd WebSocket request-response Sampler" enabled="true">
           <boolProp name="createNewConnection">true</boolProp>
           <stringProp name="server">echo.websocket.org</stringProp>
-          <intProp name="port">80</intProp>
+          <stringProp name="port">80</stringProp>
           <stringProp name="path">/</stringProp>
           <boolProp name="binaryPayload">true</boolProp>
           <stringProp name="requestData">${invalid_bin_data}</stringProp>

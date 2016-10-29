@@ -53,6 +53,13 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     public SampleResult sample(Entry entry) {
         SampleResult result = new SampleResult();
         result.setSampleLabel(getTitle());
+        String validationError = validateArguments();
+        if (validationError != null) {
+            result.setResponseCode("Sampler error");
+            result.setResponseMessage("Sampler error: " + validationError);
+            return result;
+        }
+
         boolean isOK = false; // Did sample succeed?
         Object response = null;
         URL url = null;
@@ -60,7 +67,7 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         WebSocketClient wsClient;
         if (getCreateNewConnection()) {
             try {
-                url = new URL("http", getServer(), getPort(), getPath());   // java.net.URL does not support "ws" protocol....
+                url = new URL("http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
             } catch (MalformedURLException e) {
                 // Impossible
             }
@@ -176,6 +183,18 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         }
     }
 
+    private String validateArguments() {
+        try {
+            int port = Integer.parseInt(getPort().trim());
+            if (port <= 0 || port > 65535)
+                return "Port number '" + getPort() + "' is not valid.";
+        }
+        catch (NumberFormatException notAnumber) {
+            return "Port number '" + getPort() + "' is not a number.";
+        }
+        return null;
+    }
+
     private String formatBinary(byte[] data) {
         StringBuilder builder = new StringBuilder();
         for (byte b: data)
@@ -212,8 +231,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         setProperty("server", server);
     }
 
-    public int getPort() {
-        return getPropertyAsInt("port", DEFAULT_WS_PORT);
+    public String getPort() {
+        return getPropertyAsString("port", "" + DEFAULT_WS_PORT);
     }
 
     public String getPath() {
@@ -224,9 +243,8 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         setProperty("path", path);
     }
 
-    public void setPort(int port) {
-        if (port > 0)
-            setProperty("port", port);
+    public void setPort(String port) {
+        setProperty("port", port);
     }
 
     public String getRequestData() {

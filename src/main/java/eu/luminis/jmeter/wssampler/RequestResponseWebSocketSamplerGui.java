@@ -69,7 +69,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
         if (element instanceof RequestResponseWebSocketSampler) {
             RequestResponseWebSocketSampler sampler = (RequestResponseWebSocketSampler) element;
             sampler.setServer(settingsPanel.serverField.getText());
-            sampler.setPort(getInt(settingsPanel.portField.getText(), 80));
+            sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());
             if (getInt(settingsPanel.connectionTimeoutField.getText(), -1) != -1)
                 sampler.setConnectTimeout(getInt(settingsPanel.connectionTimeoutField.getText(), 10));
