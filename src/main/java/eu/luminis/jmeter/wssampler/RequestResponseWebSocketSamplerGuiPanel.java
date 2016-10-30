@@ -33,6 +33,11 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
 
     public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{\\w+\\}");
 
+    public static final int MIN_CONNECTION_TIMEOUT = RequestResponseWebSocketSampler.MIN_CONNECTION_TIMEOUT;
+    public static final int MAX_CONNECTION_TIMEOUT = RequestResponseWebSocketSampler.MAX_CONNECTION_TIMEOUT;
+    public static final int MIN_READ_TIMEOUT = RequestResponseWebSocketSampler.MIN_READ_TIMEOUT;
+    public static final int MAX_READ_TIMEOUT = RequestResponseWebSocketSampler.MAX_READ_TIMEOUT;
+
     JTextField serverField;
     JTextField portField;
     JTextField requestDataField;
@@ -108,11 +113,11 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
             JLabel connectionTimeoutLabel = new JLabel("Connection timeout (ms):");
             connectionTimeoutPanel.add(connectionTimeoutLabel);
             connectionTimeoutField = new JTextField();
-            connectionTimeoutField.setColumns(5);
+            connectionTimeoutField.setColumns(10);
             connectionTimeoutPanel.add(connectionTimeoutField);
             JLabel connectionTimeoutErrorLabel = new JLabel();
             connectionTimeoutErrorLabel.setForeground(Color.RED);
-            addIntegerRangeCheck(connectionTimeoutField, 1, 999999, connectionTimeoutErrorLabel);
+            addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
             connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
             connectionRelatedSettings.add(connectionTimeoutLabel);
             connectionRelatedSettings.add(connectionTimeoutField);
@@ -172,10 +177,10 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
             {
                 requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
                 readTimeoutField = new JTextField();
-                readTimeoutField.setColumns(5);
+                readTimeoutField.setColumns(10);
                 JLabel readTimeoutErrorField = new JLabel();
                 readTimeoutErrorField.setForeground(Color.RED);
-                addIntegerRangeCheck(readTimeoutField, 0, 999999, readTimeoutErrorField);
+                addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
                 requestSettingsPanel.add(readTimeoutField);
                 requestSettingsPanel.add(readTimeoutErrorField);
             }

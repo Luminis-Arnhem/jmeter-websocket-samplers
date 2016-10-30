@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
 
 public class RequestResponseWebSocketSampler extends AbstractSampler {
 
+    public static final int MIN_CONNECTION_TIMEOUT = 1;
+    public static final int MAX_CONNECTION_TIMEOUT = 999999;
+    public static final int MIN_READ_TIMEOUT = 0;
+    public static final int MAX_READ_TIMEOUT = 999999;
+
     private static final Logger log = LoggingManager.getLoggerForClass();
 
     private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = SharedContext.threadLocalCachedConnection;
@@ -104,16 +109,17 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         // Here we go!
         result.sampleStart(); // Start timing
         try {
+            int readTimeout = Integer.parseInt(getReadTimeout());
             if (wsClient == null) {
                 wsClient = new WebSocketClient(url);
-                wsClient.connect(additionalHeaders, getConnectTimeout(), getReadTimeout());
+                wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
                 connected = true;
             }
             if (getBinary())
                 wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
             else
                 wsClient.sendTextFrame(getRequestData());
-            response = getBinary() ? wsClient.receiveBinaryData(getReadTimeout()) : wsClient.receiveText(getReadTimeout());
+            response = getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
             result.sampleEnd(); // End timimg
 
             if (getBinary()) {
@@ -185,13 +191,30 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     private String validateArguments() {
         try {
-            int port = Integer.parseInt(getPort().trim());
+            int port = Integer.parseInt(getPort());
             if (port <= 0 || port > 65535)
                 return "Port number '" + getPort() + "' is not valid.";
         }
         catch (NumberFormatException notAnumber) {
             return "Port number '" + getPort() + "' is not a number.";
         }
+        try {
+            int connectTimeout = Integer.parseInt(getConnectTimeout());
+            if (connectTimeout < MIN_CONNECTION_TIMEOUT || connectTimeout > MAX_CONNECTION_TIMEOUT)
+                return "Connection timeout '" + connectTimeout + "' is not valid; should between " + MIN_CONNECTION_TIMEOUT + " and " + MAX_CONNECTION_TIMEOUT;
+            }
+        catch (NumberFormatException notAnumber) {
+            return "Connection timeout '" + getConnectTimeout() + "' is not a number.";
+        }
+        try {
+            int readTimeout = Integer.parseInt(getReadTimeout());
+            if (readTimeout < MIN_READ_TIMEOUT || readTimeout > MAX_READ_TIMEOUT)
+                return "Read timeout '" + readTimeout + "' is not valid; should between " + MIN_READ_TIMEOUT + " and " + MAX_READ_TIMEOUT;
+        }
+        catch (NumberFormatException notAnumber) {
+            return "Read timeout '" + getReadTimeout() + "' is not a number.";
+        }
+
         return null;
     }
 
@@ -232,7 +255,11 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     public String getPort() {
-        return getPropertyAsString("port", "" + DEFAULT_WS_PORT);
+        return getPropertyAsString("port", "" + DEFAULT_WS_PORT).trim();
+    }
+
+    public void setPort(String port) {
+        setProperty("port", port);
     }
 
     public String getPath() {
@@ -241,10 +268,6 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
 
     public void setPath(String path) {
         setProperty("path", path);
-    }
-
-    public void setPort(String port) {
-        setProperty("port", port);
     }
 
     public String getRequestData() {
@@ -275,21 +298,19 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
         setProperty("createNewConnection", value);
     }
 
-    public int getConnectTimeout() {
-        return getPropertyAsInt("connectTimeout", WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+    public String getConnectTimeout() {
+        return getPropertyAsString("connectTimeout", "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT).trim();
     }
 
-    public void setConnectTimeout(int connectTimeout) {
-        if (connectTimeout > 0)
-            setProperty("connectTimeout", connectTimeout, WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+    public void setConnectTimeout(String connectTimeout) {
+        setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
     }
 
-    public int getReadTimeout() {
-        return getPropertyAsInt("readTimeout", WebSocketClient.DEFAULT_READ_TIMEOUT);
+    public String getReadTimeout() {
+        return getPropertyAsString("readTimeout", "" +WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
     }
 
-    public void setReadTimeout(int readTimeout) {
-        if (readTimeout > 0)
-            setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
+    public void setReadTimeout(String readTimeout) {
+        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 }

@@ -23,6 +23,18 @@
             <stringProp name="Argument.value">80</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+          <elementProp name="connectTimeout" elementType="Argument">
+            <stringProp name="Argument.name">connectTimeout</stringProp>
+            <stringProp name="Argument.value">10357</stringProp>
+            <stringProp name="Argument.desc">connection timeout in milliseconds</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="readTimeout" elementType="Argument">
+            <stringProp name="Argument.name">readTimeout</stringProp>
+            <stringProp name="Argument.value">4500</stringProp>
+            <stringProp name="Argument.desc">read timeout in milliseconds</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
         </collectionProp>
       </Arguments>
       <hashTree/>
@@ -49,6 +61,8 @@
           <stringProp name="requestData">Please echo this!</stringProp>
           <stringProp name="TestPlan.comments"> basic websocket example, sending a text message and receiving the echo&apos;d response</stringProp>
           <boolProp name="binaryPayload">false</boolProp>
+          <stringProp name="connectTimeout">${connectTimeout}</stringProp>
+          <stringProp name="readTimeout">${readTimeout}</stringProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
@@ -68,6 +82,7 @@
           <stringProp name="path"></stringProp>
           <boolProp name="binaryPayload">false</boolProp>
           <stringProp name="requestData">non empty string, otherwise, echo.websocket.org does not respond</stringProp>
+          <stringProp name="readTimeout">${readTimeout}</stringProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
