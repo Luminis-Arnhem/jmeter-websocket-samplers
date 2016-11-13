@@ -28,8 +28,8 @@ public class BinaryUtils {
     public static String formatBinary(byte[] data) {
         StringBuilder builder = new StringBuilder();
         for (byte b: data)
-            builder.append(String.format("%#x ", b));
-        return builder.toString();
+            builder.append(String.format("%#04x ", b));  // # defines the leading 0x, which takes 2 chars, hence width is 2 + 2 = 4
+        return builder.toString().trim();
     }
 
     public static boolean contains(byte[] source, byte[] value) {

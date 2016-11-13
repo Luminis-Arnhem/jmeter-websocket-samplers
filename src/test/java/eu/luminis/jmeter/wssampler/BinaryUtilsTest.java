@@ -54,6 +54,22 @@ public class BinaryUtilsTest {
     }
 
     @Test
+    public void testFormatSingleNibble() {
+        assertEquals("0x01", test.formatBinary(new byte[] { 1 }));
+    }
+
+    @Test
+    public void testFormatZeroBytes() {
+        assertEquals("", test.formatBinary(new byte[0]));
+    }
+
+
+    @Test
+    public void testFormatNegativeValue() {
+        assertEquals("0xfc", test.formatBinary(new byte[] { -4 }));
+    }
+
+    @Test
     public void testContainsOnEqualValues() {
         assertTrue(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }));
     }
