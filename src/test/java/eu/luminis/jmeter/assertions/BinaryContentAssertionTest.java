@@ -140,6 +140,66 @@ public class BinaryContentAssertionTest {
         assertFalse(assertion.getResult(sampleResult));
     }
 
+    @Test
+    public void startWithComparisonIsTrue() {
+        BinaryContentAssertion assertion = new BinaryContentAssertion();
+        assertion.setComparisonType(BinaryContentAssertion.ComparisonType.StartsWith);
+        assertion.setComparisonValue("cafe");
+
+        SampleResult sampleResult = mock(SampleResult.class);
+        when(sampleResult.getResponseData()).thenReturn(CAFE_BABE);
+
+        assertTrue(assertion.getResult(sampleResult));
+    }
+
+    @Test
+    public void startWithComparisonIsEqual() {
+        BinaryContentAssertion assertion = new BinaryContentAssertion();
+        assertion.setComparisonType(BinaryContentAssertion.ComparisonType.StartsWith);
+        assertion.setComparisonValue("cafebabe");
+
+        SampleResult sampleResult = mock(SampleResult.class);
+        when(sampleResult.getResponseData()).thenReturn(CAFE_BABE);
+
+        assertTrue(assertion.getResult(sampleResult));
+    }
+
+    @Test
+    public void startWithComparisonIsFalse() {
+        BinaryContentAssertion assertion = new BinaryContentAssertion();
+        assertion.setComparisonType(BinaryContentAssertion.ComparisonType.StartsWith);
+        assertion.setComparisonValue("babe");
+
+        SampleResult sampleResult = mock(SampleResult.class);
+        when(sampleResult.getResponseData()).thenReturn(CAFE_BABE);
+
+        assertFalse(assertion.getResult(sampleResult));
+    }
+
+    @Test
+    public void startWithComparisonValueIsLonger() {
+        BinaryContentAssertion assertion = new BinaryContentAssertion();
+        assertion.setComparisonType(BinaryContentAssertion.ComparisonType.StartsWith);
+        assertion.setComparisonValue("cafebabe00");
+
+        SampleResult sampleResult = mock(SampleResult.class);
+        when(sampleResult.getResponseData()).thenReturn(CAFE_BABE);
+
+        assertFalse(assertion.getResult(sampleResult));
+    }
+
+    @Test
+    public void notStartsWithComparisonIsFalse() {
+        BinaryContentAssertion assertion = new BinaryContentAssertion();
+        assertion.setComparisonType(BinaryContentAssertion.ComparisonType.StartsWith);
+        assertion.setComparisonValue("babe");
+
+        SampleResult sampleResult = mock(SampleResult.class);
+        when(sampleResult.getResponseData()).thenReturn(CAFE_BABE);
+
+        assertFalse(assertion.getResult(sampleResult));
+    }
+
     private void assertTrue(AssertionResult assertionResult) {
         Assert.assertFalse(assertionResult.isFailure());
         Assert.assertFalse(assertionResult.isError());

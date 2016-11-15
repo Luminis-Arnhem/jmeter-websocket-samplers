@@ -13,8 +13,10 @@ public class BinaryContentAssertion extends AbstractScopedAssertion implements A
     public enum ComparisonType {
         Equals,
         Contains,
+        StartsWith,
         NotEquals,
-        NotContains
+        NotContains,
+        NotStartsWith
     }
 
     @Override
@@ -48,6 +50,18 @@ public class BinaryContentAssertion extends AbstractScopedAssertion implements A
                 result.setFailure(contains);
                 if (contains)
                     result.setFailureMessage("Response expected not to contain " + BinaryUtils.formatBinary(comparisonValue) + "\n" + "Response was: " + BinaryUtils.formatBinary(responseData));
+                break;
+            case StartsWith:
+                boolean startsWith = comparisonValue.length <= responseData.length && Arrays.equals(comparisonValue, Arrays.copyOf(responseData, comparisonValue.length));
+                if (!startsWith)
+                    result.setFailureMessage("Response expected to start with " + BinaryUtils.formatBinary(comparisonValue) + "\n" + "Response was: " + BinaryUtils.formatBinary(responseData));
+                result.setFailure(!startsWith);
+                break;
+            case NotStartsWith:
+                startsWith = comparisonValue.length <= responseData.length && Arrays.equals(comparisonValue, Arrays.copyOf(responseData, comparisonValue.length));
+                if (startsWith)
+                    result.setFailureMessage("Response expected not to start with " + BinaryUtils.formatBinary(comparisonValue) + "\n" + "Response was: " + BinaryUtils.formatBinary(responseData));
+                result.setFailure(startsWith);
                 break;
             default:
                 throw new RuntimeException("Program error");

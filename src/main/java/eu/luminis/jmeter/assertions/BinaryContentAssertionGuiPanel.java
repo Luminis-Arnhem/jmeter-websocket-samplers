@@ -1,6 +1,7 @@
 package eu.luminis.jmeter.assertions;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
@@ -12,15 +13,15 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 
 public class BinaryContentAssertionGuiPanel extends JPanel {
 
     JTextArea binaryContent;
     JRadioButton containsButton;
     JRadioButton doesButton;
-    private JRadioButton doesNotButton;
-    private JRadioButton equalsButton;
+    JRadioButton doesNotButton;
+    JRadioButton equalsButton;
+    JRadioButton startsWithButton;
 
     public BinaryContentAssertionGuiPanel() {
         init();
@@ -30,12 +31,14 @@ public class BinaryContentAssertionGuiPanel extends JPanel {
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JPanel settingsPanel = new JPanel();
         {
-            settingsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+            settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.X_AXIS));
+            settingsPanel.add(Box.createHorizontalStrut(5));
             settingsPanel.add(new JLabel("Assert response "));
 
             JPanel negationPanel = new JPanel();
             {
                 negationPanel.setLayout(new BoxLayout(negationPanel, BoxLayout.Y_AXIS));
+                negationPanel.add(Box.createVerticalGlue());
                 doesButton = new JRadioButton("does");
                 negationPanel.add(doesButton);
                 doesNotButton = new JRadioButton("does NOT");
@@ -44,6 +47,8 @@ public class BinaryContentAssertionGuiPanel extends JPanel {
                 doesButton.setSelected(true);
                 negationGroup.add(doesButton);
                 negationGroup.add(doesNotButton);
+                negationPanel.add(Box.createVerticalGlue());
+                negationPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 0, 0), BorderFactory.createEtchedBorder()));
             }
             settingsPanel.add(negationPanel);
 
@@ -52,12 +57,16 @@ public class BinaryContentAssertionGuiPanel extends JPanel {
                 matchPanel.setLayout(new BoxLayout(matchPanel, BoxLayout.Y_AXIS));
                 containsButton = new JRadioButton("contain");
                 matchPanel.add(containsButton);
+                startsWithButton = new JRadioButton("start with");
+                matchPanel.add(startsWithButton);
                 equalsButton = new JRadioButton("equal");
                 matchPanel.add(equalsButton);
                 containsButton.setSelected(true);
                 ButtonGroup matchGroup = new ButtonGroup();
                 matchGroup.add(containsButton);
                 matchGroup.add(equalsButton);
+                matchGroup.add(startsWithButton);
+                matchPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5), BorderFactory.createEtchedBorder()));
             }
             settingsPanel.add(matchPanel);
 
@@ -90,8 +99,31 @@ public class BinaryContentAssertionGuiPanel extends JPanel {
         binaryContent.setText("");
         // Default is: "does contain"
         setDoes(true);
-        setContains(true);
+        setContains();
     }
+    public void setDoes(boolean value) {
+        doesButton.setSelected(value);
+        doesNotButton.setSelected(!value);
+    }
+
+    public void setContains() {
+        containsButton.setSelected(true);
+        equalsButton.setSelected(false);
+        startsWithButton.setSelected(false);
+    }
+
+    public void setEquals() {
+        containsButton.setSelected(false);
+        equalsButton.setSelected(true);
+        startsWithButton.setSelected(false);
+    }
+
+    public void setStartsWith() {
+        containsButton.setSelected(false);
+        equalsButton.setSelected(false);
+        startsWithButton.setSelected(true);
+    }
+
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,13 +132,4 @@ public class BinaryContentAssertionGuiPanel extends JPanel {
         frame.setVisible(true);
     }
 
-    public void setDoes(boolean value) {
-        doesButton.setSelected(value);
-        doesNotButton.setSelected(!value);
-    }
-
-    public void setContains(boolean value) {
-        containsButton.setSelected(value);
-        equalsButton.setSelected(!value);
-    }
 }
