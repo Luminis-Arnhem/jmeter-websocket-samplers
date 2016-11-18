@@ -2,6 +2,7 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.AbstractSampler;
+import org.apache.log.Logger;
 
 abstract public class WebsocketSampler extends AbstractSampler {
 
@@ -47,4 +48,13 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
         return null;
     }
+
+    protected void dispose(WebSocketClient webSocketClient) {
+        if (webSocketClient != null) {
+            getLogger().debug("Closing streams for existing websocket connection");
+            webSocketClient.dispose();
+        }
+    }
+
+    abstract protected Logger getLogger();
 }

@@ -67,4 +67,9 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     public void setReadTimeout(int readTimeout) {
         setProperty("readTimeout", readTimeout, WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
+
+    @Override
+    protected Logger getLogger() {
+        return log;
+    }
 }

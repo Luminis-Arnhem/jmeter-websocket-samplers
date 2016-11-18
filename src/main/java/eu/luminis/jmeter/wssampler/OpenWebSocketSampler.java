@@ -1,7 +1,6 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.HttpUpgradeException;
-import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -20,31 +19,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
-public class RequestResponseWebSocketSampler extends WebsocketSampler {
+public class OpenWebSocketSampler extends WebsocketSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
-
     private HeaderManager headerManager;
-
-
-    public RequestResponseWebSocketSampler() {
-        super.setName("Request-Response WebSocket Sampler");
-        // Set defaults that have non-default values by default
-        setCreateNewConnection(true);
-    }
-
-    @Override
-    public String getName() {
-        return getPropertyAsString(TestElement.NAME);
-    }
-
-    @Override
-    public void setName(String name) {
-        if (name != null) {
-            setProperty(TestElement.NAME, name);
-        }
-    }
 
     @Override
     public SampleResult sample(Entry entry) {
@@ -58,38 +37,18 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         }
 
         boolean isOK = false; // Did sample succeed?
-        Object response = null;
         URL url = null;
 
-        WebSocketClient wsClient;
-        if (getCreateNewConnection()) {
-            try {
-                url = new URL("http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
-            } catch (MalformedURLException e) {
-                // Impossible
-            }
-            wsClient = null;
-            dispose(threadLocalCachedConnection.get());
-        }
-        else {
-            wsClient = threadLocalCachedConnection.get();
-            if (wsClient != null) {
-                url = wsClient.getConnectUrl();
-            }
-            else {
-                log.error("There is no connection to re-use");
-                result.setResponseCode("Sampler error");
-                result.setResponseMessage("Sampler configured for using existing connection, but there is no connection");
-                return result;
-            }
+        try {
+            url = new URL("http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
+        } catch (MalformedURLException e) {
+            // Impossible
         }
 
         String path = url.getFile();
         if (! path.startsWith("/"))
             path = "/" + path;
-        result.setSamplerData("Connect URL:\nws://" + url.getHost() + ":" + url.getPort() + path
-                + (wsClient != null? "\n(using existing connection)": "")
-                + "\n\nRequest data:\n" + getRequestData() + "\n");
+        result.setSamplerData("Connect URL:\nws://" + url.getHost() + ":" + url.getPort() + path + "\n");
 
         Map<String, String> additionalHeaders = Collections.EMPTY_MAP;
         if (headerManager != null) {
@@ -97,54 +56,26 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
         }
 
+        dispose(threadLocalCachedConnection.get());
+        WebSocketClient wsClient = null;
         boolean connected = false;
         // Here we go!
         result.sampleStart(); // Start timing
         try {
             int readTimeout = Integer.parseInt(getReadTimeout());
-            if (wsClient == null) {
-                wsClient = new WebSocketClient(url);
-                wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
-                connected = true;
-            }
-            if (getBinary())
-                wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
-            else
-                wsClient.sendTextFrame(getRequestData());
-            response = getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
-            result.sampleEnd(); // End timimg
+            wsClient = new WebSocketClient(url);
+            wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
+            connected = true;
 
-            if (getBinary()) {
-                result.setResponseData((byte[]) response);
-                log.debug("Received binary data: " + BinaryUtils.formatBinary((byte[]) response));
-            }
-            else {
-                result.setResponseData((String) response, null);
-                log.debug("Received text: '" + response + "'");
-            }
-            result.setDataType(getBinary() ? SampleResult.BINARY : SampleResult.TEXT);
+            result.sampleEnd(); // End timimg
 
             result.setResponseCodeOK();
             result.setResponseMessage("OK");
             isOK = true;
-
-        }
-        catch (UnexpectedFrameException e) {
-            result.sampleEnd(); // End timimg
-            log.error("Unexpected frame type received: " + e.getReceivedFrame());
-            result.setResponseCode("Sampler error: unexpected frame type.");
-            result.setResponseMessage("Received: " + e.getReceivedFrame());
         }
         catch (MalformedURLException e) {
             // Impossible
             throw new RuntimeException(e);
-        }
-        catch (NumberFormatException noNumber) {
-            // Thrown by BinaryUtils.parseBinaryString
-            result.sampleEnd(); // End timimg
-            log.error("Request data is not binary: " + getRequestData());
-            result.setResponseCode("Sampler Error");
-            result.setResponseMessage("Request data is not binary: " + getRequestData());
         }
         catch (HttpUpgradeException upgradeError) {
             result.sampleEnd(); // End timimg
@@ -167,16 +98,11 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
         if (connected)
             threadLocalCachedConnection.set(wsClient);
-        else if (getCreateNewConnection())
+        else
             threadLocalCachedConnection.set(null);
 
         result.setSuccessful(isOK);
         return result;
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return log;
     }
 
     private String validateArguments() {
@@ -188,6 +114,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
         return errorMsg;
     }
+
 
     public void addTestElement(TestElement el) {
         if (el instanceof HeaderManager) {
@@ -234,34 +161,6 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         setProperty("path", path);
     }
 
-    public String getRequestData() {
-        return getPropertyAsString("requestData");
-    }
-
-    public void setRequestData(String requestData) {
-        setProperty("requestData", requestData);
-    }
-
-    public boolean getBinary() {
-        return getPropertyAsBoolean("binaryPayload");
-    }
-
-    public void setBinary(boolean binary) {
-        setProperty("binaryPayload", binary);
-    }
-
-    public String toString() {
-        return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
-    }
-
-    public boolean getCreateNewConnection() {
-        return getPropertyAsBoolean("createNewConnection");
-    }
-
-    public void setCreateNewConnection(boolean value) {
-        setProperty("createNewConnection", value);
-    }
-
     public String getConnectTimeout() {
         return getPropertyAsString("connectTimeout", "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT).trim();
     }
@@ -276,5 +175,10 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     public void setReadTimeout(String readTimeout) {
         setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return log;
     }
 }
