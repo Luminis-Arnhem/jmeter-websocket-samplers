@@ -3,7 +3,6 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.CloseFrame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
-import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
@@ -12,11 +11,10 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class CloseWebSocketSampler extends AbstractSampler {
+public class CloseWebSocketSampler extends WebsocketSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
-    private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = SharedContext.threadLocalCachedConnection;
 
     @Override
     public SampleResult sample(Entry entry) {

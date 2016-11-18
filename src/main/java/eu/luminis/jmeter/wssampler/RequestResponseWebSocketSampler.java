@@ -5,7 +5,6 @@ import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
-import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
@@ -21,17 +20,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
-public class RequestResponseWebSocketSampler extends AbstractSampler {
-
-    public static final int MIN_CONNECTION_TIMEOUT = 1;
-    public static final int MAX_CONNECTION_TIMEOUT = 999999;
-    public static final int MIN_READ_TIMEOUT = 0;
-    public static final int MAX_READ_TIMEOUT = 999999;
+public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
-    private static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = SharedContext.threadLocalCachedConnection;
-    private static final int DEFAULT_WS_PORT = 80;
 
     private HeaderManager headerManager;
 
@@ -190,32 +182,13 @@ public class RequestResponseWebSocketSampler extends AbstractSampler {
     }
 
     private String validateArguments() {
-        try {
-            int port = Integer.parseInt(getPort());
-            if (port <= 0 || port > 65535)
-                return "Port number '" + getPort() + "' is not valid.";
-        }
-        catch (NumberFormatException notAnumber) {
-            return "Port number '" + getPort() + "' is not a number.";
-        }
-        try {
-            int connectTimeout = Integer.parseInt(getConnectTimeout());
-            if (connectTimeout < MIN_CONNECTION_TIMEOUT || connectTimeout > MAX_CONNECTION_TIMEOUT)
-                return "Connection timeout '" + connectTimeout + "' is not valid; should between " + MIN_CONNECTION_TIMEOUT + " and " + MAX_CONNECTION_TIMEOUT;
-            }
-        catch (NumberFormatException notAnumber) {
-            return "Connection timeout '" + getConnectTimeout() + "' is not a number.";
-        }
-        try {
-            int readTimeout = Integer.parseInt(getReadTimeout());
-            if (readTimeout < MIN_READ_TIMEOUT || readTimeout > MAX_READ_TIMEOUT)
-                return "Read timeout '" + readTimeout + "' is not valid; should between " + MIN_READ_TIMEOUT + " and " + MAX_READ_TIMEOUT;
-        }
-        catch (NumberFormatException notAnumber) {
-            return "Read timeout '" + getReadTimeout() + "' is not a number.";
-        }
+        String errorMsg = validatePortNumber(getPort());
+        if (errorMsg == null)
+            errorMsg = validateConnectionTimeout(getConnectTimeout());
+        if (errorMsg == null)
+            errorMsg = validateReadTimeout(getReadTimeout());
 
-        return null;
+        return errorMsg;
     }
 
     public void addTestElement(TestElement el) {

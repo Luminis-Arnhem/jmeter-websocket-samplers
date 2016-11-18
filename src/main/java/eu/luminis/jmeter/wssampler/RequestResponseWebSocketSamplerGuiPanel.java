@@ -13,30 +13,20 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
-public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
+public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
     public static final String BINARY = "Binary";
     public static final String TEXT = "Text";
-
-    public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{\\w+\\}");
-
-    public static final int MIN_CONNECTION_TIMEOUT = RequestResponseWebSocketSampler.MIN_CONNECTION_TIMEOUT;
-    public static final int MAX_CONNECTION_TIMEOUT = RequestResponseWebSocketSampler.MAX_CONNECTION_TIMEOUT;
-    public static final int MIN_READ_TIMEOUT = RequestResponseWebSocketSampler.MIN_READ_TIMEOUT;
-    public static final int MAX_READ_TIMEOUT = RequestResponseWebSocketSampler.MAX_READ_TIMEOUT;
 
     JTextField serverField;
     JTextField portField;
@@ -226,67 +216,6 @@ public class RequestResponseWebSocketSamplerGuiPanel extends JPanel {
         else {
             messageField.setText("");
         }
-    }
-
-    private void addIntegerRangeCheck(final JTextField input, int min, int max) {
-        addIntegerRangeCheck(input, min, max, null);
-    }
-
-    private void addIntegerRangeCheck(final JTextField input, int min, int max, JLabel errorMsgField) {
-        input.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                checkIntegerInRange(e.getDocument(), min, max, input, errorMsgField);
-            }
-        });
-    }
-
-    private boolean checkIntegerInRange(Document doc, int min, int max, JTextField field, JLabel errorMsgField) {
-        boolean ok = false;
-        boolean isNumber = false;
-
-        try {
-            String literalContent = stripJMeterVariables(doc.getText(0, doc.getLength()));
-            if (literalContent.trim().length() > 0) {
-                int value = Integer.parseInt(literalContent);
-                ok = value >= min && value <= max;
-                isNumber = true;
-            } else {
-                // Could be just a JMeter variable (e.g. ${port}), which should not be refused!
-                ok = true;
-            }
-        }
-        catch (NumberFormatException nfe) {
-        }
-        catch (BadLocationException e) {
-            // Impossible
-        }
-        if (field != null)
-            if (ok) {
-                field.setForeground(Color.BLACK);
-                if (errorMsgField != null)
-                    errorMsgField.setText("");
-            }
-            else {
-                field.setForeground(Color.RED);
-                if (isNumber && errorMsgField != null)
-                    errorMsgField.setText("Value must >= " + min + " and <= " + max);
-            }
-        return ok;
-    }
-
-    private String stripJMeterVariables(String data) {
-        return DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
 
 
