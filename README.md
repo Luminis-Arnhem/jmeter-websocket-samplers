@@ -22,6 +22,8 @@ For examples of how to use the sampler, see the JMeter .jmx files in the [sample
 
 Each JMeter (ThreadGroup) thread can have at most one active WebSocket connection. In the sampler, you can indicate whether you want to (re) use the current connection, or create a new one. If you create a new one, the current connection is closed at TCP level, but no WebSocket close frames are sent. If you want to close the connection properly (i.e. send a WebSocket close frame and wait for the close response), use the WebSocket Close sampler. 
 
+There is also a WebSocket Open Connection sampler that only opens the WebSocket connection (i.e. sends an upgrade request) and sends no data once the websocket connection is established.
+
 ### Binary response assertion
 
 In addition to WebSocket samplers, the plugin also provides an generic JMeter assertion element that can be used for veryfying binary responses. It's usage is pretty straight forward:
