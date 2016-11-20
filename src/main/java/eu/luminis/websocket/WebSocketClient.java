@@ -55,7 +55,7 @@ public class WebSocketClient {
             connect(headers, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
-    public void connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
+    public Map<String, String> connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
 
         if (state != WebSocketState.CLOSED) {
             throw new IllegalStateException("Cannot connect when state is " + state);
@@ -64,6 +64,7 @@ public class WebSocketClient {
 
         boolean connected = false;
         wsSocket = new Socket();
+        Map<String, String> responseHeaders = null;
 
         try {
             wsSocket.connect(new InetSocketAddress(connectUrl.getHost(), connectUrl.getPort()), connectTimeout);
@@ -96,7 +97,7 @@ public class WebSocketClient {
             httpWriter.println("\r");
             httpWriter.flush();
 
-            checkServerResponse(socketInputStream, encodeNonce);
+            responseHeaders = checkServerResponse(socketInputStream, encodeNonce);
             connected = true;
             state = WebSocketState.CONNECTED;
         }
@@ -111,6 +112,7 @@ public class WebSocketClient {
                 state = WebSocketState.CLOSED;
             }
         }
+        return responseHeaders;
     }
 
     public void dispose() {
@@ -195,7 +197,7 @@ public class WebSocketClient {
             throw new UnexpectedFrameException(frame);
     }
 
-    protected void checkServerResponse(InputStream inputStream, String nonce) throws IOException {
+    protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {
         BufferedReader httpReader = new BufferedReader(new InputStreamReader(inputStream));
         String line = httpReader.readLine();
         if (line != null)
@@ -233,6 +235,7 @@ public class WebSocketClient {
             // Impossible
         }
         // If it gets here, server response is ok.
+        return serverHeaders;
     }
 
     private void checkHttpStatus(String statusLine, int expectedStatusCode) throws HttpException {

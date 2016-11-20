@@ -64,13 +64,14 @@ public class OpenWebSocketSampler extends WebsocketSampler {
         try {
             int readTimeout = Integer.parseInt(getReadTimeout());
             wsClient = new WebSocketClient(url);
-            wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
+            Map<String, String> responseHeaders = wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
             connected = true;
 
             result.sampleEnd(); // End timimg
 
-            result.setResponseCodeOK();
-            result.setResponseMessage("OK");
+            result.setResponseCode("101");
+            result.setResponseMessage("Switching Protocols");
+            result.setResponseHeaders(responseHeaders.entrySet().stream().map( header -> header.getKey() + ": " + header.getValue()).collect(Collectors.joining("\n")));
             isOK = true;
         }
         catch (MalformedURLException e) {

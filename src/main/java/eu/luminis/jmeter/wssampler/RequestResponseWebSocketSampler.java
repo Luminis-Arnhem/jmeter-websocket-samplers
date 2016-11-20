@@ -102,9 +102,10 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         result.sampleStart(); // Start timing
         try {
             int readTimeout = Integer.parseInt(getReadTimeout());
+            Map<String, String> responseHeaders = Collections.emptyMap();
             if (wsClient == null) {
                 wsClient = new WebSocketClient(url);
-                wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
+                responseHeaders = wsClient.connect(additionalHeaders, Integer.parseInt(getConnectTimeout()), readTimeout);
                 connected = true;
             }
             if (getBinary())
@@ -124,8 +125,15 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             }
             result.setDataType(getBinary() ? SampleResult.BINARY : SampleResult.TEXT);
 
-            result.setResponseCodeOK();
-            result.setResponseMessage("OK");
+            if (connected) {
+                result.setResponseCode("101");
+                result.setResponseMessage("Switching Protocols");
+                result.setResponseHeaders(responseHeaders.entrySet().stream().map(header -> header.getKey() + ": " + header.getValue()).collect(Collectors.joining("\n")));
+            }
+            else {
+                result.setResponseCodeOK();
+                result.setResponseMessage("OK");
+            }
             isOK = true;
 
         }
