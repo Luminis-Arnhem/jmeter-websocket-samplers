@@ -217,9 +217,9 @@ public class WebSocketClient {
         while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
 
         // Check server response for mandatory headers
-        if (! "websocket".equals(getLowerCase(serverHeaders.get("Upgrade"))))  // Specification is not clear about whether the check should be case-insensative...
+        if (! "websocket".equals(getLowerCase(serverHeaders.get("Upgrade"))))  // According to RFC 6455 section 4.1, client must match case-insensative
             throw new HttpUpgradeException("Server response should contain 'Upgrade' header with value 'websocket'");
-        if (! "Upgrade".equals(serverHeaders.get("Connection")))
+        if (! "upgrade".equals(getLowerCase(serverHeaders.get("Connection"))))  // According to RFC 6455 section 4.1, client must match case-insensative
             throw new HttpUpgradeException("Server response should contain 'Connection' header with value 'Upgrade'");
         if (! serverHeaders.containsKey("Sec-WebSocket-Accept"))
             throw new HttpUpgradeException("Server response should contain 'Sec-WebSocket-Accept' header");
