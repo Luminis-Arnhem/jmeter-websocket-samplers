@@ -52,3 +52,8 @@ to build. Almost any version of gradle will do (tested with 2.2). Gradle can als
 ## Feedback
 
 Questions, problems, or other feedback? Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
+
+
+## License
+
+This program is open source and licensed under LGPL (see the LICENSE.txt and LICENSE-LESSER.txt files in the distribution). This means that you can use this program for anything you like, and that you can embed it as a library in other applications, even commercial ones. If you do so, the author would appreciate if you include a reference to the original. As of the LGPL license, all modifications and additions to the source code must be published as (L)GPL as well.
