@@ -186,6 +186,18 @@ public class WebSocketClient {
         socketOutputStream.write(new BinaryFrame(requestData).getFrameBytes());
     }
 
+    public void sendPingFrame() throws IOException {
+        sendPingFrame(new byte[0]);
+    }
+
+    public void sendPingFrame(byte[] requestData) throws IOException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot send data frame when state is " + state);
+        }
+
+        socketOutputStream.write(new PingFrame(requestData).getFrameBytes());
+    }
+
     public String receiveText(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
@@ -211,6 +223,21 @@ public class WebSocketClient {
 
         if (frame.isBinary())
             return ((BinaryFrame) frame).getData();
+        else
+            throw new UnexpectedFrameException(frame);
+    }
+
+    public byte[] receivePong(int timeout) throws IOException, UnexpectedFrameException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot receive data frame when state is " + state);
+        }
+
+        Frame frame = Frame.parseFrame(socketInputStream);
+
+        wsSocket.setSoTimeout(timeout);
+
+        if (frame.isPong())
+            return ((PongFrame) frame).getData();
         else
             throw new UnexpectedFrameException(frame);
     }

@@ -84,6 +84,10 @@ public abstract class Frame {
                 return new BinaryFrame(payload);
             case OPCODE_CLOSE:
                 return new CloseFrame(payload);
+            case OPCODE_PING:
+                return new PingFrame(payload);
+            case OPCODE_PONG:
+                return new PongFrame(payload);
             default:
                 throw new RuntimeException("unsupported frame type: " + opCode);
         }
@@ -175,6 +179,14 @@ public abstract class Frame {
     }
 
     public boolean isClose() {
+        return false;
+    }
+
+    public boolean isPing() {
+        return false;
+    }
+
+    public boolean isPong() {
         return false;
     }
 
