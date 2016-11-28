@@ -94,25 +94,25 @@ public class WebSocketClient {
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(socketOutputStream);
-            httpWriter.println("GET " + path + " HTTP/1.1\r");
-            httpWriter.println("Host: " + connectUrl.getHost() + "\r");
+            httpWriter.print("GET " + path + " HTTP/1.1\r\n");
+            httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 String headerLine = header.getKey() + ": " + header.getValue();
                 // Ensure header line does _not_ contain new line
                 if (!headerLine.contains("\r") && !headerLine.contains("\n"))
-                    httpWriter.println(headerLine + "\r");
+                    httpWriter.print(headerLine + "\r\n");
                 else {
                     throw new IllegalArgumentException("Invalid header; contains new line.");
                 }
             }
-            httpWriter.println("Upgrade: websocket\r");
-            httpWriter.println("Connection: Upgrade\r");
+            httpWriter.print("Upgrade: websocket\r\n");
+            httpWriter.print("Connection: Upgrade\r\n");
             byte[] nonce = new byte[16];
             randomGenerator.nextBytes(nonce);
             String encodeNonce = new String(Base64.getEncoder().encode(nonce));
-            httpWriter.println("Sec-WebSocket-Key: " + encodeNonce + "\r");
-            httpWriter.println("Sec-WebSocket-Version: 13\r");
-            httpWriter.println("\r");
+            httpWriter.print("Sec-WebSocket-Key: " + encodeNonce + "\r\n");
+            httpWriter.print("Sec-WebSocket-Version: 13\r\n");
+            httpWriter.print("\r\n");
             httpWriter.flush();
 
             responseHeaders = checkServerResponse(socketInputStream, encodeNonce);
