@@ -82,7 +82,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         WebSocketClient wsClient;
         if (getCreateNewConnection()) {
             try {
-                url = new URL("http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
+                url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
             } catch (MalformedURLException e) {
                 // Impossible
             }
@@ -102,10 +102,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             }
         }
 
-        String path = url.getFile();
-        if (! path.startsWith("/"))
-            path = "/" + path;
-        result.setSamplerData("Connect URL:\nws://" + url.getHost() + ":" + url.getPort() + path
+        result.setSamplerData("Connect URL:\n" + getConnectUrl(url)
                 + (wsClient != null? "\n(using existing connection)": "")
                 + "\n\nRequest data:\n" + getRequestData() + "\n");
 
@@ -303,4 +300,5 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
     public void setReadTimeout(String readTimeout) {
         setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
+
 }

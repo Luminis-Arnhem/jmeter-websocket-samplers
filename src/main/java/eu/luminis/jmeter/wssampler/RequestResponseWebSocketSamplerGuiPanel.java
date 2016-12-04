@@ -94,6 +94,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
 
             JPanel urlPanel = createUrlPanel();
             {
+                connectionRelatedSettings.add(protocolSelector);
                 connectionRelatedSettings.add(serverLabel);
                 connectionRelatedSettings.add(serverField);
                 connectionRelatedSettings.add(pathLabel);
@@ -214,10 +215,8 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
     }
 
     void clearGui() {
-        serverField.setText("");
-        portField.setText("");
+        super.clearGui();
         requestDataField.setText("");
-        pathField.setText("");
         messageField.setText("");
         setCreateNewConnection(true);
     }

@@ -90,9 +90,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
     }
 
     void clearGui() {
-        serverField.setText("");
-        portField.setText("");
-        pathField.setText("");
+        super.clearGui();
         connectionTimeoutErrorLabel.setText("");
     }
 

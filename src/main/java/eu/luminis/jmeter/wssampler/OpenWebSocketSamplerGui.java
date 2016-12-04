@@ -67,6 +67,7 @@ public class OpenWebSocketSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof OpenWebSocketSampler) {
             OpenWebSocketSampler sampler = (OpenWebSocketSampler) element;
+            settingsPanel.setTLS(sampler.getTLS());
             settingsPanel.serverField.setText(sampler.getServer());
             settingsPanel.portField.setText(sampler.getPort());
             settingsPanel.pathField.setText(sampler.getPath());
@@ -80,6 +81,7 @@ public class OpenWebSocketSamplerGui extends AbstractSamplerGui {
         configureTestElement(element);
         if (element instanceof OpenWebSocketSampler) {
             OpenWebSocketSampler sampler = (OpenWebSocketSampler) element;
+            sampler.setTLS(settingsPanel.getTLS());
             sampler.setServer(settingsPanel.serverField.getText());
             sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());

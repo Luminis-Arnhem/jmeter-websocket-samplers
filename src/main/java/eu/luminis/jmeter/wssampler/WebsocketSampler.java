@@ -22,6 +22,8 @@ import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.log.Logger;
 
+import java.net.URL;
+
 abstract public class WebsocketSampler extends AbstractSampler {
 
     public static final int MIN_CONNECTION_TIMEOUT = 1;
@@ -31,6 +33,21 @@ abstract public class WebsocketSampler extends AbstractSampler {
     public static final int DEFAULT_WS_PORT = 80;
 
     protected static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
+
+    protected String getConnectUrl(URL url) {
+        String path = url.getFile();
+        if (! path.startsWith("/"))
+            path = "/" + path;
+
+        if ("http".equals(url.getProtocol()))
+            return "ws" + "://" + url.getHost() + ":" + url.getPort() + path;
+        else if ("https".equals(url.getProtocol()))
+            return "wss" + "://" + url.getHost() + ":" + url.getPort() + path;
+        else {
+            getLogger().error("Invalid protocol: " + url.getProtocol());
+            return "";
+        }
+    }
 
     protected String validatePortNumber(String value) {
         try {
@@ -72,6 +89,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
             getLogger().debug("Closing streams for existing websocket connection");
             webSocketClient.dispose();
         }
+    }
+
+    public boolean getTLS() {
+        return getPropertyAsBoolean("TLS");
+    }
+
+    public void setTLS(boolean value) {
+        setProperty("TLS", value);
     }
 
     abstract protected Logger getLogger();

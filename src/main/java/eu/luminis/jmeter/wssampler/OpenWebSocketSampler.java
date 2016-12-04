@@ -58,15 +58,12 @@ public class OpenWebSocketSampler extends WebsocketSampler {
         URL url = null;
 
         try {
-            url = new URL("http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
+            url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
         } catch (MalformedURLException e) {
             // Impossible
         }
 
-        String path = url.getFile();
-        if (! path.startsWith("/"))
-            path = "/" + path;
-        result.setSamplerData("Connect URL:\nws://" + url.getHost() + ":" + url.getPort() + path + "\n");
+        result.setSamplerData("Connect URL:\n" + getConnectUrl(url) + "\n");
 
         Map<String, String> additionalHeaders = Collections.EMPTY_MAP;
         if (headerManager != null) {

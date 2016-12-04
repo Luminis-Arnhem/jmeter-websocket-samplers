@@ -19,7 +19,9 @@
 package eu.luminis.jmeter.wssampler;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -42,6 +44,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     public static final int MIN_READ_TIMEOUT = WebsocketSampler.MIN_READ_TIMEOUT;
     public static final int MAX_READ_TIMEOUT = WebsocketSampler.MAX_READ_TIMEOUT;
 
+    protected JComboBox<String> protocolSelector;
     protected JTextField serverField;
     protected JTextField portField;
     protected JTextField pathField;
@@ -51,6 +54,12 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected JLabel pathLabel;
     protected JLabel serverLabel;
 
+    void clearGui() {
+        protocolSelector.setSelectedItem("ws");
+        serverField.setText("");
+        portField.setText("");
+        pathField.setText("");
+    }
 
     protected JPanel createUrlPanel() {
         JPanel urlPanel = new JPanel();
@@ -58,6 +67,9 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
         urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0),
                 BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3, 5, 5, 0))));
 
+        protocolSelector = new JComboBox<String>(new String[]{"ws", "wss"});
+        urlPanel.add(protocolSelector);
+        urlPanel.add(Box.createHorizontalStrut(10));
         serverLabel = new JLabel("Server name or IP:");
         urlPanel.add(serverLabel);
         serverField = new JTextField();
@@ -141,4 +153,17 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected String stripJMeterVariables(String data) {
         return WebSocketSamplerGuiPanel.DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
+
+    boolean getTLS() {
+        return "wss".equals(protocolSelector.getSelectedItem());
+    }
+
+    void setTLS(boolean tls) {
+        if (tls)
+            protocolSelector.setSelectedItem("wss");
+        else
+            protocolSelector.setSelectedItem("ws");
+    }
+
+
 }

@@ -18,6 +18,7 @@
  */
 package eu.luminis.websocket;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +57,6 @@ public class WebSocketClient {
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
 
-
     public WebSocketClient(URL wsURL) {
         connectUrl = wsURL;
     }
@@ -81,11 +81,10 @@ public class WebSocketClient {
         state = WebSocketState.CONNECTING;
 
         boolean connected = false;
-        wsSocket = new Socket();
+        wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
 
         try {
-            wsSocket.connect(new InetSocketAddress(connectUrl.getHost(), connectUrl.getPort()), connectTimeout);
             wsSocket.setSoTimeout(readTimeout);
             socketInputStream = wsSocket.getInputStream();
             socketOutputStream = wsSocket.getOutputStream();
@@ -131,6 +130,19 @@ public class WebSocketClient {
             }
         }
         return responseHeaders;
+    }
+
+    private Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+        Socket plainSocket = new Socket();
+        plainSocket.connect(new InetSocketAddress(host, port), connectTimeout);
+        if ("https".equals(connectUrl.getProtocol())) {
+            plainSocket.setSoTimeout(readTimeout);
+            SSLSocketFactory tlsSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            return tlsSocketFactory.createSocket(plainSocket, host, port, true);
+        }
+        else {
+            return plainSocket;
+        }
     }
 
     public void dispose() {
