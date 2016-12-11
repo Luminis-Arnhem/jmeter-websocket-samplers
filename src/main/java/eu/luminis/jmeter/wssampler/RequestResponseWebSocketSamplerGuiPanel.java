@@ -49,10 +49,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
     public static final String BINARY = "Binary";
     public static final String TEXT = "Text";
 
-    JTextField serverField;
-    JTextField portField;
     JTextArea requestDataField;
-    JTextField pathField;
     JComboBox typeSelector;
     private JLabel messageField;
     JRadioButton reuseConnection;
@@ -95,37 +92,14 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
             }
             connectionPanel.add(outerConnectionButtonPanel);
 
-            JPanel urlPanel = new JPanel();
+            JPanel urlPanel = createUrlPanel();
             {
-                urlPanel.setLayout(new BoxLayout(urlPanel, X_AXIS));
-                urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0),
-                        BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3, 5, 5, 0))));
-                JLabel serverLabel = new JLabel("Server name or IP:");
-                urlPanel.add(serverLabel);
                 connectionRelatedSettings.add(serverLabel);
-                connectionRelatedSettings.add(urlPanel);
-                serverField = new JTextField();
-                serverField.setColumns(20);
-                serverField.setMaximumSize(new Dimension(Integer.MAX_VALUE, serverField.getMinimumSize().height));
-                urlPanel.add(serverField);
-                JLabel portLabel = new JLabel("Port:");
-                urlPanel.add(portLabel);
-                connectionRelatedSettings.add(portLabel);
                 connectionRelatedSettings.add(serverField);
-                portField = new JTextField();
-                addIntegerRangeCheck(portField, 1, 65535);
-                portField.setColumns(5);
-                portField.setMaximumSize(portField.getPreferredSize());
-                connectionRelatedSettings.add(portField);
-                urlPanel.add(portField);
-                JLabel pathLabel = new JLabel("Path:");
-                urlPanel.add(pathLabel);
                 connectionRelatedSettings.add(pathLabel);
-                pathField = new JTextField();
-                pathField.setColumns(20);
-                pathField.setMaximumSize(new Dimension(Integer.MAX_VALUE, pathField.getMinimumSize().height));
-                urlPanel.add(pathField);
                 connectionRelatedSettings.add(pathField);
+                connectionRelatedSettings.add(portLabel);
+                connectionRelatedSettings.add(portField);
             }
             connectionPanel.add(urlPanel);
 

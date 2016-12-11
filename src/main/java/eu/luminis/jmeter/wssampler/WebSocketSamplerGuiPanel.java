@@ -18,6 +18,8 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -26,7 +28,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.regex.Pattern;
+
+import static javax.swing.BoxLayout.X_AXIS;
 
 abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
@@ -37,6 +42,44 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     public static final int MIN_READ_TIMEOUT = WebsocketSampler.MIN_READ_TIMEOUT;
     public static final int MAX_READ_TIMEOUT = WebsocketSampler.MAX_READ_TIMEOUT;
 
+    protected JTextField serverField;
+    protected JTextField portField;
+    protected JTextField pathField;
+    protected JTextField connectionTimeoutField;
+    protected JTextField readTimeoutField;
+    protected JLabel portLabel;
+    protected JLabel pathLabel;
+    protected JLabel serverLabel;
+
+
+    protected JPanel createUrlPanel() {
+        JPanel urlPanel = new JPanel();
+        urlPanel.setLayout(new BoxLayout(urlPanel, X_AXIS));
+        urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0),
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3, 5, 5, 0))));
+
+        serverLabel = new JLabel("Server name or IP:");
+        urlPanel.add(serverLabel);
+        serverField = new JTextField();
+        serverField.setColumns(20);
+        serverField.setMaximumSize(new Dimension(Integer.MAX_VALUE, serverField.getMinimumSize().height));
+        urlPanel.add(serverField);
+        portLabel = new JLabel("Port:");
+        urlPanel.add(portLabel);
+        portField = new JTextField();
+        addIntegerRangeCheck(portField, 1, 65535);
+        portField.setColumns(5);
+        portField.setMaximumSize(portField.getPreferredSize());
+        urlPanel.add(portField);
+        pathLabel = new JLabel("Path:");
+        urlPanel.add(pathLabel);
+        pathField = new JTextField();
+        pathField.setColumns(20);
+        pathField.setMaximumSize(new Dimension(Integer.MAX_VALUE, pathField.getMinimumSize().height));
+        urlPanel.add(pathField);
+
+        return urlPanel;
+    }
 
     protected void addIntegerRangeCheck(final JTextField input, int min, int max) {
         addIntegerRangeCheck(input, min, max, null);

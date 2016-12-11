@@ -38,11 +38,6 @@ import static javax.swing.BoxLayout.Y_AXIS;
 
 public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
-    JTextField serverField;
-    JTextField portField;
-    JTextField pathField;
-    JTextField connectionTimeoutField;
-    JTextField readTimeoutField;
     private JLabel connectionTimeoutErrorLabel;
     private JLabel readTimeoutErrorLabel;
 
@@ -56,30 +51,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
         {
             boxPanel.setLayout(new BoxLayout(boxPanel, Y_AXIS));
 
-            JPanel urlPanel = new JPanel();
-            {
-                urlPanel.setLayout(new BoxLayout(urlPanel, X_AXIS));
-                urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0),
-                        BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3, 5, 5, 0))));
-
-                JLabel serverLabel = new JLabel("Server name or IP:");
-                urlPanel.add(serverLabel);
-                serverField = new JTextField();
-                serverField.setColumns(20);
-                urlPanel.add(serverField);
-                JLabel portLabel = new JLabel("Port:");
-                urlPanel.add(portLabel);
-                portField = new JTextField();
-                addIntegerRangeCheck(portField, 1, 65535);
-                portField.setColumns(5);
-                portField.setMaximumSize(portField.getPreferredSize());
-                urlPanel.add(portField);
-                JLabel pathLabel = new JLabel("Path:");
-                urlPanel.add(pathLabel);
-                pathField = new JTextField();
-                pathField.setColumns(20);
-                urlPanel.add(pathField);
-            }
+            JPanel urlPanel = createUrlPanel();
             boxPanel.add(urlPanel);
 
             JPanel connectionTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
