@@ -90,7 +90,6 @@ public class WebSocketClient {
 
         try {
             wsSocket.setSoTimeout(readTimeout);
-            socketInputStream = wsSocket.getInputStream();
             socketOutputStream = wsSocket.getOutputStream();
 
             String path = connectUrl.getFile();  // getFile includes path and query string
@@ -118,6 +117,7 @@ public class WebSocketClient {
             httpWriter.print("\r\n");
             httpWriter.flush();
 
+            socketInputStream = wsSocket.getInputStream();
             responseHeaders = checkServerResponse(socketInputStream, encodeNonce);
             connected = true;
             state = WebSocketState.CONNECTED;
@@ -270,7 +270,7 @@ public class WebSocketClient {
         if (line != null)
             checkHttpStatus(line, 101);
         else
-            throw new HttpProtocolException("Missing status line in response");
+            throw new HttpProtocolException("Empty response; connection closed.");
 
         Map<String, String> serverHeaders = new HashMap<>();
         do {
