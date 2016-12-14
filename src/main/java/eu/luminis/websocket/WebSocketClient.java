@@ -18,6 +18,9 @@
  */
 package eu.luminis.websocket;
 
+import org.apache.jmeter.util.JsseSSLManager;
+import org.apache.jmeter.util.SSLManager;
+
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +31,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -137,8 +141,14 @@ public class WebSocketClient {
         plainSocket.connect(new InetSocketAddress(host, port), connectTimeout);
         if ("https".equals(connectUrl.getProtocol())) {
             plainSocket.setSoTimeout(readTimeout);
-            SSLSocketFactory tlsSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            return tlsSocketFactory.createSocket(plainSocket, host, port, true);
+
+            JsseSSLManager sslMgr = (JsseSSLManager) SSLManager.getInstance();
+            try {
+                SSLSocketFactory tlsSocketFactory = sslMgr.getContext().getSocketFactory();
+                return tlsSocketFactory.createSocket(plainSocket, host, port, true);
+            } catch (GeneralSecurityException e) {
+                throw new IOException(e);
+            }
         }
         else {
             return plainSocket;
