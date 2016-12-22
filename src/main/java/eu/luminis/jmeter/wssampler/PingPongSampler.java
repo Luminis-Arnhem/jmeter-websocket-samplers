@@ -20,72 +20,34 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
-import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 public class PingPongSampler extends WebsocketSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
     @Override
-    public SampleResult sample(Entry entry) {
-        SampleResult result = new SampleResult();
-        result.setSampleLabel(getName());
-        String validationError = validateArguments();
-        if (validationError != null) {
-            result.setResponseCode("Sampler error");
-            result.setResponseMessage("Sampler error: " + validationError);
-            return result;
-        }
-
+    protected WebSocketClient prepareWebSocketClient(SampleResult result) {
         WebSocketClient wsClient = threadLocalCachedConnection.get();
         if (wsClient == null) {
             log.error("There is no connection to re-use");
             result.setResponseCode("Sampler error");
             result.setResponseMessage("Sampler must use existing connection, but there is no connection");
-            return result;
+            return null;
         }
+        else
+            return wsClient;
+    }
 
-        result.sampleStart(); // Start timing
-        try {
-            int readTimeout = Integer.parseInt(getReadTimeout());
-            wsClient.sendPingFrame();
-            wsClient.receivePong(readTimeout);
-            result.sampleEnd(); // End timimg
-
-            result.setResponseCodeOK();
-            result.setResponseMessage("OK");
-            result.setSuccessful(true);
-        }
-        catch (UnexpectedFrameException e) {
-            result.sampleEnd(); // End timimg
-            log.error("Unexpected frame type received: " + e.getReceivedFrame());
-            result.setResponseCode("Sampler error: unexpected frame type.");
-            result.setResponseMessage("Received: " + e.getReceivedFrame());
-        }
-        catch (MalformedURLException e) {
-            // Impossible
-            throw new RuntimeException(e);
-        }
-        catch (IOException ioExc) {
-            result.sampleEnd(); // End timimg
-            log.error("Error during sampling", ioExc);
-            result.setResponseCode("Websocket error");
-            result.setResponseMessage("WebSocket error: " + ioExc);
-        }
-        catch (Exception error) {
-            result.sampleEnd(); // End timimg
-            log.error("Unhandled error during sampling", error);
-            result.setResponseCode("Sampler error");
-            result.setResponseMessage("Sampler error: " + error);
-        }
-
-        return result;
+    @Override
+    public Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
+        wsClient.sendPingFrame();
+        wsClient.receivePong(readTimeout);
+        return null;
     }
 
     @Override
@@ -93,17 +55,10 @@ public class PingPongSampler extends WebsocketSampler {
         return log;
     }
 
-    private String validateArguments() {
+    @Override
+    protected String validateArguments() {
         String errorMsg = validateReadTimeout(getReadTimeout());
         return errorMsg;
-    }
-
-    public String getReadTimeout() {
-        return getPropertyAsString("readTimeout", "" + WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
-    }
-
-    public void setReadTimeout(String readTimeout) {
-        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 
 }

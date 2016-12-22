@@ -60,6 +60,7 @@ public class WebSocketClient {
     private OutputStream socketOutputStream;
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
+    private Map<String, String> additionalHeaders;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = wsURL;
@@ -69,15 +70,35 @@ public class WebSocketClient {
         return connectUrl;
     }
 
-    public void connect() throws IOException, HttpException {
-        connect(Collections.EMPTY_MAP, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    public void setAdditionalUpgradeRequestHeaders(Map<String, String> additionalHeaders) {
+        this.additionalHeaders = additionalHeaders;
     }
 
-    public void connect(Map<String, String> headers) throws IOException, HttpException {
-            connect(headers, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    public Map<String, String>  connect() throws IOException, HttpException {
+        return connect(Collections.EMPTY_MAP, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    }
+
+    public Map<String, String> connect(int connectTimeout, int readTimeout) throws IOException, HttpException {
+        return connect(Collections.EMPTY_MAP, connectTimeout, readTimeout);
+    }
+
+    public Map<String, String> connect(Map<String, String> headers) throws IOException, HttpException {
+        if (additionalHeaders != null && ! additionalHeaders.isEmpty() && headers != null && !headers.isEmpty())
+            throw new IllegalArgumentException("Cannot pass headers when setAdditionalUpgradeRequestHeaders is called before");
+        return connect(headers, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     public Map<String, String> connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
+        if (headers != null && ! headers.isEmpty()) {
+            if (additionalHeaders != null && !additionalHeaders.isEmpty())
+                throw new IllegalArgumentException("Cannot pass headers when setAdditionalUpgradeRequestHeaders is called before");
+        }
+        else {
+            headers = additionalHeaders;
+        }
+        if (headers == null) {
+            headers = Collections.EMPTY_MAP;
+        }
 
         if (state != WebSocketState.CLOSED) {
             throw new IllegalStateException("Cannot connect when state is " + state);
@@ -135,6 +156,11 @@ public class WebSocketClient {
         }
         return responseHeaders;
     }
+
+    public boolean isConnected() {
+        return state == WebSocketState.CONNECTED;
+    }
+
 
     private Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
         Socket plainSocket = new Socket();

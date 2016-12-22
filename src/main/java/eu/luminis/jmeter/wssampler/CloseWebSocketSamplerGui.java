@@ -89,7 +89,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         if (testElement instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) testElement;
             if (getInt(readTimeoutField.getText(), -1) != -1)
-                sampler.setReadTimeout(getInt(readTimeoutField.getText(), 10));
+                sampler.setReadTimeout(readTimeoutField.getText());
         }
     }
 
