@@ -86,6 +86,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
             Map<String, String> responseHeaders = null;
             if (! wsClient.isConnected()) {
                 responseHeaders = wsClient.connect(connectTimeout, readTimeout);
+                result.connectEnd();
                 gotNewConnection = true;
             }
             Object response = doSample(wsClient, result);
