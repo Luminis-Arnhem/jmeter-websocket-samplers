@@ -196,6 +196,10 @@ abstract public class WebsocketSampler extends AbstractSampler {
             int port = Integer.parseInt(value);
             if (port <= 0 || port > 65535)
                 return "Port number '" + value + "' is not valid.";
+            if (port == 80 && useTLS())
+                getLogger().warn("Sampler is using wss protocol (with TLS) on port 80; this might indicate a configuration error");
+            if (port == 443 && !useTLS())
+                getLogger().warn("Sampler is using ws protocol (without TLS) on port 443; this might indicate a configuration error");
         } catch (NumberFormatException notAnumber) {
             return "Port number '" + value + "' is not a number.";
         }
