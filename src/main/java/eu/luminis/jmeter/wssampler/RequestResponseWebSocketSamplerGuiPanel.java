@@ -204,8 +204,9 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
         this.add(splitter);
         splitter.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 
-        this.add(new JPanel());
-
+        JPanel stuffIt = new JPanel();
+        this.add(stuffIt);
+        stuffIt.setAlignmentX(JComponent.LEFT_ALIGNMENT);
     }
 
     private void handleConnectionRadio(ActionEvent e) {

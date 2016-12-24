@@ -19,21 +19,16 @@
 package eu.luminis.jmeter.wssampler;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.util.regex.Pattern;
 
-import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
@@ -50,6 +45,8 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
         JPanel boxPanel = new JPanel();
         {
             boxPanel.setLayout(new BoxLayout(boxPanel, Y_AXIS));
+            boxPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
+            boxPanel.add(Box.createVerticalStrut(3));
 
             JPanel urlPanel = createUrlPanel();
             boxPanel.add(urlPanel);
