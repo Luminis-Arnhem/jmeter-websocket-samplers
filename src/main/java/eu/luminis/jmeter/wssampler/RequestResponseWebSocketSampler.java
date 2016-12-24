@@ -21,7 +21,6 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
@@ -39,18 +38,6 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         super.setName("Request-Response WebSocket Sampler");
         // Set defaults that have non-default values by default
         setCreateNewConnection(true);
-    }
-
-    @Override
-    public String getName() {
-        return getPropertyAsString(TestElement.NAME);
-    }
-
-    @Override
-    public void setName(String name) {
-        if (name != null) {
-            setProperty(TestElement.NAME, name);
-        }
     }
 
     @Override

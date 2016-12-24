@@ -85,10 +85,6 @@ public class OpenWebSocketSampler extends WebsocketSampler {
         return headers;
     }
 
-    private String getTitle() {
-        return this.getName();
-    }
-
     public String getServer() {
         return getPropertyAsString("server");
     }
