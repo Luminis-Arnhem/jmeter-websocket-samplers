@@ -27,6 +27,9 @@ import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.util.JsseSSLManager;
+import org.apache.jmeter.util.SSLManager;
 import org.apache.log.Logger;
 
 import java.io.IOException;
@@ -43,6 +46,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
     public static final int MIN_READ_TIMEOUT = 0;
     public static final int MAX_READ_TIMEOUT = 999999;
     public static final int DEFAULT_WS_PORT = 80;
+
+    // Control reuse of cached SSL Context in subsequent connections on the same thread
+    protected static final boolean USE_CACHED_SSL_CONTEXT = JMeterUtils.getPropDefault("https.use.cached.ssl.context", true);
 
     protected static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
 
@@ -85,6 +91,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
         try {
             Map<String, String> responseHeaders = null;
             if (! wsClient.isConnected()) {
+                if (useTLS() && !USE_CACHED_SSL_CONTEXT)
+                    ((JsseSSLManager) SSLManager.getInstance()).resetContext();
+
                 responseHeaders = wsClient.connect(connectTimeout, readTimeout);
                 result.connectEnd();
                 gotNewConnection = true;
@@ -231,6 +240,10 @@ abstract public class WebsocketSampler extends AbstractSampler {
             headers.put(header.getName(), header.getValue());
         }
         return headers;
+    }
+
+    protected boolean useTLS() {
+        return getTLS();
     }
 
     public String getConnectTimeout() {
