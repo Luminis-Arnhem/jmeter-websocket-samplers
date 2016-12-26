@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -40,14 +41,22 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
 
-        JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel layoutPanel = new JPanel();
         {
-            requestSettingsPanel.add(new JLabel("Pong (read) timeout (ms): "));
-            readTimeoutField = new JTextField();
-            readTimeoutField.setColumns(5);
-            requestSettingsPanel.add(readTimeoutField);
+            layoutPanel.setLayout(new BorderLayout());
+
+            JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                requestSettingsPanel.setBorder(BorderFactory.createTitledBorder("Data (pong frame)"));
+                requestSettingsPanel.add(new JLabel("Pong (read) timeout (ms): "));
+                readTimeoutField = new JTextField();
+                readTimeoutField.setColumns(5);
+                requestSettingsPanel.add(readTimeoutField);
+            }
+            layoutPanel.add(requestSettingsPanel, BorderLayout.NORTH);
         }
-        add(requestSettingsPanel);
+
+        add(layoutPanel, BorderLayout.CENTER);
     }
 
     @Override
