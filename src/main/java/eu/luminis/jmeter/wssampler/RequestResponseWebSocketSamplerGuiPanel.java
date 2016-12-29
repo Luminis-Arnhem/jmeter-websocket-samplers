@@ -198,7 +198,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
                 dataPanel.add(requestSettingsPanel);
             }
             splitter.setTopComponent(dataPanel);
-            splitter.setBottomComponent(new JPanel());
+            splitter.setBottomComponent(createAboutPanel(this));
             splitter.setBorder(null);
         }
         this.add(splitter);

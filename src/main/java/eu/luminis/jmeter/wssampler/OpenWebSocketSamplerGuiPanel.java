@@ -84,6 +84,8 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
         this.setLayout(new BorderLayout());
         add(boxPanel, BorderLayout.NORTH);
+
+        add(createAboutPanel(this));
     }
 
     void clearGui() {

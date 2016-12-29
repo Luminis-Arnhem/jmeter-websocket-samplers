@@ -54,6 +54,7 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
                 requestSettingsPanel.add(readTimeoutField);
             }
             layoutPanel.add(requestSettingsPanel, BorderLayout.NORTH);
+            layoutPanel.add(WebSocketSamplerGuiPanel.createAboutPanel(this));
         }
 
         add(layoutPanel, BorderLayout.CENTER);

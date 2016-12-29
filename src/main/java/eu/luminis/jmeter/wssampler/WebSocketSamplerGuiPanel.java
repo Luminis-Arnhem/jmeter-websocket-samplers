@@ -22,15 +22,22 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.regex.Pattern;
 
 import static javax.swing.BoxLayout.X_AXIS;
@@ -165,5 +172,20 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
             protocolSelector.setSelectedItem("ws");
     }
 
+    static JPanel createAboutPanel(JComponent parent) {
+        JPanel aboutPanel = new JPanel();
+        aboutPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        JLabel aboutLabel = new JLabel("<html>WebSocket Samplers plugin. <a href=\"#\">Check</a> for updates.</html>");
+        aboutLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                AboutDialog.showDialog(SwingUtilities.getWindowAncestor(parent));
+            }
+        });
+        aboutLabel.setFont(parent.getFont().deriveFont(Font.PLAIN, 10));
+        aboutLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        aboutPanel.add(aboutLabel);
+        return aboutPanel;
+    }
 
 }
