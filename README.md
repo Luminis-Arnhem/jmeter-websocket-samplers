@@ -7,10 +7,27 @@ JMeter add-on that defines a number of samplers for load testing WebSocket appli
 Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads) dir, copy it to <jmeter-home>/lib/ext and start JMeter. That's all.
 
 ## Features
+The WebSocket Samplers plugin provides the following features:
+
+* provides 4 different WebSocket samplers
+* samplers do not create additional threads, so large number of JMeter threads can be used,
+* support for wss (WebSocket over TLS)
+* wss support fully compatible with JMeter's SSLManager, including client certificates
+* support for binary WebSocket frames
+* assertion for checking binary responses
+* integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
+* many sample JMeter test plans illustrate the various features.
 
 ### Samplers
 
-Currently, there is only one sampler: the request-response sampler. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. This sampler does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
+Currently, there are four samplers:
+
+* request-response sampler, for performing a basic request-response exchange,
+* ping-pong sampler, for sending a ping and receiving a pong
+* close connection sampler, for properly closing a websocket connection
+* open connection sampler, for _explicitly_ setting up a websocket connection.
+
+The request-response sampler is the most commonly used one. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. This sampler does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
 
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
