@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Peter Doornbosch
+ * Copyright 2016, 2017 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
