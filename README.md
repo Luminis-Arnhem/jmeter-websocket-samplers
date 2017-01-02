@@ -41,6 +41,15 @@ Each JMeter (ThreadGroup) thread can have at most one active WebSocket connectio
 
 There is also a WebSocket Open Connection sampler that only opens the WebSocket connection (i.e. sends an upgrade request) and sends no data once the websocket connection is established.
 
+### WebSockets over TLS
+
+To use the wss (WebSockets over TLS) protocol instead of plain ws, simply select the wss protocol in the Server URL settings. Make sure you also change the port number (e.g. to 443, the default wss port), or you'll get confusing results when trying to set up a TLS connection with a normal HTTP port.
+
+TLS server certificates are accepted without any verification; this is default JMeter behaviour, see for example <http://jmeter.apache.org/usermanual/get-started.html#opt_ssl>.
+
+Using client certificates is also fully supported. It works exactly the same as the default SSL support in JMeter. However, setting it up correctly can be a bit of a challenge; see (https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/jmeter_ssl_with_client_certificates.md) for a step by step guide.
+
+
 ### Binary response assertion
 
 In addition to WebSocket samplers, the plugin also provides an generic JMeter assertion element that can be used for veryfying binary responses. It's usage is pretty straight forward:
