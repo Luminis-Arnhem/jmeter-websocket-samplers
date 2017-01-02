@@ -47,7 +47,7 @@ To use the wss (WebSockets over TLS) protocol instead of plain ws, simply select
 
 TLS server certificates are accepted without any verification; this is default JMeter behaviour, see for example <http://jmeter.apache.org/usermanual/get-started.html#opt_ssl>.
 
-Using client certificates is also fully supported. It works exactly the same as the default SSL support in JMeter. However, setting it up correctly can be a bit of a challenge; see (https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/jmeter_ssl_with_client_certificates.md) for a step by step guide.
+Using client certificates is also fully supported. It works exactly the same as the default SSL support in JMeter. However, setting it up correctly can be a bit of a challenge; see [jmeter_ssl_with_client_certificates.md](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/jmeter_ssl_with_client_certificates.md) for a step by step guide.
 
 
 ### Binary response assertion
