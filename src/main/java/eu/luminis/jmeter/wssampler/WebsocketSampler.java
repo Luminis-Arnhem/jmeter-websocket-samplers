@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.HttpUpgradeException;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -53,6 +54,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
     protected static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
 
     protected HeaderManager headerManager;
+    protected CookieManager cookieManager;
     protected int readTimeout;
     protected int connectTimeout;
 
@@ -80,8 +82,11 @@ abstract public class WebsocketSampler extends AbstractSampler {
         if (wsClient == null)
             return result;
 
-        if (headerManager != null) {
+        if (headerManager != null || cookieManager != null) {
             Map<String, String> additionalHeaders = convertHeaders(headerManager);
+            String cookieHeaderValue = getCookieHeaderValue(cookieManager, wsClient.getConnectUrl());
+            if (cookieHeaderValue != null)
+                additionalHeaders.put("Cookie", cookieHeaderValue);
             wsClient.setAdditionalUpgradeRequestHeaders(additionalHeaders);
             result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
         }
@@ -171,6 +176,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
     public void addTestElement(TestElement el) {
         if (el instanceof HeaderManager) {
             headerManager = (HeaderManager) el;
+        }
+        else if (el instanceof CookieManager) {
+            cookieManager = (CookieManager) el;
         } else {
             super.addTestElement(el);
         }
@@ -239,12 +247,21 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     private Map<String,String> convertHeaders(HeaderManager headerManager) {
         Map<String, String> headers = new HashMap<>();
-        for (int i = 0; i < headerManager.size(); i++) {
-            Header header = headerManager.get(i);
-            headers.put(header.getName(), header.getValue());
-        }
+        if (headerManager != null)
+            for (int i = 0; i < headerManager.size(); i++) {
+                Header header = headerManager.get(i);
+                headers.put(header.getName(), header.getValue());
+            }
         return headers;
     }
+
+    private String getCookieHeaderValue(CookieManager cookieManager, URL url) {
+        if (cookieManager != null)
+            return cookieManager.getCookieHeaderForURL(url);
+        else
+            return null;
+    }
+
 
     protected boolean useTLS() {
         return getTLS();

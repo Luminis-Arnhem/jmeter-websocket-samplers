@@ -39,6 +39,33 @@
           </collectionProp>
         </HeaderManager>
         <hashTree/>
+        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
+          <collectionProp name="CookieManager.cookies">
+            <elementProp name="cookie1" elementType="Cookie" testname="cookie1">
+              <stringProp name="Cookie.value">chocolate</stringProp>
+              <stringProp name="Cookie.domain">echo.websocket.org</stringProp>
+              <stringProp name="Cookie.path">/</stringProp>
+              <boolProp name="Cookie.secure">false</boolProp>
+              <longProp name="Cookie.expires">0</longProp>
+              <boolProp name="Cookie.path_specified">true</boolProp>
+              <boolProp name="Cookie.domain_specified">true</boolProp>
+            </elementProp>
+            <elementProp name="cookie2" elementType="Cookie" testname="cookie2">
+              <stringProp name="Cookie.value">chocolate-chip</stringProp>
+              <stringProp name="Cookie.domain">echo.websocket.org</stringProp>
+              <stringProp name="Cookie.path">/</stringProp>
+              <boolProp name="Cookie.secure">false</boolProp>
+              <longProp name="Cookie.expires">0</longProp>
+              <boolProp name="Cookie.path_specified">true</boolProp>
+              <boolProp name="Cookie.domain_specified">true</boolProp>
+            </elementProp>
+          </collectionProp>
+          <stringProp name="TestPlan.comments">			</stringProp>
+          <boolProp name="CookieManager.clearEachIteration">false</boolProp>
+          <stringProp name="CookieManager.policy">standard</stringProp>
+          <stringProp name="CookieManager.implementation">org.apache.jmeter.protocol.http.control.HC4CookieHandler</stringProp>
+        </CookieManager>
+        <hashTree/>
         <eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler" testname="Basic WebSocket Sample" enabled="true">
           <boolProp name="createNewConnection">true</boolProp>
           <stringProp name="server">echo.websocket.org</stringProp>
@@ -47,6 +74,7 @@
           <stringProp name="requestData">Please echo this!</stringProp>
           <stringProp name="TestPlan.comments"> basic websocket example, sending a text message and receiving the echo&apos;d response</stringProp>
           <boolProp name="binaryPayload">false</boolProp>
+          <boolProp name="TLS">false</boolProp>
         </eu.luminis.jmeter.wssampler.RequestResponseWebSocketSampler>
         <hashTree/>
         <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
