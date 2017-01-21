@@ -21,10 +21,12 @@ package eu.luminis.jmeter.wssampler;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
@@ -32,15 +34,22 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static javax.swing.BoxLayout.X_AXIS;
+import static javax.swing.BoxLayout.Y_AXIS;
 
 abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
@@ -60,6 +69,8 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected JLabel portLabel;
     protected JLabel pathLabel;
     protected JLabel serverLabel;
+    protected JRadioButton reuseConnection;
+    protected JRadioButton newConnection;
 
     void clearGui() {
         protocolSelector.setSelectedItem("ws");
@@ -68,8 +79,18 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
         pathField.setText("");
     }
 
+    /**
+     * Creates a standard URL panel for configuring all URL components: protocol type (ws/wss), server, port, path.
+     */
     protected JPanel createUrlPanel() {
-        JPanel urlPanel = new JPanel();
+        JPanel urlPanel = new JPanel() {
+            @Override
+            public void setEnabled(boolean enabled) {
+                super.setEnabled(enabled);
+                for (Component child: getComponents())
+                    child.setEnabled(enabled);
+            }
+        };
         urlPanel.setLayout(new BoxLayout(urlPanel, X_AXIS));
         urlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0),
                 BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Server URL"), BorderFactory.createEmptyBorder(3, 5, 5, 0))));
@@ -98,6 +119,81 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
         urlPanel.add(pathField);
 
         return urlPanel;
+    }
+
+    /**
+     * Creates a standard connection (settings) panel, including the choice to setup a new connection or reusing an existing one.
+     */
+    protected JPanel createConnectionPanel() {
+
+        List<JComponent> connectionRelatedSettings = new ArrayList<>();
+
+        ActionListener disableConnectionSettingsAction = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean enabled = e.getSource() == newConnection;
+                for (JComponent c: connectionRelatedSettings)
+                    c.setEnabled(enabled);
+            }
+        };
+
+        JPanel connectionPanel = new JPanel();
+        {
+            connectionPanel.setLayout(new BoxLayout(connectionPanel, Y_AXIS));
+            connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
+
+            JPanel outerConnectionButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                JPanel innerConnectionButtonPanel = new JPanel();
+                {
+                    innerConnectionButtonPanel.setLayout(new BoxLayout(innerConnectionButtonPanel, Y_AXIS));
+                    reuseConnection = new JRadioButton("use existing connection");
+                    reuseConnection.addActionListener(disableConnectionSettingsAction);
+                    innerConnectionButtonPanel.add(reuseConnection);
+                    newConnection = new JRadioButton("setup new connection");
+                    newConnection.setSelected(true);
+                    newConnection.addActionListener(disableConnectionSettingsAction);
+                    innerConnectionButtonPanel.add(newConnection);
+
+                    ButtonGroup connectionButtons = new ButtonGroup();
+                    connectionButtons.add(newConnection);
+                    connectionButtons.add(reuseConnection);
+                }
+                outerConnectionButtonPanel.add(innerConnectionButtonPanel);
+            }
+            connectionPanel.add(outerConnectionButtonPanel);
+
+            JPanel urlPanel = createUrlPanel();
+            {
+                connectionRelatedSettings.add(urlPanel);
+            }
+            connectionPanel.add(urlPanel);
+
+            JPanel connectionTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                connectionTimeoutPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
+                JLabel connectionTimeoutLabel = new JLabel("Connection timeout (ms):");
+                connectionTimeoutPanel.add(connectionTimeoutLabel);
+                connectionTimeoutField = new JTextField();
+                connectionTimeoutField.setColumns(10);
+                connectionTimeoutPanel.add(connectionTimeoutField);
+                JLabel connectionTimeoutErrorLabel = new JLabel();
+                connectionTimeoutErrorLabel.setForeground(Color.RED);
+                addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
+                connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
+                connectionRelatedSettings.add(connectionTimeoutLabel);
+                connectionRelatedSettings.add(connectionTimeoutField);
+            }
+            connectionPanel.add(connectionTimeoutPanel);
+        }
+        return connectionPanel;
+    }
+
+    protected void setCreateNewConnection(boolean yesOrNo) {
+        newConnection.setSelected(yesOrNo);
+        reuseConnection.setSelected(! yesOrNo);
+        ActionEvent changedSelectionEvent = new ActionEvent(yesOrNo? newConnection: reuseConnection, 0, "dummy");
+        Arrays.stream(reuseConnection.getActionListeners()).forEach(l -> l.actionPerformed(changedSelectionEvent));
     }
 
     protected void addIntegerRangeCheck(final JTextField input, int min, int max) {
@@ -158,7 +254,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     }
 
     protected String stripJMeterVariables(String data) {
-        return WebSocketSamplerGuiPanel.DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
+        return DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
 
     boolean getTLS() {

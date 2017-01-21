@@ -21,13 +21,11 @@ package eu.luminis.jmeter.wssampler;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -38,8 +36,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
@@ -52,11 +49,6 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
     JTextArea requestDataField;
     JComboBox typeSelector;
     private JLabel messageField;
-    JRadioButton reuseConnection;
-    JRadioButton newConnection;
-    List<JComponent> connectionRelatedSettings = new ArrayList<>();
-    JTextField connectionTimeoutField;
-    JTextField readTimeoutField;
 
     public RequestResponseWebSocketSamplerGuiPanel() {
         init();
@@ -66,61 +58,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
 
         this.setLayout(new BoxLayout(this, Y_AXIS));
 
-        JPanel connectionPanel = new JPanel();
-        {
-            connectionPanel.setLayout(new BoxLayout(connectionPanel, Y_AXIS));
-            connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
-
-            JPanel outerConnectionButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            {
-                JPanel innerConnectionButtonPanel = new JPanel();
-                {
-                    innerConnectionButtonPanel.setLayout(new BoxLayout(innerConnectionButtonPanel, Y_AXIS));
-                    reuseConnection = new JRadioButton("use existing connection");
-                    reuseConnection.addActionListener(e -> handleConnectionRadio(e));
-                    innerConnectionButtonPanel.add(reuseConnection);
-                    newConnection = new JRadioButton("setup new connection");
-                    newConnection.setSelected(true);
-                    newConnection.addActionListener(e -> handleConnectionRadio(e));
-                    innerConnectionButtonPanel.add(newConnection);
-
-                    ButtonGroup connectionButtons = new ButtonGroup();
-                    connectionButtons.add(newConnection);
-                    connectionButtons.add(reuseConnection);
-                }
-                outerConnectionButtonPanel.add(innerConnectionButtonPanel);
-            }
-            connectionPanel.add(outerConnectionButtonPanel);
-
-            JPanel urlPanel = createUrlPanel();
-            {
-                connectionRelatedSettings.add(protocolSelector);
-                connectionRelatedSettings.add(serverLabel);
-                connectionRelatedSettings.add(serverField);
-                connectionRelatedSettings.add(pathLabel);
-                connectionRelatedSettings.add(pathField);
-                connectionRelatedSettings.add(portLabel);
-                connectionRelatedSettings.add(portField);
-            }
-            connectionPanel.add(urlPanel);
-
-            JPanel connectionTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            {
-                connectionTimeoutPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
-                JLabel connectionTimeoutLabel = new JLabel("Connection timeout (ms):");
-                connectionTimeoutPanel.add(connectionTimeoutLabel);
-                connectionTimeoutField = new JTextField();
-                connectionTimeoutField.setColumns(10);
-                connectionTimeoutPanel.add(connectionTimeoutField);
-                JLabel connectionTimeoutErrorLabel = new JLabel();
-                connectionTimeoutErrorLabel.setForeground(Color.RED);
-                addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
-                connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
-                connectionRelatedSettings.add(connectionTimeoutLabel);
-                connectionRelatedSettings.add(connectionTimeoutField);
-            }
-            connectionPanel.add(connectionTimeoutPanel);
-        }
+        JPanel connectionPanel = createConnectionPanel();
         this.add(connectionPanel);
         connectionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 
@@ -209,23 +147,11 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
         stuffIt.setAlignmentX(JComponent.LEFT_ALIGNMENT);
     }
 
-    private void handleConnectionRadio(ActionEvent e) {
-        boolean enabled = e.getSource() == newConnection;
-        for (JComponent c: connectionRelatedSettings)
-            c.setEnabled(enabled);
-    }
-
     void clearGui() {
         super.clearGui();
         requestDataField.setText("");
         messageField.setText("");
         setCreateNewConnection(true);
-    }
-
-    void setCreateNewConnection(boolean yesOrNo) {
-        newConnection.setSelected(yesOrNo);
-        reuseConnection.setSelected(! yesOrNo);
-        handleConnectionRadio(new ActionEvent(yesOrNo? newConnection: reuseConnection, 0, "dummy"));
     }
 
     private void checkBinary() {
