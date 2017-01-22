@@ -108,9 +108,12 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
     }
 
     protected String validateArguments() {
-        String errorMsg = validatePortNumber(getPort());
-        if (errorMsg == null)
-            errorMsg = validateConnectionTimeout(getConnectTimeout());
+        String errorMsg = null;
+        if (getCreateNewConnection()) {
+            errorMsg = validatePortNumber(getPort());
+            if (errorMsg == null)
+                errorMsg = validateConnectionTimeout(getConnectTimeout());
+        }
         if (errorMsg == null)
             errorMsg = validateReadTimeout(getReadTimeout());
 
