@@ -177,12 +177,13 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                 connectionTimeoutField = new JTextField();
                 connectionTimeoutField.setColumns(10);
                 connectionTimeoutPanel.add(connectionTimeoutField);
-                JLabel connectionTimeoutErrorLabel = new JLabel();
+                JLabel connectionTimeoutErrorLabel = new JErrorMessageLabel();
                 connectionTimeoutErrorLabel.setForeground(Color.RED);
                 addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
                 connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
                 connectionRelatedSettings.add(connectionTimeoutLabel);
                 connectionRelatedSettings.add(connectionTimeoutField);
+                connectionRelatedSettings.add(connectionTimeoutErrorLabel);
             }
             connectionPanel.add(connectionTimeoutPanel);
         }
