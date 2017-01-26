@@ -82,13 +82,15 @@ abstract public class WebsocketSampler extends AbstractSampler {
         if (wsClient == null)
             return result;
 
-        if (headerManager != null || cookieManager != null) {
-            Map<String, String> additionalHeaders = convertHeaders(headerManager);
-            String cookieHeaderValue = getCookieHeaderValue(cookieManager, wsClient.getConnectUrl());
-            if (cookieHeaderValue != null)
-                additionalHeaders.put("Cookie", cookieHeaderValue);
-            wsClient.setAdditionalUpgradeRequestHeaders(additionalHeaders);
-            result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
+        if (! wsClient.isConnected()) {
+            if (headerManager != null || cookieManager != null) {
+                Map<String, String> additionalHeaders = convertHeaders(headerManager);
+                String cookieHeaderValue = getCookieHeaderValue(cookieManager, wsClient.getConnectUrl());
+                if (cookieHeaderValue != null)
+                    additionalHeaders.put("Cookie", cookieHeaderValue);
+                wsClient.setAdditionalUpgradeRequestHeaders(additionalHeaders);
+                result.setRequestHeaders(additionalHeaders.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining("\n")));
+            }
         }
 
         boolean gotNewConnection = false;
