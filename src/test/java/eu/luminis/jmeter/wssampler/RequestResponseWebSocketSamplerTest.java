@@ -1,5 +1,6 @@
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.HttpUpgradeException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -12,6 +13,7 @@ import org.mockito.stubbing.Answer;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -52,14 +54,29 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.getRequestHeaders().isEmpty());
     }
 
+    @Test
+    public void testFailingUpgradeRequest() throws Exception {
 
+        WebSocketClient mockWsClient = createDefaultWsClientMock();
+        when(mockWsClient.connect(anyInt(), anyInt())).thenThrow(new HttpUpgradeException(404));
+
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mockWsClient;
+            }
+        };
+
+        SampleResult result = sampler.sample(null);
+        assertFalse(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
+    }
 
 
     WebSocketClient createDefaultWsClientMock() {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com"));
-            //when(mockWsClient.receiveText(anyInt())).thenReturn("ws-response-data");
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
                 @Override
                 public String answer(InvocationOnMock invocation) throws Throwable {

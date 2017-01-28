@@ -101,6 +101,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
                 if (useTLS() && !USE_CACHED_SSL_CONTEXT)
                     ((JsseSSLManager) SSLManager.getInstance()).resetContext();
 
+                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
+
                 responseHeaders = wsClient.connect(connectTimeout, readTimeout);
                 result.connectEnd();
                 gotNewConnection = true;
