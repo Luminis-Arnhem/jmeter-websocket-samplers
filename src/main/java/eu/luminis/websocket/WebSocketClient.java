@@ -22,10 +22,8 @@ import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
 
 import javax.net.ssl.SSLSocketFactory;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
@@ -291,7 +289,7 @@ public class WebSocketClient {
     }
 
     protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {
-        BufferedReader httpReader = new BufferedReader(new InputStreamReader(inputStream));
+        HttpLineReader httpReader = new HttpLineReader(inputStream);
         String line = httpReader.readLine();
         if (line != null)
             checkHttpStatus(line, 101);

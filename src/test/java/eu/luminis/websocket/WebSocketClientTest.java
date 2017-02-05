@@ -22,10 +22,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.URL;
+
+import static org.junit.Assert.assertEquals;
 
 public class WebSocketClientTest {
 
@@ -37,6 +41,7 @@ public class WebSocketClientTest {
         String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
         String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
         new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+        // The test is that it gets here: the server response contains all necessary headers.
     }
 
     @Test
@@ -109,6 +114,17 @@ public class WebSocketClientTest {
     public void testReceiveOnClosedConnection() throws IOException, UnexpectedFrameException {
         new WebSocketClient(new URL("http://nowhere")).receiveText(3000);
     }
+
+    @Test
+    public void testProcessingHttpResponseDoesNotEatFrameBytes() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\nfirstframebytes";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        ByteArrayInputStream bytes = new ByteArrayInputStream(serverResponse.getBytes());
+        new WebSocketClient(new URL("http://nowhere")).checkServerResponse(bytes, clientNonce);
+        // Check that after processing the HTTP response, all bytes that are not part of the response are still in the stream.
+        assertEquals("firstframebytes", new BufferedReader(new InputStreamReader(bytes)).readLine());
+    }
+
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         Field field = null;
