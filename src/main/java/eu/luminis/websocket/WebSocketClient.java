@@ -301,8 +301,13 @@ public class WebSocketClient {
             line = httpReader.readLine();
             if (line != null) {
                 String[] values = line.split(": ");
-                if (values.length > 1)
-                    serverHeaders.put(values[0], values[1]);
+                if (values.length > 1) {
+                    String key = values[0];
+                    if (serverHeaders.containsKey(key))
+                        serverHeaders.put(key, serverHeaders.get(key) + ", " + compvalues[1]);
+                    else
+                        serverHeaders.put(key, values[1]);
+                }
             }
         }
         while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.

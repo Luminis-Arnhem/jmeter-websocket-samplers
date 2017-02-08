@@ -147,6 +147,16 @@ public class WebSocketClientTest {
         assertTrue(headers.containsKey("Upgrade"));
     }
 
+    @Test
+    public void duplicateHeaderShouldResultInMultipleValue() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nCache-Control: no-cache\r\nCache-Control: no-store\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertEquals("no-cache, no-store", headers.get("Cache-Control"));
+    }
+
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         Field field = null;
         try {
