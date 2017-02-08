@@ -28,8 +28,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class WebSocketClientTest {
 
@@ -125,6 +127,25 @@ public class WebSocketClientTest {
         assertEquals("firstframebytes", new BufferedReader(new InputStreamReader(bytes)).readLine());
     }
 
+    @Test
+    public void funnyCasedUpgradeHeaderShouldBeAccepted() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nupgRade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertTrue(headers.containsKey("Upgrade"));
+    }
+
+    @Test
+    public void funnyCasedConnectionHeaderShouldBeAccepted() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConNECtion: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertTrue(headers.containsKey("Upgrade"));
+    }
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         Field field = null;

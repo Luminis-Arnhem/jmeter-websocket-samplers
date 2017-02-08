@@ -34,9 +34,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -296,7 +296,7 @@ public class WebSocketClient {
         else
             throw new HttpProtocolException("Empty response; connection closed.");
 
-        Map<String, String> serverHeaders = new HashMap<>();
+        Map<String, String> serverHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);  // Field names of Http Headers are case-insensitive, see https://tools.ietf.org/html/rfc2616#section-4.2
         do {
             line = httpReader.readLine();
             if (line != null) {
