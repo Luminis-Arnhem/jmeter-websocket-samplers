@@ -157,6 +157,36 @@ public class WebSocketClientTest {
         assertEquals("no-cache, no-store", headers.get("Cache-Control"));
     }
 
+    @Test
+    public void headerValueWithColonShouldNotBeTruncated() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUser-Agent: Mozilla:4.0\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertEquals("Mozilla:4.0", headers.get("User-Agent"));
+    }
+
+    @Test
+    public void httpHeaderWithoutSpacesShouldBeAccepted() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade:websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertEquals("websocket", headers.get("Upgrade"));
+    }
+
+    @Test
+    public void headerValuesWithSurroundingSpacesShouldBeTrimmed() throws IOException {
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade:   websocket   \r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
+        String clientNonce = "dGhlIHNhbXBsZSBub25jZQ==";
+        Map<String, String> headers = new WebSocketClient(new URL("http://nowhere")).checkServerResponse(new ByteArrayInputStream(serverResponse.getBytes()), clientNonce);
+
+        // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
+        assertEquals("websocket", headers.get("Upgrade"));
+    }
+
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         Field field = null;
         try {

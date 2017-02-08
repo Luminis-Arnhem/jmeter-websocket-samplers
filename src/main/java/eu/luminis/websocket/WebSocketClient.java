@@ -300,13 +300,14 @@ public class WebSocketClient {
         do {
             line = httpReader.readLine();
             if (line != null) {
-                String[] values = line.split(": ");
+                String[] values = line.split(":", 2);
                 if (values.length > 1) {
                     String key = values[0];
+                    String value = values[1].trim();
                     if (serverHeaders.containsKey(key))
-                        serverHeaders.put(key, serverHeaders.get(key) + ", " + compvalues[1]);
+                        serverHeaders.put(key, serverHeaders.get(key) + ", " + value);
                     else
-                        serverHeaders.put(key, values[1]);
+                        serverHeaders.put(key, value);
                 }
             }
         }
