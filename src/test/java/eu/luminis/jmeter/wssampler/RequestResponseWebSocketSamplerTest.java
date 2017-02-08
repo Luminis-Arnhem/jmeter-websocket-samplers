@@ -49,7 +49,7 @@ public class RequestResponseWebSocketSamplerTest {
         };
 
         SampleResult result = sampler.sample(null);
-        assertTrue(result.getTime() > 300);
+        assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);  // A bit tricky of course, but on decent computers the call should not take more than 100 ms....
         assertEquals("ws-response-data", result.getResponseDataAsString());
     }
