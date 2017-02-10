@@ -263,10 +263,9 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
-        Frame frame = Frame.parseFrame(socketInputStream);
-
         wsSocket.setSoTimeout(timeout);
 
+        Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isBinary())
             return ((BinaryFrame) frame).getData();
         else
@@ -278,10 +277,9 @@ public class WebSocketClient {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
-        Frame frame = Frame.parseFrame(socketInputStream);
-
         wsSocket.setSoTimeout(timeout);
 
+        Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isPong())
             return ((PongFrame) frame).getData();
         else
