@@ -83,6 +83,7 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
             dataPanel.add(requestSettingsPanel);
         }
         boxPanel.add(dataPanel);
+        boxPanel.add(createAboutPanel(this));
 
         setLayout(new BorderLayout());
         add(boxPanel, BorderLayout.NORTH);
