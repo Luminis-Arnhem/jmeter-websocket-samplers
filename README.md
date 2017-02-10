@@ -9,29 +9,32 @@ Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocke
 ## Features
 The WebSocket Samplers plugin provides the following features:
 
-* provides 4 different WebSocket samplers
+* provides 6 different WebSocket samplers
 * samplers do not create additional threads, so large number of JMeter threads can be used,
 * support for wss (WebSocket over TLS)
 * wss support fully compatible with JMeter's SSLManager, including client certificates
 * support for binary WebSocket frames
 * assertion for checking binary responses
 * integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
+* sends cookies defined by JMeter's Cookie Manager with each upgrade request (i.e. the HTTP request that initiates the WebSocket connection)
 * many sample JMeter test plans illustrate the various features.
 
 ### Samplers
 
-Currently, there are four samplers:
+Currently, there are six samplers:
 
 * request-response sampler, for performing a basic request-response exchange,
 * ping-pong sampler, for sending a ping and receiving a pong
 * close connection sampler, for properly closing a websocket connection
-* open connection sampler, for _explicitly_ setting up a websocket connection.
+* single-read sampler, for receiving one (text or binary) WebSocket frame
+* single-write sampler, for sending one (text or binary) WebSocket frame
+* open connection sampler, for _explicitly_ setting up a WebSocket connection.
 
-The request-response sampler is the most commonly used one. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. This sampler does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
+The request-response sampler is the most commonly used one. With this sampler you can test a request-response exchange, much like an ordinary HTTP request/response. As all other samplers in this plugin, it does not create any thread by itself, but instead performs all communication on the JMeter ThreadGroup thread. This implies that it scales very well, comparable with standard JMeter HTTP sampler.
 
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
-The request-response sampler supports both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There is a work around however: use a "Save Responses to a file" listener (see sample).
+The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There is a work around however: use a "Save Responses to a file" listener (see sample).
 
 For examples of how to use the sampler, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
