@@ -203,6 +203,18 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
     }
 
+    protected void processDefaultReadResponse(Object response, boolean binary, SampleResult result) {
+        if (binary) {
+            result.setResponseData((byte[]) response);
+            getLogger().debug("Received binary data: " + BinaryUtils.formatBinary((byte[]) response));
+        }
+        else {
+            result.setResponseData((String) response, null);
+            getLogger().debug("Received text: '" + response + "'");
+        }
+        result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
+    }
+
     protected String validatePortNumber(String value) {
         try {
             int port = Integer.parseInt(value);

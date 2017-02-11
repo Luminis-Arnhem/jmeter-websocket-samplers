@@ -70,15 +70,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected void postProcessResponse(Object response, SampleResult result) {
-        if (getBinary()) {
-            result.setResponseData((byte[]) response);
-            log.debug("Received binary data: " + BinaryUtils.formatBinary((byte[]) response));
-        }
-        else {
-            result.setResponseData((String) response, null);
-            log.debug("Received text: '" + response + "'");
-        }
-        result.setDataType(getBinary() ? SampleResult.BINARY : SampleResult.TEXT);
+        processDefaultReadResponse(response, getBinary(), result);
     }
 
 
