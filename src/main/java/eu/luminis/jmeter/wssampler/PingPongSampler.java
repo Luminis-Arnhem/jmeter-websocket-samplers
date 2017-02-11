@@ -34,7 +34,7 @@ public class PingPongSampler extends WebsocketSampler {
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
         WebSocketClient wsClient = threadLocalCachedConnection.get();
         if (wsClient == null) {
-            log.error("There is no connection to re-use");
+            log.error("Sampler '"+ getName() + "': there is no connection to re-use");
             result.setResponseCode("Sampler error");
             result.setResponseMessage("Sampler must use existing connection, but there is no connection");
             return null;

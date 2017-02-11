@@ -134,13 +134,13 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
         catch (HttpUpgradeException upgradeError) {
             result.sampleEnd(); // End timimg
-            log.error("Http upgrade error", upgradeError);
+            getLogger().error("Http upgrade error in sampler '" + getName() + "'.", upgradeError);
             result.setResponseCode(upgradeError.getStatusCode());
             result.setResponseMessage(upgradeError.getMessage());
         }
         catch (IOException ioExc) {
             result.sampleEnd(); // End timimg
-            log.error("Error during sampling", ioExc);
+            getLogger().error("I/O Error in sampler '" + getName() + "'.", ioExc);
             result.setResponseCode("Websocket error");
             result.setResponseMessage("WebSocket error: " + ioExc);
         }
@@ -151,7 +151,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
         catch (Exception error) {
             result.sampleEnd(); // End timimg
-            log.error("Unhandled error during sampling", error);
+            getLogger().error("Unhandled error in sampler '"  + getName() + "'.", error);
             result.setResponseCode("Sampler error");
             result.setResponseMessage("Sampler error: " + error);
         }
@@ -172,7 +172,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
         result.sampleEnd(); // End timimg
-        getLogger().error("Unexpected frame type received: " + e.getReceivedFrame());
+        getLogger().error("Unexpected frame type received in sampler '" + getName() + "': " + e.getReceivedFrame());
         result.setResponseCode("Sampler error: unexpected frame type.");
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
@@ -198,7 +198,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
         else if ("https".equals(url.getProtocol()))
             return "wss" + "://" + url.getHost() + ":" + url.getPort() + path;
         else {
-            getLogger().error("Invalid protocol: " + url.getProtocol());
+            getLogger().error("Invalid protocol in sampler '"+ getName() + "': " + url.getProtocol());
             return "";
         }
     }
@@ -206,11 +206,11 @@ abstract public class WebsocketSampler extends AbstractSampler {
     protected void processDefaultReadResponse(Object response, boolean binary, SampleResult result) {
         if (binary) {
             result.setResponseData((byte[]) response);
-            getLogger().debug("Received binary data: " + BinaryUtils.formatBinary((byte[]) response));
+            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary((byte[]) response));
         }
         else {
             result.setResponseData((String) response, null);
-            getLogger().debug("Received text: '" + response + "'");
+            getLogger().debug("Sampler '" + getName() + "' received text: '" + response + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
     }
@@ -221,9 +221,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
             if (port <= 0 || port > 65535)
                 return "Port number '" + value + "' is not valid.";
             if (port == 80 && useTLS())
-                getLogger().warn("Sampler is using wss protocol (with TLS) on port 80; this might indicate a configuration error");
+                getLogger().warn("Sampler '"+ getName() + "' is using wss protocol (with TLS) on port 80; this might indicate a configuration error");
             if (port == 443 && !useTLS())
-                getLogger().warn("Sampler is using ws protocol (without TLS) on port 443; this might indicate a configuration error");
+                getLogger().warn("Sampler '"+ getName() + "' is using ws protocol (without TLS) on port 443; this might indicate a configuration error");
         } catch (NumberFormatException notAnumber) {
             return "Port number '" + value + "' is not a number.";
         }
@@ -256,7 +256,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected void dispose(WebSocketClient webSocketClient) {
         if (webSocketClient != null) {
-            getLogger().debug("Closing streams for existing websocket connection");
+            getLogger().debug("Sampler  '"+ getName() + "': closing streams for existing websocket connection");
             webSocketClient.dispose();
         }
     }

@@ -55,7 +55,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
                 return wsClient;
             }
             else {
-                log.error("There is no connection to re-use");
+                log.error("Sampler '"+ getName() + "': there is no connection to re-use");
                 result.setResponseCode("Sampler error");
                 result.setResponseMessage("Sampler configured for using existing connection, but there is no connection");
                 return null;

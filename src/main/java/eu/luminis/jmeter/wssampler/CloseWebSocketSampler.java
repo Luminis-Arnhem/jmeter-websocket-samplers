@@ -36,7 +36,7 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
         WebSocketClient wsClient = threadLocalCachedConnection.get();
         if (wsClient == null) {
-            log.warn("There is no connection; nothing to close.");
+            log.warn("Sampler '"+ getName() + "': there is no connection; nothing to close.");
             result.setSamplerData("No request sent.");
             result.setResponseMessage("No connection; nothing to close.");
             return null;
@@ -67,7 +67,7 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
-        log.error("Close request was not answered with close response, but " + e.getReceivedFrame());
+        log.error("Sampler '"+ getName() + "': close request was not answered with close response, but " + e.getReceivedFrame());
         result.setResponseCode("WebSocket error: unsuccesful close.");
         result.setResponseMessage("WebSocket error: received not a close frame, but " + e.getReceivedFrame());
     }

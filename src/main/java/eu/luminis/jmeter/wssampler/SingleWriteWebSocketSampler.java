@@ -55,7 +55,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
                 return wsClient;
             }
             else {
-                log.error("There is no connection to re-use");
+                log.error("Sampler '"+ getName() + "': there is no connection to re-use");
                 result.setResponseCode("Sampler error");
                 result.setResponseMessage("Sampler configured for using existing connection, but there is no connection");
                 return null;
@@ -72,7 +72,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
             catch (NumberFormatException noNumber) {
                 // Thrown by BinaryUtils.parseBinaryString
                 result.sampleEnd(); // End timimg
-                log.error("Request data is not binary: " + getRequestData());
+                log.error("Sampler '"+ getName() + "': request data is not binary: " + getRequestData());
                 result.setResponseCode("Sampler Error");
                 result.setResponseMessage("Request data is not binary: " + getRequestData());
                 throw new SamplingAbortedException();
