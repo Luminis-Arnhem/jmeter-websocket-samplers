@@ -38,8 +38,15 @@ public class FrameFilter extends ConfigTestElement {
 
     public Frame receiveFrame(WebSocketClient wsClient, int readTimeout) throws IOException {
         Frame receivedFrame;
+        int socketTimeout = readTimeout;
         do {
-            receivedFrame = wsClient.receiveFrame(readTimeout);
+            long start = System.currentTimeMillis();
+            receivedFrame = wsClient.receiveFrame(socketTimeout);
+            long duration = System.currentTimeMillis() - start;
+            if (duration < socketTimeout)
+                socketTimeout -= duration;
+            else
+                socketTimeout = 0;
         }
         while (matchesFilter(receivedFrame));
         return receivedFrame;
