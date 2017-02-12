@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
@@ -83,7 +84,17 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
         else
             wsClient.sendTextFrame(getRequestData());
 
-        return getBinary()? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        Frame receivedFrame;
+        if (frameFilter != null) {
+            receivedFrame = frameFilter.receiveFrame(wsClient, readTimeout);
+            if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
+                return receivedFrame;
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+
+        }
+        else
+            return getBinary()? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
     }
 
     @Override

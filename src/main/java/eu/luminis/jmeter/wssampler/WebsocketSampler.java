@@ -55,6 +55,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
+    protected FrameFilter frameFilter;
     protected int readTimeout;
     protected int connectTimeout;
 
@@ -183,7 +184,12 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
         else if (el instanceof CookieManager) {
             cookieManager = (CookieManager) el;
-        } else {
+        }
+        else if (el instanceof FrameFilter) {
+            frameFilter = (FrameFilter) el;
+            getLogger().debug("Sampler " + this + " configured with frame filter " + el);
+        }
+        else {
             super.addTestElement(el);
         }
     }
