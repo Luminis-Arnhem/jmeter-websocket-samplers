@@ -48,14 +48,19 @@ public class FrameFilter extends ConfigTestElement {
             else
                 socketTimeout = 0;
         }
-        while (matchesFilter(receivedFrame));
+        while (matchesFilter(receivedFrame, wsClient));
         return receivedFrame;
     }
 
-    private boolean matchesFilter(Frame receivedFrame) {
+    private boolean matchesFilter(Frame receivedFrame, WebSocketClient wsClient) throws IOException {
         boolean match = receivedFrame.isPing() || receivedFrame.isPong();
-        if (match)
+        if (match) {
             log.debug("Filter discards frame " + receivedFrame);
+            if (getReplyToPing()) {
+                log.debug("Automatically replying to ping with a pong.");
+                wsClient.sendPongFrame();   // TODO: check consequences of throwing an IOException here....
+            }
+        }
         return match;
     }
 
@@ -79,4 +84,11 @@ public class FrameFilter extends ConfigTestElement {
         return "Frame Filter '" + getName() + "'";
     }
 
+    public boolean getReplyToPing() {
+        return getPropertyAsBoolean("replyToPing");
+    }
+
+    public void setReplyToPing(boolean value) {
+        setProperty("replyToPing", value);
+    }
 }

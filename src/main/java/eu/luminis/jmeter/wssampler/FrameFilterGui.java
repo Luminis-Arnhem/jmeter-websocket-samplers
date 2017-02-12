@@ -21,19 +21,17 @@ package eu.luminis.jmeter.wssampler;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.testelement.TestElement;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 import java.awt.BorderLayout;
 
 public class FrameFilterGui extends AbstractConfigGui {
 
-    private JComponent settingsPanel;
+    private FrameFilterGuiPanel settingsPanel;
 
     public FrameFilterGui() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
-        settingsPanel = new JLabel("Filters (discards) both ping and pong frames");
+        settingsPanel = new FrameFilterGuiPanel();
         add(settingsPanel, BorderLayout.CENTER);
     }
 
@@ -57,6 +55,11 @@ public class FrameFilterGui extends AbstractConfigGui {
     @Override
     public void configure(TestElement element) {
         super.configure(element);
+        if (element instanceof FrameFilter) {
+            FrameFilter filter = (FrameFilter) element;
+            settingsPanel.replyToPing.setSelected(filter.getReplyToPing());
+        }
+
     }
 
     @Override
@@ -64,7 +67,7 @@ public class FrameFilterGui extends AbstractConfigGui {
         configureTestElement(element);
         if (element instanceof FrameFilter) {
             FrameFilter filter = (FrameFilter) element;
-            filter.setName(getName());
+            filter.setReplyToPing(settingsPanel.replyToPing.isSelected());
         }
     }
 

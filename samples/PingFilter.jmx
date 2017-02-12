@@ -44,10 +44,12 @@
             <stringProp name="path"></stringProp>
             <boolProp name="binaryPayload">false</boolProp>
             <boolProp name="createNewConnection">false</boolProp>
-            <stringProp name="readTimeout">45000</stringProp>
+            <stringProp name="readTimeout">70000</stringProp>
           </eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler>
           <hashTree/>
-          <eu.luminis.jmeter.wssampler.FrameFilter guiclass="eu.luminis.jmeter.wssampler.FrameFilterGui" testclass="eu.luminis.jmeter.wssampler.FrameFilter" testname="Ping Frame Filter" enabled="true"/>
+          <eu.luminis.jmeter.wssampler.FrameFilter guiclass="eu.luminis.jmeter.wssampler.FrameFilterGui" testclass="eu.luminis.jmeter.wssampler.FrameFilter" testname="Ping Frame Filter" enabled="true">
+            <boolProp name="replyToPing">true</boolProp>
+          </eu.luminis.jmeter.wssampler.FrameFilter>
           <hashTree/>
         </hashTree>
       </hashTree>

@@ -244,6 +244,14 @@ public class WebSocketClient {
         socketOutputStream.write(new PingFrame(requestData).getFrameBytes());
     }
 
+    public void sendPongFrame() throws IOException {
+        if (state != WebSocketState.CONNECTED) {
+            throw new IllegalStateException("Cannot send data frame when state is " + state);
+        }
+
+        socketOutputStream.write(new PongFrame(new byte[0]).getFrameBytes());
+    }
+
     public Frame receiveFrame(int readTimeout) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
