@@ -22,6 +22,7 @@ import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.config.ConfigElement;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -36,32 +37,42 @@ public class FrameFilter extends ConfigTestElement {
         super();
     }
 
-    public Frame receiveFrame(WebSocketClient wsClient, int readTimeout) throws IOException {
+    public Frame receiveFrame(WebSocketClient wsClient, int readTimeout, SampleResult result) throws IOException {
         Frame receivedFrame;
         int socketTimeout = readTimeout;
+        boolean matchesFilter;
         do {
             long start = System.currentTimeMillis();
             receivedFrame = wsClient.receiveFrame(socketTimeout);
             long duration = System.currentTimeMillis() - start;
+
+            matchesFilter = matchesFilter(receivedFrame);
+            if (matchesFilter) {
+                log.debug("Filter discards frame " + receivedFrame);
+                if (getReplyToPing()) {
+                    log.debug("Automatically replying to ping with a pong.");
+                    wsClient.sendPongFrame();   // TODO: check consequences of throwing an IOException here....
+                }
+
+                SampleResult subResult = new SampleResult();
+                subResult.setSampleLabel("Ping");
+                subResult.setSuccessful(true);
+                subResult.setResponseMessage("Received " + receivedFrame);
+                result.addRawSubResult(subResult);
+            }
+
             if (duration < socketTimeout)
                 socketTimeout -= duration;
             else
                 socketTimeout = 0;
         }
-        while (matchesFilter(receivedFrame, wsClient));
+        while (matchesFilter);
+
         return receivedFrame;
     }
 
-    private boolean matchesFilter(Frame receivedFrame, WebSocketClient wsClient) throws IOException {
-        boolean match = receivedFrame.isPing() || receivedFrame.isPong();
-        if (match) {
-            log.debug("Filter discards frame " + receivedFrame);
-            if (getReplyToPing()) {
-                log.debug("Automatically replying to ping with a pong.");
-                wsClient.sendPongFrame();   // TODO: check consequences of throwing an IOException here....
-            }
-        }
-        return match;
+    private boolean matchesFilter(Frame receivedFrame) {
+        return receivedFrame.isPing() || receivedFrame.isPong();
     }
 
     @Override

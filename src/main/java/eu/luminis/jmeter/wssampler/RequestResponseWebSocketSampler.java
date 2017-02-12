@@ -86,7 +86,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
         Frame receivedFrame;
         if (frameFilter != null) {
-            receivedFrame = frameFilter.receiveFrame(wsClient, readTimeout);
+            receivedFrame = frameFilter.receiveFrame(wsClient, readTimeout, result);
             if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
                 return receivedFrame;
             else
