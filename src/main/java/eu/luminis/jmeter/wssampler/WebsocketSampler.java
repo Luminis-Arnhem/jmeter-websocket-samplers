@@ -186,8 +186,12 @@ abstract public class WebsocketSampler extends AbstractSampler {
             cookieManager = (CookieManager) el;
         }
         else if (el instanceof FrameFilter) {
-            frameFilter = (FrameFilter) el;
-            getLogger().debug("Sampler " + this + " configured with frame filter " + el);
+            if (frameFilter == null) {
+                frameFilter = (FrameFilter) el;
+                getLogger().debug("Sampler " + this + " configured with frame filter " + el);
+            }
+            else
+                getLogger().warn("Multiple filters not (yet) supported; ignoring filter " + el + " for sampler " + this + ".");
         }
         else {
             super.addTestElement(el);

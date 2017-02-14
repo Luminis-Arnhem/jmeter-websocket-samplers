@@ -20,10 +20,8 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.WebSocketClient;
-import org.apache.jmeter.config.ConfigElement;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
@@ -77,17 +75,7 @@ public class FrameFilter extends ConfigTestElement {
 
     @Override
     public boolean expectsModification() {
-        return super.expectsModification();
-    }
-
-    @Override
-    public void addTestElement(TestElement parm1) {
-        super.addTestElement(parm1);
-    }
-
-    @Override
-    public void addConfigElement(ConfigElement config) {
-        super.addConfigElement(config);
+        return false;
     }
 
     @Override
