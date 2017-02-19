@@ -27,11 +27,11 @@ import javax.swing.JPanel;
 
 import static javax.swing.BoxLayout.Y_AXIS;
 
-public class FrameFilterGuiPanel extends JPanel {
+public class PingFrameFilterGuiPanel extends JPanel {
 
     JCheckBox replyToPing;
 
-    public FrameFilterGuiPanel() {
+    public PingFrameFilterGuiPanel() {
         setLayout(new BoxLayout(this, Y_AXIS));
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter conditions"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
@@ -44,7 +44,7 @@ public class FrameFilterGuiPanel extends JPanel {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
-        frame.getContentPane().add(new FrameFilterGuiPanel());
+        frame.getContentPane().add(new PingFrameFilterGuiPanel());
         frame.setVisible(true);
     }
 }

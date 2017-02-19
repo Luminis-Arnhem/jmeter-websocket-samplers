@@ -71,6 +71,11 @@ public class CloseFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_CLOSE;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "close";
+    }
 }
 
 

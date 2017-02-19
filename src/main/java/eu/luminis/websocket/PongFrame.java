@@ -49,4 +49,9 @@ public class PongFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_PONG;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "pong";
+    }
 }

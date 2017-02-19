@@ -193,4 +193,7 @@ public abstract class Frame {
     protected abstract byte[] getPayload();
 
     protected abstract byte getOpCode();
+
+    public abstract String getTypeAsString();
+
 }

@@ -54,4 +54,9 @@ public class TextFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_TEXT;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "text";
+    }
 }

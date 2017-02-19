@@ -48,5 +48,10 @@ public class BinaryFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_BINARY;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "binary";
+    }
 }
 

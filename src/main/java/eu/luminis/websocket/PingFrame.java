@@ -49,4 +49,9 @@ public class PingFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_PING;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "ping";
+    }
 }

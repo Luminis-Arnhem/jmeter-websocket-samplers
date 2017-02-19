@@ -27,15 +27,17 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 
-public class FrameFilter extends ConfigTestElement {
+public abstract class FrameFilter extends ConfigTestElement {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    protected Logger log = LoggingManager.getLoggerForClass();
 
     public FrameFilter() {
         super();
     }
 
     public Frame receiveFrame(WebSocketClient wsClient, int readTimeout, SampleResult result) throws IOException {
+        prepareFilter();
+
         Frame receivedFrame;
         int socketTimeout = readTimeout;
         boolean matchesFilter;
@@ -46,14 +48,11 @@ public class FrameFilter extends ConfigTestElement {
 
             matchesFilter = matchesFilter(receivedFrame);
             if (matchesFilter) {
-                log.debug("Filter discards frame " + receivedFrame);
-                if (getReplyToPing()) {
-                    log.debug("Automatically replying to ping with a pong.");
-                    wsClient.sendPongFrame();   // TODO: check consequences of throwing an IOException here....
-                }
+                log.debug("Filter discards " + receivedFrame);
+                performReplyAction(wsClient, receivedFrame);
 
                 SampleResult subResult = new SampleResult();
-                subResult.setSampleLabel("Ping");
+                subResult.setSampleLabel("Filter discarded " + receivedFrame.getTypeAsString() + " frame");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
                 result.addRawSubResult(subResult);
@@ -69,9 +68,11 @@ public class FrameFilter extends ConfigTestElement {
         return receivedFrame;
     }
 
-    private boolean matchesFilter(Frame receivedFrame) {
-        return receivedFrame.isPing() || receivedFrame.isPong();
-    }
+    protected void prepareFilter() {};
+
+    abstract protected boolean matchesFilter(Frame receivedFrame);
+
+    protected void performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {}
 
     @Override
     public boolean expectsModification() {
@@ -81,13 +82,5 @@ public class FrameFilter extends ConfigTestElement {
     @Override
     public String toString() {
         return "Frame Filter '" + getName() + "'";
-    }
-
-    public boolean getReplyToPing() {
-        return getPropertyAsBoolean("replyToPing");
-    }
-
-    public void setReplyToPing(boolean value) {
-        setProperty("replyToPing", value);
     }
 }

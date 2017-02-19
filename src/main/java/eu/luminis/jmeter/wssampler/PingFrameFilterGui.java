@@ -23,21 +23,21 @@ import org.apache.jmeter.testelement.TestElement;
 
 import java.awt.BorderLayout;
 
-public class FrameFilterGui extends AbstractConfigGui {
+public class PingFrameFilterGui extends AbstractConfigGui {
 
-    private FrameFilterGuiPanel settingsPanel;
+    private PingFrameFilterGuiPanel settingsPanel;
 
-    public FrameFilterGui() {
+    public PingFrameFilterGui() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
-        settingsPanel = new FrameFilterGuiPanel();
+        settingsPanel = new PingFrameFilterGuiPanel();
         add(settingsPanel, BorderLayout.CENTER);
     }
 
     @Override
     public String getStaticLabel() {
-        return "- Frame Filter";
+        return "- Ping/Pong Frame Filter";
     }
 
     @Override
@@ -47,7 +47,7 @@ public class FrameFilterGui extends AbstractConfigGui {
 
     @Override
     public TestElement createTestElement() {
-        FrameFilter frameFilterElement = new FrameFilter();
+        FrameFilter frameFilterElement = new PingFrameFilter();
         configureTestElement(frameFilterElement);  // Essential because it sets some basic JMeter properties (e.g. the link between sampler and gui class)
         return frameFilterElement;
     }
@@ -55,8 +55,8 @@ public class FrameFilterGui extends AbstractConfigGui {
     @Override
     public void configure(TestElement element) {
         super.configure(element);
-        if (element instanceof FrameFilter) {
-            FrameFilter filter = (FrameFilter) element;
+        if (element instanceof PingFrameFilter) {
+            PingFrameFilter filter = (PingFrameFilter) element;
             settingsPanel.replyToPing.setSelected(filter.getReplyToPing());
         }
 
@@ -65,8 +65,8 @@ public class FrameFilterGui extends AbstractConfigGui {
     @Override
     public void modifyTestElement(TestElement element) {
         configureTestElement(element);
-        if (element instanceof FrameFilter) {
-            FrameFilter filter = (FrameFilter) element;
+        if (element instanceof PingFrameFilter) {
+            PingFrameFilter filter = (PingFrameFilter) element;
             filter.setReplyToPing(settingsPanel.replyToPing.isSelected());
         }
     }
