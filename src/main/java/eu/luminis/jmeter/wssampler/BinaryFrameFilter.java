@@ -41,6 +41,11 @@ public class BinaryFrameFilter extends FrameFilter {
             return false;
     }
 
+    @Override
+    public String toString() {
+        return "Binary Frame Filter '" + getName() + "'";
+    }
+
     static boolean equalBytes(byte[] frameBytes, int matchPosition, byte[] matchValue, int valuePosition, int length) {
         if (matchPosition + length > frameBytes.length || valuePosition + length > matchValue.length)
             return false;

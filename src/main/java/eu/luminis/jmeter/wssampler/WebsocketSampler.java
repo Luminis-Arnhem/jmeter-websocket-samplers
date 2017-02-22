@@ -36,7 +36,9 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -55,7 +57,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
-    protected FrameFilter frameFilter;
+    protected FrameFilter frameFilterChain;
     protected int readTimeout;
     protected int connectTimeout;
 
@@ -178,23 +180,22 @@ abstract public class WebsocketSampler extends AbstractSampler {
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
-    public void addTestElement(TestElement el) {
-        if (el instanceof HeaderManager) {
-            headerManager = (HeaderManager) el;
+    public void addTestElement(TestElement element) {
+        if (element instanceof HeaderManager) {
+            headerManager = (HeaderManager) element;
         }
-        else if (el instanceof CookieManager) {
-            cookieManager = (CookieManager) el;
+        else if (element instanceof CookieManager) {
+            cookieManager = (CookieManager) element;
         }
-        else if (el instanceof FrameFilter) {
-            if (frameFilter == null) {
-                frameFilter = (FrameFilter) el;
-                getLogger().debug("Sampler " + this + " configured with frame filter " + el);
-            }
+        else if (element instanceof FrameFilter) {
+            if (frameFilterChain == null)
+                frameFilterChain = (FrameFilter) element;
             else
-                getLogger().warn("Multiple filters not (yet) supported; ignoring filter " + el + " for sampler " + this + ".");
+                frameFilterChain.setNext((FrameFilter) element);
+            getLogger().debug("Added filter to sampler " + this + "; filter list is now " + frameFilterChain.getChainAsString());
         }
         else {
-            super.addTestElement(el);
+            super.addTestElement(element);
         }
     }
 

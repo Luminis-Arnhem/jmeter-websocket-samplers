@@ -31,6 +31,8 @@ public abstract class FrameFilter extends ConfigTestElement {
 
     protected Logger log = LoggingManager.getLoggerForClass();
 
+    private FrameFilter next;
+
     public FrameFilter() {
         super();
     }
@@ -43,7 +45,7 @@ public abstract class FrameFilter extends ConfigTestElement {
         boolean matchesFilter;
         do {
             long start = System.currentTimeMillis();
-            receivedFrame = wsClient.receiveFrame(socketTimeout);
+            receivedFrame = next != null? next.receiveFrame(wsClient, socketTimeout, result): wsClient.receiveFrame(socketTimeout);
             long duration = System.currentTimeMillis() - start;
 
             matchesFilter = matchesFilter(receivedFrame);
@@ -52,7 +54,7 @@ public abstract class FrameFilter extends ConfigTestElement {
                 performReplyAction(wsClient, receivedFrame);
 
                 SampleResult subResult = new SampleResult();
-                subResult.setSampleLabel("Filter discarded " + receivedFrame.getTypeAsString() + " frame");
+                subResult.setSampleLabel("Discarded " + receivedFrame.getTypeAsString() + " frame (by filter '" + getName() + "')");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
                 result.addRawSubResult(subResult);
@@ -82,5 +84,18 @@ public abstract class FrameFilter extends ConfigTestElement {
     @Override
     public String toString() {
         return "Frame Filter '" + getName() + "'";
+    }
+
+    public void setNext(FrameFilter nextFilter) {
+        if (nextFilter == this)
+            log.debug("Ignoring additional filter '" + nextFilter + "'; already present in chain.");
+        else if (next == null)
+            this.next = nextFilter;
+        else
+            next.setNext(nextFilter);
+    }
+
+    public String getChainAsString() {
+        return toString() + (next != null? " -> " + next.getChainAsString(): "");
     }
 }
