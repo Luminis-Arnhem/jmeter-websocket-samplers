@@ -28,20 +28,19 @@ import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
+import static eu.luminis.jmeter.wssampler.WebsocketSampler.MAX_READ_TIMEOUT;
+import static eu.luminis.jmeter.wssampler.WebsocketSampler.MIN_READ_TIMEOUT;
+
 public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
 
     private JTextField readTimeoutField;
 
     public CloseWebSocketSamplerGui() {
-        init();
-    }
-
-    private void init() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
 
-        JPanel layoutPanel = new JPanel();
+        WebSocketSamplerGuiPanel layoutPanel = new WebSocketSamplerGuiPanel(){};
         {
             layoutPanel.setLayout(new BorderLayout());
 
@@ -51,8 +50,11 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
 
                 requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
                 readTimeoutField = new JTextField();
-                readTimeoutField.setColumns(5);
+                readTimeoutField.setColumns(10);
                 requestSettingsPanel.add(readTimeoutField);
+                JErrorMessageLabel readTimeoutErrorField = new JErrorMessageLabel();
+                requestSettingsPanel.add(readTimeoutErrorField);
+                layoutPanel.addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
             }
             layoutPanel.add(requestSettingsPanel, BorderLayout.NORTH);
             layoutPanel.add(WebSocketSamplerGuiPanel.createAboutPanel(this));
@@ -71,6 +73,12 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
     }
 
     @Override
+    public void clearGui() {
+        super.clearGui();
+        readTimeoutField.setText("");
+    }
+
+    @Override
     public TestElement createTestElement() {
         CloseWebSocketSampler element = new CloseWebSocketSampler();
         configureTestElement(element);  // Essential because it sets some basic JMeter properties (e.g. the link between sampler and gui class)
@@ -82,15 +90,9 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) element;
-            readTimeoutField.setText("" + sampler.getReadTimeout());
+            readTimeoutField.setText(sampler.getReadTimeout());
         }
         super.configure(element);
-    }
-
-    @Override
-    public void clearGui() {
-        super.clearGui();
-        readTimeoutField.setText("");
     }
 
     @Override
@@ -98,19 +100,8 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) testElement;
-            if (getInt(readTimeoutField.getText(), -1) != -1)
-                sampler.setReadTimeout(readTimeoutField.getText());
+            sampler.setReadTimeout(readTimeoutField.getText());
         }
     }
-
-    private int getInt(String value, int def) {
-        try {
-            return Integer.parseInt(value);
-        }
-        catch (NumberFormatException e) {
-            return def;
-        }
-    }
-
 }
 

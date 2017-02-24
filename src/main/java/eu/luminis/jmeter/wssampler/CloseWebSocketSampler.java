@@ -79,6 +79,8 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected String validateArguments() {
-        return null;
+        String errorMsg = null;
+        errorMsg = validateReadTimeout(getReadTimeout());
+        return errorMsg;
     }
 }
