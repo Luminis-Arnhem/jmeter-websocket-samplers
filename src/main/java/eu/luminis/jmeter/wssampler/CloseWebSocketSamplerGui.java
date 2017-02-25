@@ -21,18 +21,17 @@ package eu.luminis.jmeter.wssampler;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
 import static eu.luminis.jmeter.wssampler.WebsocketSampler.MAX_READ_TIMEOUT;
 import static eu.luminis.jmeter.wssampler.WebsocketSampler.MIN_READ_TIMEOUT;
+import static javax.swing.BoxLayout.*;
 
 public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
 
+    private JTextField closeStatusField;
     private JTextField readTimeoutField;
 
     public CloseWebSocketSamplerGui() {
@@ -44,19 +43,35 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         {
             layoutPanel.setLayout(new BorderLayout());
 
-            JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            JPanel settingsPanel = new JPanel();
             {
-                requestSettingsPanel.setBorder(BorderFactory.createTitledBorder("Data (close frame)"));
+                settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+                settingsPanel.setBorder(BorderFactory.createTitledBorder("Data (close frame)"));
+                JPanel closeStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                {
+                    closeStatusPanel.add(new JLabel("Close status: "));
+                    closeStatusField = new JTextField();
+                    closeStatusField.setColumns(10);
+                    closeStatusPanel.add(closeStatusField);
+                    JErrorMessageLabel closeStatusErrorField = new JErrorMessageLabel();
+                    closeStatusPanel.add(closeStatusErrorField);
+                    layoutPanel.addIntegerRangeCheck(closeStatusField, 1000, 1015, closeStatusErrorField);
+                }
+                settingsPanel.add(closeStatusPanel);
 
-                requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
-                readTimeoutField = new JTextField();
-                readTimeoutField.setColumns(10);
-                requestSettingsPanel.add(readTimeoutField);
-                JErrorMessageLabel readTimeoutErrorField = new JErrorMessageLabel();
-                requestSettingsPanel.add(readTimeoutErrorField);
-                layoutPanel.addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
+                JPanel readTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                {
+                    readTimeoutPanel.add(new JLabel("Response (read) timeout (ms): "));
+                    readTimeoutField = new JTextField();
+                    readTimeoutField.setColumns(10);
+                    readTimeoutPanel.add(readTimeoutField);
+                    JErrorMessageLabel readTimeoutErrorField = new JErrorMessageLabel();
+                    readTimeoutPanel.add(readTimeoutErrorField);
+                    layoutPanel.addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
+                }
+                settingsPanel.add(readTimeoutPanel);
             }
-            layoutPanel.add(requestSettingsPanel, BorderLayout.NORTH);
+            layoutPanel.add(settingsPanel, BorderLayout.NORTH);
             layoutPanel.add(WebSocketSamplerGuiPanel.createAboutPanel(this));
         }
         add(layoutPanel, BorderLayout.CENTER);
@@ -75,6 +90,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
     @Override
     public void clearGui() {
         super.clearGui();
+        closeStatusField.setText("");
         readTimeoutField.setText("");
     }
 
@@ -90,6 +106,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) element;
+            closeStatusField.setText(sampler.getStatusCode());
             readTimeoutField.setText(sampler.getReadTimeout());
         }
         super.configure(element);
@@ -100,6 +117,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) testElement;
+            sampler.setStatusCode(closeStatusField.getText());
             sampler.setReadTimeout(readTimeoutField.getText());
         }
     }
