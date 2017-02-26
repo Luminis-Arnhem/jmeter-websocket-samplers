@@ -103,7 +103,7 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                     borderPanel.repaint();
                     break;
                 case 1:
-                    typeSelector2.addItem("contains"); typeSelector2.addItem("starts with"); typeSelector2.addItem("equals");
+                    typeSelector2.addItem("contains"); typeSelector2.addItem("starts with"); typeSelector2.addItem("equals"); typeSelector2.addItem("ends with");
                     if (selectedItem >= 0)
                         typeSelector2.setSelectedIndex(selectedItem);
                     binaryDataLabel.setEnabled(true);
@@ -114,7 +114,7 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                     borderPanel.repaint();
                     break;
                 case 2:
-                    typeSelector2.addItem("contain"); typeSelector2.addItem("start with"); typeSelector2.addItem("equal");
+                    typeSelector2.addItem("contain"); typeSelector2.addItem("start with"); typeSelector2.addItem("equal"); typeSelector2.addItem("end with");
                     if (selectedItem >= 0)
                         typeSelector2.setSelectedIndex(selectedItem);
                     binaryDataLabel.setEnabled(true);
@@ -139,9 +139,11 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
             case 10 + 0: return Contains;
             case 10 + 1: return StartsWith;
             case 10 + 2: return Equals;
+            case 10 + 3: return EndsWith;
             case 20 + 0: return NotContains;
             case 20 + 1: return NotStartsWith;
             case 20 + 2: return NotEquals;
+            case 20 + 3: return NotEndsWith;
             default:
                 throw new RuntimeException("invalid comparison type");
         }
@@ -157,11 +159,15 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                 break;
             case Equals: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(2);
                 break;
+            case EndsWith: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(3);
+                break;
             case NotContains: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(0);
                 break;
             case NotStartsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(1);
                 break;
             case NotEquals: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(2);
+                break;
+            case NotEndsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(3);
                 break;
             default:
                 throw new RuntimeException("invalid comparison type");
