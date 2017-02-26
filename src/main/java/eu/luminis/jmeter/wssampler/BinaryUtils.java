@@ -51,6 +51,9 @@ public class BinaryUtils {
     }
 
     public static boolean contains(byte[] source, byte[] value) {
+        if (value.length == 0)
+            return false;
+
         for (int i = 0; i < source.length; i++) {
             if (value[0] == source[i]) {
                 boolean equal = true;

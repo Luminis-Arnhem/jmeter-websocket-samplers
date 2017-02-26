@@ -3,25 +3,59 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.BinaryFrame;
 import eu.luminis.websocket.Frame;
 
+import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
+
 public class BinaryFrameFilter extends FrameFilter {
 
-    int matchPosition;
-    byte[] matchValue;
-
     public enum ComparisonType {
+        IsBinary,
         Equals,
         Contains,
-        ContainsWithExactPosition,
         StartsWith,
+        EndsWith,
         NotEquals,
         NotContains,
-        NotStartsWith
+        NotStartsWith,
+        NotEndsWith
+    }
+
+    ComparisonType filterType;
+    Integer matchPosition;
+    byte[] matchValue;
+
+    public BinaryFrameFilter() {
+        ComparisonType filterType = IsBinary;
+    }
+
+    public BinaryFrameFilter(ComparisonType type) {
+        filterType = type;
     }
 
     @Override
     protected void prepareFilter() {
-        matchPosition = getMatchPosition();
-        matchValue = BinaryUtils.parseBinaryString(getMatchValue());
+        switch (filterType) {
+            case Contains:
+            case NotContains:
+                matchPosition = convertToInt(getMatchPosition());
+            case Equals:
+            case NotEquals:
+            case StartsWith:
+            case NotStartsWith:
+            case EndsWith:
+            case NotEndsWith:
+                matchValue = BinaryUtils.parseBinaryString(getMatchValue());
+                if (matchValue.length == 0)
+                    log.error("Binary filter '" + getName() + "' is missing match value; will filter nothing!");
+                break;
+        }
+    }
+
+    private Integer convertToInt(String matchPosition) {
+        try {
+            return Integer.parseInt(matchPosition);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override
@@ -30,12 +64,38 @@ public class BinaryFrameFilter extends FrameFilter {
             BinaryFrame receivedFrame = (BinaryFrame) frame;
             byte[] frameBytes = receivedFrame.getData();
 
-            // 1st impl: only support contains with start position
-            if (matchPosition + matchValue.length < frameBytes.length) {
-                return equalBytes(frameBytes, matchPosition, matchValue, 0, matchValue.length);
+            switch (filterType) {
+                case IsBinary:
+                    return true;
+                case Equals:
+                case NotEquals:
+                    boolean equal = frameBytes.length == matchValue.length && equalBytes(frameBytes, 0, matchValue, 0, matchValue.length);
+                    return filterType == Equals? equal: !equal;
+                case Contains:
+                case NotContains:
+                    if (matchPosition != null) {
+                        boolean contains;
+                        if (matchValue.length > 0 && matchPosition + matchValue.length <= frameBytes.length)
+                            contains = equalBytes(frameBytes, matchPosition, matchValue, 0, matchValue.length);
+                        else
+                            contains = false;
+                        return filterType == Contains? contains: !contains;
+                    }
+                    else {
+                        boolean contains = BinaryUtils.contains(frameBytes, matchValue);
+                        return filterType == Contains? contains: !contains;
+                    }
+                case StartsWith:
+                case NotStartsWith:
+                    boolean startsWith = equalBytes(frameBytes, 0, matchValue, 0, matchValue.length);
+                    return filterType == StartsWith? startsWith: !startsWith;
+                case EndsWith:
+                case NotEndsWith:
+                    boolean endsWith = equalBytes(frameBytes, Math.max(0, frameBytes.length - matchValue.length), matchValue, 0, matchValue.length);
+                    return filterType == EndsWith? endsWith: !endsWith;
+                default:
+                    throw new RuntimeException("unknown comparison type");
             }
-            else
-                return false;
         }
         else
             return false;
@@ -57,11 +117,19 @@ public class BinaryFrameFilter extends FrameFilter {
         return true;
     }
 
-    public int getMatchPosition() {
-        return getPropertyAsInt("matchPosition");
+    public ComparisonType getComparisonType() {
+        return ComparisonType.valueOf(getPropertyAsString("comparisonType", "IsBinary"));
     }
 
-    public void setMatchPosition(int value) {
+    public void setComparisonType(ComparisonType type) {
+        setProperty("comparisonType", type.toString());
+    }
+
+    public String getMatchPosition() {
+        return getPropertyAsString("matchPosition");
+    }
+
+    public void setMatchPosition(String value) {
         setProperty("matchPosition", value);
     }
 

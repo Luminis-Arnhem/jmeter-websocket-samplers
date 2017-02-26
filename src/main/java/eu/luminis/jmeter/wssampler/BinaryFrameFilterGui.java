@@ -57,6 +57,7 @@ public class BinaryFrameFilterGui extends AbstractConfigGui {
         super.configure(element);
         if (element instanceof BinaryFrameFilter) {
             BinaryFrameFilter filter = (BinaryFrameFilter) element;
+            settingsPanel.setComparisonType(filter.getComparisonType());
             settingsPanel.matchPosition.setText("" + filter.getMatchPosition());
             settingsPanel.binaryContent.setText(filter.getMatchValue());
         }
@@ -68,7 +69,8 @@ public class BinaryFrameFilterGui extends AbstractConfigGui {
         configureTestElement(element);
         if (element instanceof BinaryFrameFilter) {
             BinaryFrameFilter filter = (BinaryFrameFilter) element;
-            filter.setMatchPosition(Integer.parseInt(settingsPanel.matchPosition.getText()));  // TODO match position must be string
+            filter.setComparisonType(settingsPanel.getComparisonType());
+            filter.setMatchPosition(settingsPanel.matchPosition.getText());
             filter.setMatchValue(settingsPanel.binaryContent.getText());
         }
     }

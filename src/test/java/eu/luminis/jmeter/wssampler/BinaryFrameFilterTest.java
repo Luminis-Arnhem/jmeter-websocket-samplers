@@ -1,15 +1,20 @@
 package eu.luminis.jmeter.wssampler;
 
+
 import eu.luminis.websocket.BinaryFrame;
 import eu.luminis.websocket.EndOfStreamException;
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+
 import java.io.IOException;
 
+import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -18,36 +23,281 @@ import static org.mockito.Mockito.when;
 
 public class BinaryFrameFilterTest {
 
+    SampleResult result;
+
+    @Before
+    public void setUp() {
+        result = new SampleResult();
+    }
+
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void filterShouldDropMatchingBinaryFrame() throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt()))
-                .thenReturn(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}))
-                .thenThrow(new EndOfStreamException("end of stream"));
+    public void plainFilterDiscardsBinaryFrame() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
 
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(IsBinary);
         exception.expect(EndOfStreamException.class);
-        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter();
-        binaryFrameFilter.setMatchPosition(1);
-        binaryFrameFilter.setMatchValue("0x02 0x03");
-        binaryFrameFilter.receiveFrame(mockWsClient, 1000, new SampleResult());
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
     }
 
     @Test
-    public void filterShouldReturnNonMatchingBinaryFrame() throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt()))
-                .thenReturn(new BinaryFrame(new byte[] { 0x05, 0x06, 0x07, 0x08}))
-                .thenThrow(new EndOfStreamException("end of stream"));
+    public void filterContainsShouldDropMatchingBinaryFrame() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
 
-        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter();
-        binaryFrameFilter.setMatchPosition(1);
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Contains);
+        binaryFrameFilter.setMatchPosition("1");
         binaryFrameFilter.setMatchValue("0x02 0x03");
-        assertTrue(binaryFrameFilter.receiveFrame(mockWsClient, 1000, new SampleResult()).isBinary());
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
     }
 
+    @Test
+    public void filterContainsShouldReturnNonMatchingBinaryFrame() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x05, 0x06, 0x07, 0x08}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Contains);
+        binaryFrameFilter.setMatchPosition("1");
+        binaryFrameFilter.setMatchValue("0x02 0x03");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterContainsWithEmptyMatchValueShouldFilterNothing() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Contains);
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterContainsShouldFilterFrameThatContainsMatchValue() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Contains);
+        binaryFrameFilter.setMatchValue("0x02 0x03");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterContainsShouldKeepFrameThatDoesntContainMatchValue() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Contains);
+        binaryFrameFilter.setMatchValue("0x02 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotContainsShouldFilterFrameThatNotContains() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotContains);
+        binaryFrameFilter.setMatchValue("0x02 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterNotContainsAtPositionShouldFilterFrameThatDoesNotContainAtPosition() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotContains);
+        binaryFrameFilter.setMatchPosition("2");
+        binaryFrameFilter.setMatchValue("0x02 0x03");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterNotContainsShouldKeepFrameThatContainsTheValue() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotContains);
+        binaryFrameFilter.setMatchValue("0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotContainsAtPositionShouldKeepFrameThatContainsTheValueAtThatPosition() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotContains);
+        binaryFrameFilter.setMatchPosition("2");
+        binaryFrameFilter.setMatchValue("0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterEqualWithEqualFrameShouldFilter() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Equals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterEqualWithUnequalFrame1ShouldNotBeFiltered() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Equals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04 0x05");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterEqualWithUnequalFrames2ShouldNotBeFiltered() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Equals);
+        binaryFrameFilter.setMatchValue("0x01");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterEqualWithUnequalFrames3ShouldNoBeFiltered() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(Equals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotEqualShouldKeepEqualFrame() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEquals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotEqualShouldFilterUnEqualFrame1() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEquals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterNotEqualShouldFilterUnEqualFrame2() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEquals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterNotEqualShouldFilterUnEqualFrame3() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEquals);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterStartsWithShouldFilterFrameThatStartsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(StartsWith);
+        binaryFrameFilter.setMatchValue("0x01 0x02");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterStartsWithShouldKeepFrameThatNotStartsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(StartsWith);
+        binaryFrameFilter.setMatchValue("0x02 0x03");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotStartsWithShouldKeepFrameThatStartsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotStartsWith);
+        binaryFrameFilter.setMatchValue("0x01 0x02");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotStartsWithShouldFilterFrameThatNotStartsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotStartsWith);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterEndsWithShouldFilterFrameThatEndsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(EndsWith);
+        binaryFrameFilter.setMatchValue("0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void filterEndsWithShouldKeepFrameThatNotEndsWith1() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(EndsWith);
+        binaryFrameFilter.setMatchValue("0x02 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterEndsWithShouldKeepFrameThatNotEndsWith2() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(EndsWith);
+        binaryFrameFilter.setMatchValue("0x00 0x01 0x02 0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotEndsWithShouldKeepFrameThatEndsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEndsWith);
+        binaryFrameFilter.setMatchValue("0x01 0x02 0x03 0x04");
+        assertTrue(binaryFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
+    }
+
+    @Test
+    public void filterNotEndsWithShouldFilterFrameThatNotEndsWith() throws IOException {
+        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
+
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEndsWith);
+        binaryFrameFilter.setMatchValue("0x01 0x09 0x03 0x04");
+        exception.expect(EndOfStreamException.class);
+        binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    WebSocketClient singleFrameClient(Frame frame) throws IOException {
+        WebSocketClient mockWsClient = mock(WebSocketClient.class);
+        when(mockWsClient.receiveFrame(anyInt()))
+                .thenReturn(frame)
+                .thenThrow(new EndOfStreamException("end of stream"));
+        return mockWsClient;
+    }
 
     @Test
     public void equalByteArraysShouldEqual() {

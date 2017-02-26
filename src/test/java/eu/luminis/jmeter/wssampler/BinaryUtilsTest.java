@@ -117,4 +117,9 @@ public class BinaryUtilsTest {
         assertFalse(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xbe, (byte) 0xcc }));
     }
 
+    @Test
+    public void testContainsWithEmptyValue() {
+        assertFalse(test.contains(new byte[] { 0x01 }, new byte[0]));
+    }
+
 }
