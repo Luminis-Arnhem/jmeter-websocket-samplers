@@ -24,15 +24,17 @@ public class BinaryFrameFilter extends FrameFilter {
     byte[] matchValue;
 
     public BinaryFrameFilter() {
-        ComparisonType filterType = IsBinary;
+        filterType = IsBinary;
     }
 
     public BinaryFrameFilter(ComparisonType type) {
         filterType = type;
+        setComparisonType(type);
     }
 
     @Override
     protected void prepareFilter() {
+        filterType = getComparisonType();
         switch (filterType) {
             case Contains:
             case NotContains:
