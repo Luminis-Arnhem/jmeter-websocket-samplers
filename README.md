@@ -8,6 +8,10 @@ Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocke
 
 Make sure you're running JMeter with Java 8. Loading the plugin will fail silently if running with Java 7 (or older).
 
+## You can help! Spread the word!
+
+If you like this plugin, if you find it useful, you can help others that might have similar problems or challenges as you had, by spreading the word. Talk, tweet, blog about it; answer questions about how to load-test WebSocket on forums, stackoverflow etc. and let people know this plugin exists. If you think the plugin needs improvement, let the author know (see "feedback" below).
+
 ## Features
 The WebSocket Samplers plugin provides the following features:
 
@@ -82,7 +86,12 @@ to build. Almost any version of gradle will do (tested with 2.2). Gradle can als
 
 ## Feedback
 
-Questions, problems, or other feedback? Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
+Questions, problems, or other feedback? Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>. Any feedback is welcome, issues are always taken seriously.
+
+
+## Acknowledgements
+
+The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan.
 
 
 ## License
