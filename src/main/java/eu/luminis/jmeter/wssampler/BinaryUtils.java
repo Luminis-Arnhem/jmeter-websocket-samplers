@@ -50,6 +50,13 @@ public class BinaryUtils {
         return builder.toString().trim();
     }
 
+    public static String formatBinary(byte[] data, int maxBytes) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < Math.min(data.length, maxBytes); i++)
+            builder.append(String.format("%#04x ", data[i]));  // # defines the leading 0x, which takes 2 chars, hence width is 2 + 2 = 4
+        return builder.toString().trim();
+    }
+
     public static boolean contains(byte[] source, byte[] value) {
         if (value.length == 0)
             return false;

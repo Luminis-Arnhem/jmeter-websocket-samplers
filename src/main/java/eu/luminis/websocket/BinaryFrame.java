@@ -18,9 +18,14 @@
  */
 package eu.luminis.websocket;
 
+import eu.luminis.jmeter.wssampler.BinaryUtils;
+
+import java.util.Arrays;
+
 public class BinaryFrame extends Frame {
 
     private byte[] data;
+    int nrBytesPrintedInToString = 16;
 
     public BinaryFrame(byte[] payload) {
         data = payload;
@@ -36,7 +41,10 @@ public class BinaryFrame extends Frame {
 
     @Override
     public String toString() {
-        return "Binary frame with length " + data.length;
+        if (data.length > 0)
+            return "Binary frame, payload (length " + data.length + "): " + BinaryUtils.formatBinary(data, nrBytesPrintedInToString) + (data.length > nrBytesPrintedInToString? " ...": "");
+        else
+            return "Binary frame, empty payload";
     }
 
     @Override
