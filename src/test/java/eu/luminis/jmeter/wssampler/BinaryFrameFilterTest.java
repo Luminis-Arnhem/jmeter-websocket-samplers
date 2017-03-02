@@ -15,8 +15,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 
 import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -289,6 +288,22 @@ public class BinaryFrameFilterTest {
         binaryFrameFilter.setMatchValue("0x01 0x09 0x03 0x04");
         exception.expect(EndOfStreamException.class);
         binaryFrameFilter.receiveFrame(wsClient, 1000, result);
+    }
+
+    @Test
+    public void testMatchValueAcceptsBinary() {
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEndsWith);
+        binaryFrameFilter.setMatchValue("01 02 03 04");
+        binaryFrameFilter.prepareFilter();
+        assertArrayEquals(new byte[] { 1, 2, 3, 4}, binaryFrameFilter.matchValue);
+    }
+
+    @Test
+    public void testMatchValueDoesNotAcceptNonBinary() {
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(NotEndsWith);
+        binaryFrameFilter.setMatchValue("01 02 03 04 bo oe");
+        binaryFrameFilter.prepareFilter();
+        assertArrayEquals(new byte[0], binaryFrameFilter.matchValue);
     }
 
     WebSocketClient singleFrameClient(Frame frame) throws IOException {

@@ -34,6 +34,7 @@ public class BinaryFrameFilter extends FrameFilter {
 
     @Override
     protected void prepareFilter() {
+        matchValue = new byte[0];
         filterType = getComparisonType();
         switch (filterType) {
             case Contains:
@@ -45,9 +46,13 @@ public class BinaryFrameFilter extends FrameFilter {
             case NotStartsWith:
             case EndsWith:
             case NotEndsWith:
-                matchValue = BinaryUtils.parseBinaryString(getMatchValue());
-                if (matchValue.length == 0)
-                    log.error("Binary filter '" + getName() + "' is missing match value; will filter nothing!");
+                try {
+                    matchValue = BinaryUtils.parseBinaryString(getMatchValue());
+                    if (matchValue.length == 0)
+                        log.error("Binary filter '" + getName() + "' is missing match value; will filter nothing!");
+                } catch (NumberFormatException noNumber) {
+                    log.error("Binary filter '" + getName() + "' will filter nothing, because it has an invalid (non binary) match value: '" + getMatchValue() + "'");
+                }
                 break;
         }
     }
