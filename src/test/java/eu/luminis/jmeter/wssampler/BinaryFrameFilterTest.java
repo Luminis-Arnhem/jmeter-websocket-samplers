@@ -14,7 +14,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
-import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
+import static eu.luminis.jmeter.wssampler.ComparisonType.*;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -36,7 +36,7 @@ public class BinaryFrameFilterTest {
     public void plainFilterDiscardsBinaryFrame() throws IOException {
         WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[] { 0x01, 0x02, 0x03, 0x04}));
 
-        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(IsBinary);
+        BinaryFrameFilter binaryFrameFilter = new BinaryFrameFilter(IsPlain);
         exception.expect(EndOfStreamException.class);
         binaryFrameFilter.receiveFrame(wsClient, 1000, result);
     }

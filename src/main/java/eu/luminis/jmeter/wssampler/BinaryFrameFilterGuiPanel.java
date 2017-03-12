@@ -22,7 +22,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 
-import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
+import static eu.luminis.jmeter.wssampler.ComparisonType.*;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class BinaryFrameFilterGuiPanel extends JPanel {
@@ -132,10 +132,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
         });
     }
 
-    BinaryFrameFilter.ComparisonType getComparisonType() {
+    ComparisonType getComparisonType() {
         int code = 10 * typeSelector1.getSelectedIndex() + typeSelector2.getSelectedIndex();
         switch (code) {
-            case 0: return IsBinary;
+            case 0: return IsPlain;
             case 10 + 0: return Contains;
             case 10 + 1: return StartsWith;
             case 10 + 2: return Equals;
@@ -149,9 +149,9 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
         }
     }
 
-    void setComparisonType(BinaryFrameFilter.ComparisonType type) {
+    void setComparisonType(ComparisonType type) {
         switch(type) {
-            case IsBinary: typeSelector1.setSelectedIndex(0);
+            case IsPlain: typeSelector1.setSelectedIndex(0);
                 break;
             case Contains: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(0);
                 break;

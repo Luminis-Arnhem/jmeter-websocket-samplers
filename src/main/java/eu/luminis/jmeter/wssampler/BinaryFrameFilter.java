@@ -3,28 +3,16 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.BinaryFrame;
 import eu.luminis.websocket.Frame;
 
-import static eu.luminis.jmeter.wssampler.BinaryFrameFilter.ComparisonType.*;
+import static eu.luminis.jmeter.wssampler.ComparisonType.*;
 
 public class BinaryFrameFilter extends FrameFilter {
-
-    public enum ComparisonType {
-        IsBinary,
-        Equals,
-        Contains,
-        StartsWith,
-        EndsWith,
-        NotEquals,
-        NotContains,
-        NotStartsWith,
-        NotEndsWith
-    }
 
     ComparisonType filterType;
     Integer matchPosition;
     byte[] matchValue;
 
     public BinaryFrameFilter() {
-        filterType = IsBinary;
+        filterType = IsPlain;
     }
 
     public BinaryFrameFilter(ComparisonType type) {
@@ -72,7 +60,7 @@ public class BinaryFrameFilter extends FrameFilter {
             byte[] frameBytes = receivedFrame.getData();
 
             switch (filterType) {
-                case IsBinary:
+                case IsPlain:
                     return true;
                 case Equals:
                 case NotEquals:
@@ -125,7 +113,7 @@ public class BinaryFrameFilter extends FrameFilter {
     }
 
     public ComparisonType getComparisonType() {
-        return ComparisonType.valueOf(getPropertyAsString("comparisonType", "IsBinary"));
+        return ComparisonType.valueOf(getPropertyAsString("comparisonType", "IsPlain"));
     }
 
     public void setComparisonType(ComparisonType type) {
