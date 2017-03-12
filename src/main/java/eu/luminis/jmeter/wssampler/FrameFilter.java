@@ -68,7 +68,7 @@ public abstract class FrameFilter extends ConfigTestElement {
         return receivedFrame;
     }
 
-    protected void prepareFilter() {};
+    protected void prepareFilter() {}
 
     abstract protected boolean matchesFilter(Frame receivedFrame);
 

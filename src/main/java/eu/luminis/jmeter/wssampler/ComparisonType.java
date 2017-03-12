@@ -22,11 +22,19 @@ public enum ComparisonType {
 
     IsPlain,
     Equals,
+    EqualsRegex,
     Contains,
+    ContainsRegex,
     StartsWith,
     EndsWith,
     NotEquals,
+    NotEqualsRegex,
     NotContains,
+    NotContainsRegex,
     NotStartsWith,
-    NotEndsWith
+    NotEndsWith;
+
+    public boolean isRegexComparison() {
+        return this == EqualsRegex || this == ContainsRegex || this == NotContainsRegex || this == NotEqualsRegex;
+    }
 }

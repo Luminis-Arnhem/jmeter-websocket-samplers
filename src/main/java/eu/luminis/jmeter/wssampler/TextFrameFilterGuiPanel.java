@@ -24,9 +24,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -193,19 +190,26 @@ public class TextFrameFilterGuiPanel extends JPanel {
     }
 
     ComparisonType getComparisonType() {
-        int code = 10 * typeSelector1.getSelectedIndex() + typeSelector2.getSelectedIndex();
+        int code = 100 * typeSelector1.getSelectedIndex() + 10 * typeSelector2.getSelectedIndex() + typeSelector3.getSelectedIndex();
         switch (code) {
-            case 0: return IsPlain;
-            case 10 + 0: return Contains;
-            case 10 + 1: return StartsWith;
-            case 10 + 2: return Equals;
-            case 10 + 3: return EndsWith;
-            case 20 + 0: return NotContains;
-            case 20 + 1: return NotStartsWith;
-            case 20 + 2: return NotEquals;
-            case 20 + 3: return NotEndsWith;
+            case -111:
+            case -11:
+            case -1:
+            case 0:   return IsPlain;
+            case 100: return Contains;
+            case 101: return ContainsRegex;
+            case 110: return StartsWith;
+            case 120: return Equals;
+            case 121: return EqualsRegex;
+            case 130: return EndsWith;
+            case 200: return NotContains;
+            case 201: return NotContainsRegex;
+            case 210: return NotStartsWith;
+            case 220: return NotEquals;
+            case 221: return NotEqualsRegex;
+            case 230: return NotEndsWith;
             default:
-                throw new RuntimeException("invalid comparison type");
+                throw new RuntimeException("invalid comparison type (" + code + ")");
         }
     }
 
@@ -213,21 +217,29 @@ public class TextFrameFilterGuiPanel extends JPanel {
         switch(type) {
             case IsPlain: typeSelector1.setSelectedIndex(0);
                 break;
-            case Contains: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(0);
+            case Contains: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(0); typeSelector3.setSelectedIndex(0);
                 break;
-            case StartsWith: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(1);
+            case ContainsRegex: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(0); typeSelector3.setSelectedIndex(1);
                 break;
-            case Equals: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(2);
+            case StartsWith: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(1); typeSelector3.setSelectedIndex(0);
                 break;
-            case EndsWith: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(3);
+            case Equals: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(2); typeSelector3.setSelectedIndex(0);
                 break;
-            case NotContains: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(0);
+            case EqualsRegex: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(2); typeSelector3.setSelectedIndex(1);
                 break;
-            case NotStartsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(1);
+            case EndsWith: typeSelector1.setSelectedIndex(1); typeSelector2.setSelectedIndex(3); typeSelector3.setSelectedIndex(0);
                 break;
-            case NotEquals: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(2);
+            case NotContains: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(0); typeSelector3.setSelectedIndex(0);
                 break;
-            case NotEndsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(3);
+            case NotContainsRegex: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(0); typeSelector3.setSelectedIndex(1);
+                break;
+            case NotStartsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(1); typeSelector3.setSelectedIndex(0);
+                break;
+            case NotEquals: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(2); typeSelector3.setSelectedIndex(0);
+                break;
+            case NotEqualsRegex: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(2); typeSelector3.setSelectedIndex(1);
+                break;
+            case NotEndsWith: typeSelector1.setSelectedIndex(2); typeSelector2.setSelectedIndex(3); typeSelector3.setSelectedIndex(0);
                 break;
             default:
                 throw new RuntimeException("invalid comparison type");
@@ -235,13 +247,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
     }
 
 
-    public static void showDialog(Window parent, String regex, Function<TestRegexDialog, Boolean> closeCallback) {
-        TestRegexDialog testRegexDlg = new TestRegexDialog(parent, regex, closeCallback);
-    }
-
     public static void main(String[] args) {
-        //showDialog(null, "a+b*c?");
-
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(700, 400);
