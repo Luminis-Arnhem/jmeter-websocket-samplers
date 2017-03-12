@@ -20,7 +20,6 @@ package eu.luminis.websocket;
 
 import eu.luminis.jmeter.wssampler.BinaryUtils;
 
-import java.util.Arrays;
 
 public class BinaryFrame extends Frame {
 

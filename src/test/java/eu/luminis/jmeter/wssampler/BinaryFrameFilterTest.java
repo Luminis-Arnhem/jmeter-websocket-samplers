@@ -3,7 +3,6 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.BinaryFrame;
 import eu.luminis.websocket.EndOfStreamException;
-import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
@@ -16,11 +15,9 @@ import java.io.IOException;
 
 import static eu.luminis.jmeter.wssampler.ComparisonType.*;
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-public class BinaryFrameFilterTest {
+public class BinaryFrameFilterTest extends FrameTest {
 
     SampleResult result;
 
@@ -304,14 +301,6 @@ public class BinaryFrameFilterTest {
         binaryFrameFilter.setMatchValue("01 02 03 04 bo oe");
         binaryFrameFilter.prepareFilter();
         assertArrayEquals(new byte[0], binaryFrameFilter.matchValue);
-    }
-
-    WebSocketClient singleFrameClient(Frame frame) throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt()))
-                .thenReturn(frame)
-                .thenThrow(new EndOfStreamException("end of stream"));
-        return mockWsClient;
     }
 
     @Test
