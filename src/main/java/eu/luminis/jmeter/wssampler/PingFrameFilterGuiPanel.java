@@ -18,12 +18,11 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import com.sun.tools.javac.comp.Flow;
+
+import javax.swing.*;
+
+import java.awt.*;
 
 import static javax.swing.BoxLayout.Y_AXIS;
 
@@ -33,11 +32,28 @@ public class PingFrameFilterGuiPanel extends JPanel {
 
     public PingFrameFilterGuiPanel() {
         setLayout(new BoxLayout(this, Y_AXIS));
-        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter conditions"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-        add(new JLabel("Filters (discards) both ping and pong frames"));
-        replyToPing = new JCheckBox("Automatically respond to ping with a pong");
-        add(replyToPing);
+        JPanel contentPanel = new JPanel();
+        {
+            contentPanel.setLayout(new BoxLayout(contentPanel, Y_AXIS));
+            contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter conditions"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+            JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                labelPanel.add(new JLabel("Filters (discards) both ping and pong frames"));
+                labelPanel.setMaximumSize(new Dimension(labelPanel.getMaximumSize().width, labelPanel.getMinimumSize().height));
+            }
+            contentPanel.add(labelPanel);
+            labelPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+            replyToPing = new JCheckBox("Automatically respond to ping with a pong");
+            contentPanel.add(replyToPing);
+            replyToPing.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            add(contentPanel);
+        }
+        JPanel aboutPanel = WebSocketSamplerGuiPanel.createAboutPanel(this);
+        add(aboutPanel);
+        aboutPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
     }
 
     public static void main(String[] args) {
