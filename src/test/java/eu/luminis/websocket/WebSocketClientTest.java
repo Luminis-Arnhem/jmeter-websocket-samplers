@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
@@ -185,6 +186,30 @@ public class WebSocketClientTest {
 
         // Part of the test is that it gets here: when no upgrade header is found, an exception is thrown.
         assertEquals("websocket", headers.get("Upgrade"));
+    }
+
+    @Test
+    public void urlPathWithoutLeadingSlashShouldBeCorrected() throws MalformedURLException {
+        URL url = new URL("https", "nowhere.com", 443, "path");
+        assertEquals("/path", new WebSocketClient(url).getConnectUrl().getPath());
+    }
+
+    @Test
+    public void urlWithEmptyPathShouldBeCorrectedToRoot() throws MalformedURLException {
+        URL url = new URL("https", "nowhere.com", 443, "");
+        assertEquals("/", new WebSocketClient(url).getConnectUrl().getPath());
+    }
+
+    @Test
+    public void urlWithWithspacePathShouldBeCorrectedToRoot() throws MalformedURLException {
+        URL url = new URL("https", "nowhere.com", 443, "   ");
+        assertEquals("/", new WebSocketClient(url).getConnectUrl().getPath());
+    }
+
+    @Test
+    public void urlPathWithLeadingSpacesShouldBeCorrected() throws MalformedURLException {
+        URL url = new URL("https", "nowhere.com", 443, "   path");
+        assertEquals("/path", new WebSocketClient(url).getConnectUrl().getPath());
     }
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {

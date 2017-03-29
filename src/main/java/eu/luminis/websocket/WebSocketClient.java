@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -61,7 +62,7 @@ public class WebSocketClient {
     private Map<String, String> additionalHeaders;
 
     public WebSocketClient(URL wsURL) {
-        connectUrl = wsURL;
+        connectUrl = correctUrl(wsURL);
     }
 
     public URL getConnectUrl() {
@@ -349,6 +350,22 @@ public class WebSocketClient {
             return value.toLowerCase();
         else return null;
     }
+
+    private URL correctUrl(URL wsURL) {
+        if (wsURL.getPath().startsWith("/"))
+            return wsURL;
+        else
+            try {
+                String path = wsURL.getPath();
+                if (!path.trim().startsWith("/"))
+                    path = "/" + path.trim();
+                return new URL(wsURL.getProtocol(), wsURL.getHost(), wsURL.getPort(), path);
+            } catch (MalformedURLException e) {
+                // Impossible
+                throw new RuntimeException();
+            }
+    }
+
 }
 
 
