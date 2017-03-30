@@ -99,6 +99,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
                     dataZone.add(label);
                     requestDataField = new JTextArea();
                     requestDataField.setColumns(40);
+                    requestDataField.setLineWrap(true);
                     requestDataField.setBorder(BorderFactory.createEmptyBorder());
                     // Add a simple (huhuh!) on-change handler....
                     requestDataField.getDocument().addDocumentListener(new DocumentListener() {
