@@ -23,7 +23,7 @@ public class HttpUpgradeException extends HttpException {
     private Integer statusCode;
 
     public HttpUpgradeException(int statusCode) {
-        super("Http Upgrade failed");
+        super("Http Upgrade failed with status code " + statusCode);
         this.statusCode = statusCode;
     }
 
