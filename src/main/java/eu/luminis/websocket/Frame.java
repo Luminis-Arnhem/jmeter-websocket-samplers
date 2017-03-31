@@ -164,6 +164,7 @@ public abstract class Frame {
             if (bytesRead == 0)   // Should not happen according to Javadoc, but just in case... avoid endless loop
                 return totalRead;
             totalRead += bytesRead;
+            offset += bytesRead;
             toRead = expected - totalRead;
         }
         while (totalRead < expected);
