@@ -99,18 +99,24 @@ public class FrameTest {
     @Test
     public void testReadFromStreamBlocking() throws IOException {
 
-        byte[] buffer = new byte[256];
+        byte[] inputBuffer = new byte[256];
         for (int i = 0; i < 256; i++)
-            buffer[i] = (byte) i;
+            inputBuffer[i] = (byte) i;
 
-        InputStream input = new ByteArrayInputStream(buffer) {
+        InputStream input = new ByteArrayInputStream(inputBuffer) {
             @Override
-            public synchronized int read(byte[] b, int off, int len) {
+            public synchronized int read(byte[] b, int offset, int count) {
                 // For the test: do not return all bytes, but just a few
-                return super.read(b, off, 21);
+                if (count >= 21)
+                    return super.read(b, offset, 21);
+                else
+                    return super.read(b, offset, count);
             }
         };
 
-        Assert.assertEquals(buffer.length, Frame.readFromStream(input, buffer));
+        byte[] outputBuffer = new byte[256];
+        Assert.assertEquals(inputBuffer.length, Frame.readFromStream(input, outputBuffer));
+        Assert.assertArrayEquals(inputBuffer, outputBuffer);
     }
+
 }
