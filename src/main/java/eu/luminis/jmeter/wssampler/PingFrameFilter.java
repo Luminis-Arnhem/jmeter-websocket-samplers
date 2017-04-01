@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class PingFrameFilter extends FrameFilter {
 
-    protected Logger log = LoggingManager.getLoggerForClass();
+    private static Logger log = LoggingManager.getLoggerForClass();
 
     @Override
     protected boolean matchesFilter(Frame receivedFrame) {
@@ -28,6 +28,11 @@ public class PingFrameFilter extends FrameFilter {
             wsClient.sendPongFrame();   // TODO: check consequences of throwing an IOException here....
         }
 
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return log;
     }
 
     public boolean getReplyToPing() {

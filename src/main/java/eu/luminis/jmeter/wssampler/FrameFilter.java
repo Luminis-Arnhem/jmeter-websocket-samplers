@@ -29,8 +29,6 @@ import java.io.IOException;
 
 public abstract class FrameFilter extends ConfigTestElement {
 
-    protected Logger log = LoggingManager.getLoggerForClass();
-
     private FrameFilter next;
 
     public FrameFilter() {
@@ -50,7 +48,7 @@ public abstract class FrameFilter extends ConfigTestElement {
 
             matchesFilter = matchesFilter(receivedFrame);
             if (matchesFilter) {
-                log.debug("Filter discards " + receivedFrame);
+                getLogger().debug("Filter discards " + receivedFrame);
                 performReplyAction(wsClient, receivedFrame);
 
                 SampleResult subResult = new SampleResult();
@@ -81,6 +79,8 @@ public abstract class FrameFilter extends ConfigTestElement {
         return false;
     }
 
+    abstract protected Logger getLogger();
+
     @Override
     public String toString() {
         return "Frame Filter '" + getName() + "'";
@@ -88,7 +88,7 @@ public abstract class FrameFilter extends ConfigTestElement {
 
     public void setNext(FrameFilter nextFilter) {
         if (nextFilter == this)
-            log.debug("Ignoring additional filter '" + nextFilter + "'; already present in chain.");
+            getLogger().debug("Ignoring additional filter '" + nextFilter + "'; already present in chain.");
         else if (next == null)
             this.next = nextFilter;
         else
