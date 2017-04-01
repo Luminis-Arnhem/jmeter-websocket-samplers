@@ -106,7 +106,7 @@ public class FrameTest {
         InputStream input = new ByteArrayInputStream(inputBuffer) {
             @Override
             public synchronized int read(byte[] b, int offset, int count) {
-                // For the test: do not return all bytes, but just a few
+                // For the test: simulate a network stream and do not return all bytes at once.
                 if (count >= 21)
                     return super.read(b, offset, 21);
                 else
@@ -117,6 +117,59 @@ public class FrameTest {
         byte[] outputBuffer = new byte[256];
         Assert.assertEquals(inputBuffer.length, Frame.readFromStream(input, outputBuffer));
         Assert.assertArrayEquals(inputBuffer, outputBuffer);
+    }
+
+    @Test
+    public void testReadFromStreamLimitedMaintainsOrder() throws IOException {
+
+        byte[] inputBuffer = new byte[256];
+        for (int i = 0; i < 256; i++)
+            inputBuffer[i] = (byte) i;
+
+        InputStream input = new ByteArrayInputStream(inputBuffer) {
+            @Override
+            public synchronized int read(byte[] b, int offset, int count) {
+                // For the test: simulate a network stream and do not return all bytes at once.
+                if (count >= 21)
+                    return super.read(b, offset, 21);
+                else
+                    return super.read(b, offset, count);
+            }
+        };
+
+        byte[] outputBuffer = new byte[222];
+        int bytesRead = Frame.readFromStream(input, outputBuffer);
+        Assert.assertEquals(outputBuffer.length, bytesRead);
+        for (int i = 0; i < 222; i++)
+            Assert.assertEquals(inputBuffer[i], outputBuffer[i]);
+        for (int i = 222; i < 256; i++)
+            Assert.assertEquals(inputBuffer[i], (byte) input.read());
+    }
+
+    @Test
+    public void testReadFromStreamMightReturnLessThanRequested() throws IOException {
+
+        byte[] inputBuffer = new byte[256];
+        for (int i = 0; i < 256; i++)
+            inputBuffer[i] = (byte) i;
+
+        InputStream input = new ByteArrayInputStream(inputBuffer) {
+            @Override
+            public synchronized int read(byte[] b, int offset, int count) {
+                // For the test: simulate a network stream and do not return all bytes at once.
+                if (count >= 21)
+                    return super.read(b, offset, 21);
+                else
+                    return super.read(b, offset, count);
+            }
+        };
+
+        byte[] outputBuffer = new byte[512];
+        int bytesRead = Frame.readFromStream(input, outputBuffer);
+        Assert.assertEquals(inputBuffer.length, bytesRead);
+        for (int i = 0; i < 256; i++)
+            Assert.assertEquals(inputBuffer[i], outputBuffer[i]);
+        Assert.assertEquals(-1, input.read());
     }
 
 }
