@@ -82,7 +82,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
                 testRegexButton = new JButton("Test regular expression");
                 testRegexButton.setEnabled(false);
                 testRegexButton.addActionListener(e -> {
-                    new TestRegexDialog(SwingUtilities.getWindowAncestor(TextFrameFilterGuiPanel.this), matchValue.getText(), dlg -> {
+                    new TestRegexDialog(SwingUtilities.getWindowAncestor(TextFrameFilterGuiPanel.this), matchValue.getText(), typeSelector2.getSelectedIndex() == 2, dlg -> {
                         if (dlg.isReturnRegex()) {
                             matchValue.setText(dlg.getRegex());
                         }

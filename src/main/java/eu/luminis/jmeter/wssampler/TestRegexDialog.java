@@ -29,6 +29,7 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -42,53 +43,75 @@ class TestRegexDialog extends JDialog {
     private List<JLabel> noLabels = new ArrayList<>();
 
     private boolean returnRegex = false;
+    private boolean mustMatch;
 
-    public TestRegexDialog(Window parent, String initialRegexValue, Function<TestRegexDialog, Boolean> closeCallback) {
+    public TestRegexDialog(Window parent, String initialRegexValue, boolean mustMatch, Function<TestRegexDialog, Boolean> closeCallback) {
         super(parent);
-        setTitle("Test regular expression");
+        setTitle("Test regular expression - " + (mustMatch? "full match": "contains match"));
+        this.mustMatch = mustMatch;
         setModal(true);
 
-        JPanel panel = new JPanel();
+
+        JPanel outerPanel = new JPanel();
         {
-            panel.setLayout(new SpringLayout());
-            panel.setBorder(BorderFactory.createCompoundBorder(
+            outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
+            outerPanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createEmptyBorder(5, 5, 5, 5),
                     BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(null, ""),
                             BorderFactory.createEmptyBorder(5, 5, 5, 5))));
 
-
-            panel.add(new JLabel("Regular expression:"));
-            regex = new JTextField(initialRegexValue);
-            panel.add(regex);
-            panel.add(Box.createHorizontalStrut(1));
-            panel.add(Box.createHorizontalStrut(1));
-
-            for (int i = 0; i < initialNrOfSamples; i++) {
-                panel.add(new JLabel("Sample " + (i+1) + ":"));
-                JTextField sample = new JTextField("<add sample text here>");
-                panel.add(sample);
-                samples.add(sample);
-                JLabel yes = new JLabel("\u2713");
-                yes.setForeground(Color.GREEN.darker());
-                panel.add(yes);
-                yesLabels.add(yes);
-                JLabel no = new JLabel("\u2715");
-                no.setForeground(Color.RED);
-                panel.add(no);
-                noLabels.add(no);
+            JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 9));
+            {
+                JLabel usageLabel = new JLabel(mustMatch ? "<html>Samples must <em>match</em> regex.</html>" : "<html>Samples must <em>contain</em> value matching regex.</html>");
+                headerPanel.add(usageLabel);
             }
-            SpringUtilities.makeCompactGrid(panel, 1 + initialNrOfSamples, 4,
-                    6, 6, 6, 6);
+            outerPanel.add(headerPanel, BorderLayout.NORTH);
+            headerPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+            JPanel gridPanel = new JPanel();
+            {
+                gridPanel.setLayout(new SpringLayout());
+
+                gridPanel.add(new JLabel("Regular expression:"));
+                regex = new JTextField(initialRegexValue);
+                gridPanel.add(regex);
+                gridPanel.add(Box.createHorizontalStrut(1));  // dummy column needed for SpringLayout
+                gridPanel.add(Box.createHorizontalStrut(1));
+
+                for (int i = 0; i < initialNrOfSamples; i++) {
+                    gridPanel.add(new JLabel("Sample " + (i + 1) + ":"));
+                    JTextField sample = new JTextField("<add sample text here>");
+                    gridPanel.add(sample);
+                    samples.add(sample);
+                    JLabel yes = new JLabel("\u2713");
+                    yes.setForeground(Color.GREEN.darker());
+                    gridPanel.add(yes);
+                    yesLabels.add(yes);
+                    JLabel no = new JLabel("\u2715");
+                    no.setForeground(Color.RED);
+                    gridPanel.add(no);
+                    noLabels.add(no);
+                }
+                SpringUtilities.makeCompactGrid(gridPanel, 1 + initialNrOfSamples, 4,
+                        6, 6, 6, 6);
+            }
+            outerPanel.add(gridPanel);
+            gridPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         }
-        add(panel);
+        add(outerPanel);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 1, 3));
-        JButton useThisButton = new JButton("Use this regex");
-        useThisButton.addActionListener(e -> { returnRegex = true; dispose(); });
-        buttonPanel.add(useThisButton);
-        JButton closeButton = new JButton("Close");
-        closeButton.addActionListener(e -> dispose());
-        buttonPanel.add(closeButton);
+        {
+            JButton useThisButton = new JButton("Use this regex");
+            useThisButton.addActionListener(e -> {
+                returnRegex = true;
+                dispose();
+            });
+            buttonPanel.add(useThisButton);
+            JButton closeButton = new JButton("Close");
+            closeButton.addActionListener(e -> dispose());
+            buttonPanel.add(closeButton);
+        }
         add(buttonPanel, BorderLayout.SOUTH);
         pack();
 
@@ -156,7 +179,8 @@ class TestRegexDialog extends JDialog {
 
     void evaluate() {
         for (int i = 0; i < samples.size(); i++) {
-            boolean matches = regexPattern.matcher(samples.get(i).getText()).matches();
+            Matcher matcher = regexPattern.matcher(samples.get(i).getText());
+            boolean matches = mustMatch? matcher.matches(): matcher.find();
             yesLabels.get(i).setVisible(matches);
             noLabels.get(i).setVisible(!matches);
         }
