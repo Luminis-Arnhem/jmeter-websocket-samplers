@@ -20,6 +20,8 @@ package eu.luminis.websocket;
 
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
@@ -33,18 +35,24 @@ import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class WebSocketClient {
+
+    private static final Logger log = LoggingManager.getLoggerForClass();
 
     public static int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
     public static int DEFAULT_READ_TIMEOUT = 6 * 1000;
+
+    public static Set<String> UPGRADE_HEADERS;
+
+    static {
+        UPGRADE_HEADERS = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        UPGRADE_HEADERS.addAll(Arrays.asList(new String[] { "Host", "Upgrade", "Connection", "Sec-WebSocket-Key", "Sec-WebSocket-Version" }));
+    }
 
     enum WebSocketState {
         CLOSED,
@@ -119,13 +127,17 @@ public class WebSocketClient {
             httpWriter.print("GET " + path + " HTTP/1.1\r\n");
             httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
             for (Map.Entry<String, String> header : headers.entrySet()) {
-                String headerLine = header.getKey() + ": " + header.getValue();
-                // Ensure header line does _not_ contain new line
-                if (!headerLine.contains("\r") && !headerLine.contains("\n"))
-                    httpWriter.print(headerLine + "\r\n");
-                else {
-                    throw new IllegalArgumentException("Invalid header; contains new line.");
+                if (! UPGRADE_HEADERS.contains(header.getKey())) {
+                    String headerLine = header.getKey() + ": " + header.getValue();
+                    // Ensure header line does _not_ contain new line
+                    if (!headerLine.contains("\r") && !headerLine.contains("\n"))
+                        httpWriter.print(headerLine + "\r\n");
+                    else {
+                        throw new IllegalArgumentException("Invalid header; contains new line.");
+                    }
                 }
+                else
+                    log.error("Ignoring user supplied header '" + header + "'");
             }
             httpWriter.print("Upgrade: websocket\r\n");
             httpWriter.print("Connection: Upgrade\r\n");
@@ -160,8 +172,7 @@ public class WebSocketClient {
         return state == WebSocketState.CONNECTED;
     }
 
-
-    private Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+    protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
         Socket plainSocket = new Socket();
         plainSocket.connect(new InetSocketAddress(host, port), connectTimeout);
         if ("https".equals(connectUrl.getProtocol())) {

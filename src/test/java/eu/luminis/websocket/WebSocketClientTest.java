@@ -21,18 +21,23 @@ package eu.luminis.websocket;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 public class WebSocketClientTest {
 
@@ -212,6 +217,43 @@ public class WebSocketClientTest {
         assertEquals("/path", new WebSocketClient(url).getConnectUrl().getPath());
     }
 
+    @Test
+    public void clientSuppliedUpgradeHeaderShouldBeIgnored() throws MalformedURLException {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Upgrade", "this header should be ignored");
+        try {
+            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+        } catch (IOException e) {
+            // Expected, because no response.
+        }
+
+        String output = outputBuffer.toString();
+        List upgradeHeaders = Arrays.stream(output.split("\r\n")).filter(h -> h.toLowerCase().startsWith("upgrade")).collect(Collectors.toList());
+        assertEquals(1, upgradeHeaders.size());
+        assertEquals("Upgrade: websocket", upgradeHeaders.get(0));
+    }
+
+    @Test
+    public void clientSuppliedSecWebSocketKeyHeaderShouldBeIgnored() throws MalformedURLException {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("SEC-WEBSOCKET-KEY", "this header should be ignored");
+        try {
+            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+        } catch (IOException e) {
+            // Expected, because no response.
+        }
+
+        String output = outputBuffer.toString();
+        List<String> upgradeHeaders = Arrays.stream(output.split("\r\n")).filter(h -> h.toLowerCase().startsWith("sec-websocket-key")).collect(Collectors.toList());
+        assertEquals(1, upgradeHeaders.size());
+        String base64chars = "A-Za-z0-9+/=";
+        assertTrue(Pattern.compile("Sec-WebSocket-Key: [" + base64chars + "]+").matcher(upgradeHeaders.get(0)).matches());
+    }
+
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         Field field = null;
         try {
@@ -223,5 +265,16 @@ public class WebSocketClientTest {
         } catch (IllegalAccessException e) {
             // Impossible
         }
+    }
+
+    private WebSocketClient createMockWebSocketClientWithOutputBuffer(ByteArrayOutputStream outputBuffer) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", "nowhere.com", 80, "/")) {
+            protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+                Socket socket = Mockito.mock(Socket.class);
+                when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+                when(socket.getOutputStream()).thenReturn(outputBuffer);
+                return socket;
+            }
+        };
     }
 }
