@@ -20,16 +20,15 @@ package eu.luminis.websocket;
 
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.URL;
+import java.net.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -42,6 +41,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class WebSocketClient {
+
+    private static final Logger log = LoggingManager.getLoggerForClass();
 
     public static int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
     public static int DEFAULT_READ_TIMEOUT = 6 * 1000;
@@ -60,6 +61,9 @@ public class WebSocketClient {
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
     private Map<String, String> additionalHeaders;
+    private boolean useProxy;
+    private String proxyHost;
+    private int proxyPort;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = correctUrl(wsURL);
@@ -71,6 +75,12 @@ public class WebSocketClient {
 
     public void setAdditionalUpgradeRequestHeaders(Map<String, String> additionalHeaders) {
         this.additionalHeaders = additionalHeaders;
+    }
+
+    public void useProxy(String host, int port) {
+        useProxy = true;
+        proxyHost = host;
+        proxyPort = port;
     }
 
     public Map<String, String>  connect() throws IOException, HttpException {
@@ -105,18 +115,22 @@ public class WebSocketClient {
         state = WebSocketState.CONNECTING;
 
         boolean connected = false;
-        wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
+        wsSocket = createSocket(useProxy? proxyHost: connectUrl.getHost(), useProxy? proxyPort: connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
 
         try {
             wsSocket.setSoTimeout(readTimeout);
             socketOutputStream = wsSocket.getOutputStream();
 
+            if (useProxy) {
+                setupProxyConnection();
+            }
+
             String path = connectUrl.getFile();  // getFile includes path and query string
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(socketOutputStream);
-            httpWriter.print("GET " + path + " HTTP/1.1\r\n");
+            httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
             httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 String headerLine = header.getKey() + ": " + header.getValue();
@@ -177,6 +191,39 @@ public class WebSocketClient {
         }
         else {
             return plainSocket;
+        }
+    }
+
+    private void setupProxyConnection() throws IOException {
+        PrintWriter proxyWriter = new PrintWriter(socketOutputStream);
+        proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
+        proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+        proxyWriter.print("\r\n");
+        proxyWriter.flush();
+
+        try {
+            HttpLineReader httpReader = new HttpLineReader(wsSocket.getInputStream());
+            String statusLine = httpReader.readLine();
+            checkHttpStatus(statusLine, 200);
+
+            String line;
+            do {
+                line = httpReader.readLine();
+            }
+            while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
+            log.debug("Using proxy " + proxyHost + ":" + proxyPort);
+        }
+        catch (HttpUpgradeException httpError) {
+            log.error("Proxy connection error", httpError);
+            throw new HttpProtocolException("Connecting proxy failed with status code " + httpError.getStatusCode());
+        }
+        catch (SocketTimeoutException timeout) {
+            log.error("Proxy connection timeout");
+            throw timeout;
+        }
+        catch (IOException ioError) {
+            log.error("Proxy connection setup error: ", ioError);
+            throw ioError;
         }
     }
 

@@ -36,7 +36,9 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -57,6 +59,11 @@ abstract public class WebsocketSampler extends AbstractSampler {
     protected CookieManager cookieManager;
     protected int readTimeout;
     protected int connectTimeout;
+
+    private String proxyHost;
+    private int proxyPort;
+    private List<String> nonProxyHosts;
+    private List<String> nonProxyWildcards;
 
     abstract protected String validateArguments();
 
@@ -100,6 +107,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
             if (! wsClient.isConnected()) {
                 if (useTLS() && !USE_CACHED_SSL_CONTEXT)
                     ((JsseSSLManager) SSLManager.getInstance()).resetContext();
+                if (useProxy(wsClient.getConnectUrl().getHost()))
+                    wsClient.useProxy(proxyHost, proxyPort);
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
 
@@ -278,6 +287,19 @@ abstract public class WebsocketSampler extends AbstractSampler {
             return null;
     }
 
+    boolean useProxy(String host) {
+        // Check for (what JMeter calls) "static" proxy
+        proxyHost = System.getProperty("http.proxyHost",null);
+        proxyPort = Integer.parseInt(System.getProperty("http.proxyPort","0"));
+        List<String> nonProxyHostList = Arrays.asList(System.getProperty("http.nonProxyHosts","").split("\\|"));
+        nonProxyHosts = nonProxyHostList.stream().filter(h -> !h.startsWith("*")).collect(Collectors.toList());
+        nonProxyWildcards = nonProxyHostList.stream().filter(h -> h.startsWith("*")).map(w -> w.substring(1)).collect(Collectors.toList());
+        if (proxyHost != null && proxyHost.trim().length() > 0) {
+            return !nonProxyHosts.contains(host) && nonProxyWildcards.stream().filter(wildcard -> host.endsWith(wildcard)).count() == 0;
+        }
+        else
+            return false;
+    }
 
     protected boolean useTLS() {
         return getTLS();
