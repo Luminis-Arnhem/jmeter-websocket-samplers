@@ -28,6 +28,7 @@ public class WebsocketSamplerTest {
     @Test
     public void defaultDoesNotUseProxy() {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler();
+        sampler.initProxyConfiguration();
         assertFalse(sampler.useProxy("anywhere.com"));
     }
 
@@ -37,6 +38,7 @@ public class WebsocketSamplerTest {
         try (ScopedProperty proxyHostProp = new ScopedProperty("http.proxyHost", "proxy.local");
                 ScopedProperty proxyPortProp = new ScopedProperty("http.proxyPort", "8392"))
         {
+            sampler.initProxyConfiguration();
             assertTrue(sampler.useProxy("echo.websocket.org"));
         }
     }
@@ -48,6 +50,7 @@ public class WebsocketSamplerTest {
              ScopedProperty proxyPortProp = new ScopedProperty("http.proxyPort", "8392");
              ScopedProperty proxyExcludes = new ScopedProperty("http.nonProxyHosts", "www.google.com"))
         {
+            sampler.initProxyConfiguration();
             assertTrue(sampler.useProxy("echo.websocket.org"));
             assertFalse(sampler.useProxy("www.google.com"));
         }
@@ -60,6 +63,7 @@ public class WebsocketSamplerTest {
              ScopedProperty proxyPortProp = new ScopedProperty("http.proxyPort", "8392");
              ScopedProperty proxyExcludes = new ScopedProperty("http.nonProxyHosts", "*.google.com"))
         {
+            sampler.initProxyConfiguration();
             assertTrue(sampler.useProxy("echo.websocket.org"));
             assertFalse(sampler.useProxy("www.google.com"));
             assertFalse(sampler.useProxy("gmail.google.com"));

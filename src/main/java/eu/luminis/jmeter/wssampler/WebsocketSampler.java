@@ -60,14 +60,19 @@ abstract public class WebsocketSampler extends AbstractSampler {
     protected int readTimeout;
     protected int connectTimeout;
 
-    private String proxyHost;
-    private int proxyPort;
-    private List<String> nonProxyHosts;
-    private List<String> nonProxyWildcards;
+    // Proxy configuration: only static proxy configuration is supported.
+    private static String proxyHost;
+    private static int proxyPort;
+    private static List<String> nonProxyHosts;
+    private static List<String> nonProxyWildcards;
 
     abstract protected String validateArguments();
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
+
+    static {
+        initProxyConfiguration();
+    }
 
     @Override
     public SampleResult sample(Entry entry) {
@@ -287,13 +292,16 @@ abstract public class WebsocketSampler extends AbstractSampler {
             return null;
     }
 
-    boolean useProxy(String host) {
-        // Check for (what JMeter calls) "static" proxy
+    static void initProxyConfiguration() {
         proxyHost = System.getProperty("http.proxyHost",null);
         proxyPort = Integer.parseInt(System.getProperty("http.proxyPort","0"));
         List<String> nonProxyHostList = Arrays.asList(System.getProperty("http.nonProxyHosts","").split("\\|"));
         nonProxyHosts = nonProxyHostList.stream().filter(h -> !h.startsWith("*")).collect(Collectors.toList());
         nonProxyWildcards = nonProxyHostList.stream().filter(h -> h.startsWith("*")).map(w -> w.substring(1)).collect(Collectors.toList());
+    }
+
+    boolean useProxy(String host) {
+        // Check for (what JMeter calls) "static" proxy
         if (proxyHost != null && proxyHost.trim().length() > 0) {
             return !nonProxyHosts.contains(host) && nonProxyWildcards.stream().filter(wildcard -> host.endsWith(wildcard)).count() == 0;
         }
