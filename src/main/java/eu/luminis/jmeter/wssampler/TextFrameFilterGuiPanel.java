@@ -28,12 +28,13 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static eu.luminis.jmeter.wssampler.ComparisonType.*;
+import static eu.luminis.jmeter.wssampler.WebSocketSamplerGuiPanel.createAboutPanel;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class TextFrameFilterGuiPanel extends JPanel {
 
     private final JButton testRegexButton;
-    private JPanel borderPanel;
+    private JPanel matchPanel;
     JTextArea matchValue;
     private JComboBox typeSelector1;
     private JComboBox typeSelector2;
@@ -43,59 +44,77 @@ public class TextFrameFilterGuiPanel extends JPanel {
 
     public TextFrameFilterGuiPanel() {
         setLayout(new BoxLayout(this, Y_AXIS));
-        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter condition"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-        JPanel settingsPanel = new JPanel();
-        {
-            settingsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-            settingsPanel.add(new JLabel("Discard any text frame"));
-
-            typeSelector1 = new JComboBox(new String[] { "", "that", "that does NOT"});
-            settingsPanel.add(typeSelector1);
-
-            typeSelector2 = new JComboBox();
-            typeSelector2.setPrototypeDisplayValue("starts with");
-            settingsPanel.add(typeSelector2);
-
-            typeSelector3 = new JComboBox();
-            typeSelector3.setPrototypeDisplayValue("regular expression");
-            settingsPanel.add(typeSelector3);
-        }
-        settingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        add(settingsPanel);
 
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         {
-            borderPanel = new JPanel();
+            JPanel contentPanel = new JPanel();
             {
-                matchPanelPanelBorder = new DynamicTitledBorder(null, "Text ", TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
-                borderPanel.setBorder(BorderFactory.createCompoundBorder(matchPanelPanelBorder, new EmptyBorder(9 ,9, 9, 9)));
-                borderPanel.setLayout(new BorderLayout());
-                matchValue = new JTextArea();
-                matchValue.setRows(2);
-                matchValue.setEnabled(false);
-                matchPanelPanelBorder.setEnabled(false);
-                borderPanel.add(matchValue);
-            }
+                contentPanel.setLayout(new BoxLayout(contentPanel, Y_AXIS));
+                contentPanel.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createTitledBorder("Frame filter condition"),
+                        BorderFactory.createEmptyBorder(1, 5, 1, 1)));
 
-            JPanel matchPositionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-            {
-                testRegexButton = new JButton("Test regular expression");
-                testRegexButton.setEnabled(false);
-                testRegexButton.addActionListener(e -> {
-                    new TestRegexDialog(SwingUtilities.getWindowAncestor(TextFrameFilterGuiPanel.this), matchValue.getText(), typeSelector2.getSelectedIndex() == 2, dlg -> {
-                        if (dlg.isReturnRegex()) {
-                            matchValue.setText(dlg.getRegex());
-                        }
-                        return dlg.isReturnRegex();
-                    }).setVisible(true);
-                });
-                matchPositionPanel.add(testRegexButton);
+                JPanel settingsPanel = new JPanel();
+                {
+                    settingsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                    settingsPanel.add(new JLabel("Discard any text frame"));
+
+                    typeSelector1 = new JComboBox(new String[] { "", "that", "that does NOT"});
+                    settingsPanel.add(typeSelector1);
+
+                    typeSelector2 = new JComboBox();
+                    typeSelector2.setPrototypeDisplayValue("starts with");
+                    settingsPanel.add(typeSelector2);
+
+                    typeSelector3 = new JComboBox();
+                    typeSelector3.setPrototypeDisplayValue("regular expression");
+                    settingsPanel.add(typeSelector3);
+                }
+                contentPanel.add(settingsPanel);
+                settingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+                matchPanel = new JPanel();
+                {
+                    matchPanelPanelBorder = new DynamicTitledBorder(null, "Text ", TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
+                    matchPanel.setBorder(BorderFactory.createCompoundBorder(matchPanelPanelBorder, new EmptyBorder(5, 5, 5, 5)));
+                    matchPanel.setLayout(new BorderLayout());
+                    matchValue = new JTextArea();
+                    matchValue.setLineWrap(true);
+                    matchValue.setRows(2);
+
+                    JScrollPane scrollPane = new JScrollPane(matchValue);
+                    scrollPane.setMaximumSize(new Dimension(scrollPane.getMaximumSize().width, Integer.MAX_VALUE));
+                    scrollPane.setBorder(new JTextField().getBorder());
+                    scrollPane.setAlignmentY(0.5f);
+
+                    matchValue.setEnabled(false);
+                    matchPanelPanelBorder.setEnabled(false);
+                    matchPanel.add(scrollPane);
+                }
+                contentPanel.add(matchPanel);
+                matchPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+                JPanel matchPositionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, -4, 0));
+                {
+                    testRegexButton = new JButton("Test regular expression");
+                    testRegexButton.setEnabled(false);
+                    testRegexButton.addActionListener(e -> {
+                        new TestRegexDialog(SwingUtilities.getWindowAncestor(TextFrameFilterGuiPanel.this), matchValue.getText(), typeSelector2.getSelectedIndex() == 2, dlg -> {
+                            if (dlg.isReturnRegex()) {
+                                matchValue.setText(dlg.getRegex());
+                            }
+                            return dlg.isReturnRegex();
+                        }).setVisible(true);
+                    });
+                    matchPositionPanel.add(testRegexButton);
+                }
+                matchPositionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+                contentPanel.add(matchPositionPanel);
             }
-            matchPositionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 
             splitter.setBorder(null);
-            splitter.setTopComponent(borderPanel);
-            splitter.setBottomComponent(matchPositionPanel);
+            splitter.setTopComponent(contentPanel);
+            splitter.setBottomComponent(createAboutPanel(this));
         }
         splitter.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         add(splitter);
@@ -108,7 +127,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
                     typeSelector3.removeAllItems();
                     matchValue.setEnabled(false);
                     matchPanelPanelBorder.setEnabled(false);
-                    borderPanel.repaint();
+                    matchPanel.repaint();
                     break;
                 case 1:
                     typeSelector2.addItem("contains"); typeSelector2.addItem("starts with"); typeSelector2.addItem("equals"); typeSelector2.addItem("ends with");
@@ -116,7 +135,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
                         typeSelector2.setSelectedIndex(selectedItem);
                     matchValue.setEnabled(true);
                     matchPanelPanelBorder.setEnabled(true);
-                    borderPanel.repaint();
+                    matchPanel.repaint();
                     break;
                 case 2:
                     typeSelector2.addItem("contain"); typeSelector2.addItem("start with"); typeSelector2.addItem("equal"); typeSelector2.addItem("end with");
@@ -124,7 +143,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
                         typeSelector2.setSelectedIndex(selectedItem);
                     matchValue.setEnabled(true);
                     matchPanelPanelBorder.setEnabled(true);
-                    borderPanel.repaint();
+                    matchPanel.repaint();
             }
         });
         typeSelector2.addActionListener(e -> {
@@ -144,7 +163,7 @@ public class TextFrameFilterGuiPanel extends JPanel {
             useRegex = typeSelector3.getSelectedIndex() == 1;
             matchPanelPanelBorder.setTitle(useRegex ? "Regular expression": "Text");
             testRegexButton.setEnabled(useRegex);
-            borderPanel.repaint();
+            matchPanel.repaint();
 
             if (useRegex)
                 compileRegex();
