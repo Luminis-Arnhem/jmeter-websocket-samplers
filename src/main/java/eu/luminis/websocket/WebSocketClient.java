@@ -64,6 +64,8 @@ public class WebSocketClient {
     private boolean useProxy;
     private String proxyHost;
     private int proxyPort;
+    private String proxyUsername;
+    private String proxyPassword;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = correctUrl(wsURL);
@@ -77,10 +79,12 @@ public class WebSocketClient {
         this.additionalHeaders = additionalHeaders;
     }
 
-    public void useProxy(String host, int port) {
+    public void useProxy(String host, int port, String user, String password) {
         useProxy = true;
         proxyHost = host;
         proxyPort = port;
+        proxyUsername = user;
+        proxyPassword = password;
     }
 
     public Map<String, String>  connect() throws IOException, HttpException {
@@ -200,6 +204,10 @@ public class WebSocketClient {
         PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
         proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
         proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+        if (proxyUsername != null && proxyPassword != null) {
+            String authentication = proxyUsername + ":" + proxyPassword;
+            proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
+        }
         proxyWriter.print("\r\n");
         proxyWriter.flush();
 

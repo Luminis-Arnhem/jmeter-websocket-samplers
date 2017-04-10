@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.HttpUpgradeException;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.JMeter;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -65,6 +66,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
     private static int proxyPort;
     private static List<String> nonProxyHosts;
     private static List<String> nonProxyWildcards;
+    private static String proxyUsername;
+    private static String proxyPassword;
 
     abstract protected String validateArguments();
 
@@ -113,7 +116,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
                 if (useTLS() && !USE_CACHED_SSL_CONTEXT)
                     ((JsseSSLManager) SSLManager.getInstance()).resetContext();
                 if (useProxy(wsClient.getConnectUrl().getHost()))
-                    wsClient.useProxy(proxyHost, proxyPort);
+                    wsClient.useProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
 
@@ -298,6 +301,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
         List<String> nonProxyHostList = Arrays.asList(System.getProperty("http.nonProxyHosts","").split("\\|"));
         nonProxyHosts = nonProxyHostList.stream().filter(h -> !h.startsWith("*")).collect(Collectors.toList());
         nonProxyWildcards = nonProxyHostList.stream().filter(h -> h.startsWith("*")).map(w -> w.substring(1)).collect(Collectors.toList());
+        proxyUsername = JMeterUtils.getPropDefault(JMeter.HTTP_PROXY_USER,null);
+        proxyPassword = JMeterUtils.getPropDefault(JMeter.HTTP_PROXY_PASS,null);
     }
 
     boolean useProxy(String host) {
