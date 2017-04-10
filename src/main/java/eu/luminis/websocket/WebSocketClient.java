@@ -115,16 +115,12 @@ public class WebSocketClient {
         state = WebSocketState.CONNECTING;
 
         boolean connected = false;
-        wsSocket = createSocket(useProxy? proxyHost: connectUrl.getHost(), useProxy? proxyPort: connectUrl.getPort(), connectTimeout, readTimeout);
+        wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
 
         try {
             wsSocket.setSoTimeout(readTimeout);
             socketOutputStream = wsSocket.getOutputStream();
-
-            if (useProxy) {
-                setupProxyConnection();
-            }
 
             String path = connectUrl.getFile();  // getFile includes path and query string
             if (path == null || !path.trim().startsWith("/"))
@@ -176,33 +172,39 @@ public class WebSocketClient {
 
 
     private Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
-        Socket plainSocket = new Socket();
-        plainSocket.connect(new InetSocketAddress(host, port), connectTimeout);
+        Socket baseSocket = new Socket();
+        if (useProxy) {
+            baseSocket.connect(new InetSocketAddress(proxyHost, proxyPort), connectTimeout);
+            setupProxyConnection(baseSocket);
+        }
+        else
+            baseSocket.connect(new InetSocketAddress(host, port), connectTimeout);
+
         if ("https".equals(connectUrl.getProtocol())) {
-            plainSocket.setSoTimeout(readTimeout);
+            baseSocket.setSoTimeout(readTimeout);
 
             JsseSSLManager sslMgr = (JsseSSLManager) SSLManager.getInstance();
             try {
                 SSLSocketFactory tlsSocketFactory = sslMgr.getContext().getSocketFactory();
-                return tlsSocketFactory.createSocket(plainSocket, host, port, true);
+                return tlsSocketFactory.createSocket(baseSocket, host, port, true);
             } catch (GeneralSecurityException e) {
                 throw new IOException(e);
             }
         }
         else {
-            return plainSocket;
+            return baseSocket;
         }
     }
 
-    private void setupProxyConnection() throws IOException {
-        PrintWriter proxyWriter = new PrintWriter(socketOutputStream);
+    private void setupProxyConnection(Socket socket) throws IOException {
+        PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
         proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
         proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
         proxyWriter.print("\r\n");
         proxyWriter.flush();
 
         try {
-            HttpLineReader httpReader = new HttpLineReader(wsSocket.getInputStream());
+            HttpLineReader httpReader = new HttpLineReader(socket.getInputStream());
             String statusLine = httpReader.readLine();
             checkHttpStatus(statusLine, 200);
 
@@ -211,7 +213,7 @@ public class WebSocketClient {
                 line = httpReader.readLine();
             }
             while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
-            log.debug("Using proxy " + proxyHost + ":" + proxyPort);
+            log.debug("Using proxy " + proxyHost + ":" + proxyPort + " for " + connectUrl);
         }
         catch (HttpUpgradeException httpError) {
             log.error("Proxy connection error", httpError);
