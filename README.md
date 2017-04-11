@@ -23,6 +23,7 @@ The WebSocket Samplers plugin provides the following features:
 * assertion for checking binary responses
 * integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
 * sends cookies defined by JMeter's Cookie Manager with each upgrade request (i.e. the HTTP request that initiates the WebSocket connection)
+* proxy support
 * many sample JMeter test plans illustrate the various features.
 
 ### Samplers
@@ -68,6 +69,14 @@ In addition to WebSocket samplers, the plugin also provides an generic JMeter as
 This assertion element is of course very usefull when load testing binary websocket calls, but it is not limited to websocket tests in any way. It can be used with any sampler in the JMeter toolbox. For example, you could use it to check that an image result in a HTTP sampler, is a proper PNG file (see sample).
 
 Note that the assertion element does not check the type of the response: it simply takes the binary value of the response and checks it against the match value provided. In that sense, it is completely analogous to the standard JMeter Response Assertion, except that this one provides a convenient way for specifying a binary match value.
+
+## Proxy
+
+The plugin respects standard JMeter proxy support: if you provide the `"-H <proxyHost>"` and `"-P <proxyPort>"` options on the command line, websocket connections are set up using that proxy.
+As with standard JMeter, use `"-N <nonProxyHosts>"` to specify which hosts should not be proxied (supports wildcards like `*.apache.org`)
+and `"-u <username>"` `"-a <password>"` for proxy authentication.
+
+Tested with Apache HTTPD and Fiddler.
 
 ## Status
 
