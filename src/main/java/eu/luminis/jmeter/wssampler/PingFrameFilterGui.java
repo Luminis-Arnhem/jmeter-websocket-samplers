@@ -37,7 +37,7 @@ public class PingFrameFilterGui extends AbstractConfigGui {
 
     @Override
     public String getStaticLabel() {
-        return "- Ping/Pong Frame Filter";
+        return "WebSocket Ping/Pong Frame Filter";
     }
 
     @Override

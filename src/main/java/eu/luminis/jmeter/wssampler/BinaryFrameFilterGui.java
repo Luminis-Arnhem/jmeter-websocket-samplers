@@ -37,7 +37,7 @@ public class BinaryFrameFilterGui extends AbstractConfigGui {
 
     @Override
     public String getStaticLabel() {
-        return "- Binary Frame Filter";
+        return "WebSocket Binary Frame Filter";
     }
 
     @Override

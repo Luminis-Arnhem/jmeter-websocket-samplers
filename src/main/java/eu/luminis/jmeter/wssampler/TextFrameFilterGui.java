@@ -38,7 +38,7 @@ public class TextFrameFilterGui extends AbstractConfigGui {
 
     @Override
     public String getStaticLabel() {
-        return "- Text Frame Filter";
+        return "WebSocket Text Frame Filter";
     }
 
     @Override
