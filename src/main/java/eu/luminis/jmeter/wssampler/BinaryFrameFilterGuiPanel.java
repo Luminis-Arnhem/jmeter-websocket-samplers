@@ -19,15 +19,18 @@
 package eu.luminis.jmeter.wssampler;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 
 import static eu.luminis.jmeter.wssampler.ComparisonType.*;
+import static eu.luminis.jmeter.wssampler.WebSocketSamplerGuiPanel.createAboutPanel;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class BinaryFrameFilterGuiPanel extends JPanel {
 
-    private JPanel borderPanel;
+    private JPanel matchDataPanel;
+    private DynamicTitledBorder matchPanelBorder;
     private JLabel matchPositionLabel;
     JTextArea binaryContent;
     JTextField matchPosition;
@@ -37,54 +40,67 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
 
     public BinaryFrameFilterGuiPanel() {
         setLayout(new BoxLayout(this, Y_AXIS));
-        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter condition"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-        JPanel settingsPanel = new JPanel();
-        {
-            settingsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-            //settingsPanel.add(Box.createHorizontalStrut(5));
-            settingsPanel.add(new JLabel("Discard any binary frame"));
-
-            typeSelector1 = new JComboBox(new String[] { "", "that", "that does NOT"});
-            settingsPanel.add(typeSelector1);
-
-            typeSelector2 = new JComboBox();
-            typeSelector2.setPrototypeDisplayValue("starts with");
-            settingsPanel.add(typeSelector2);
-
-            binaryDataLabel = new JLabel("the following binary data:");
-            binaryDataLabel.setEnabled(false);
-            settingsPanel.add(binaryDataLabel);
-
-        }
-        settingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-        add(settingsPanel);
 
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         {
-            borderPanel = new JPanel();
+            JPanel contentPanel = new JPanel();
             {
-                borderPanel.setBorder(new DynamicTitledBorder(null, "Binary data", TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION));
-                borderPanel.setLayout(new BorderLayout());
-                binaryContent = new JTextArea();
-                binaryContent.setRows(5);
-                binaryContent.setEnabled(false);
-                ((DynamicTitledBorder) borderPanel.getBorder()).setEnabled(false);
-                borderPanel.add(binaryContent);
-            }
+                contentPanel.setLayout(new BoxLayout(contentPanel, Y_AXIS));
+                contentPanel.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createTitledBorder("Frame filter condition"),
+                        BorderFactory.createEmptyBorder(1, 5, 1, 1)));
 
-            JPanel matchPositionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-            {
-                matchPositionLabel = new JLabel("starting at position ");
-                matchPositionPanel.add(matchPositionLabel);
-                matchPosition = new JTextField();
-                matchPosition.setColumns(10);
-                matchPositionPanel.add(matchPosition);
+                JPanel settingsPanel = new JPanel();
+                {
+                    settingsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                    settingsPanel.add(new JLabel("Discard any binary frame"));
+
+                    typeSelector1 = new JComboBox(new String[] { "", "that", "that does NOT"});
+                    settingsPanel.add(typeSelector1);
+
+                    typeSelector2 = new JComboBox();
+                    typeSelector2.setPrototypeDisplayValue("starts with");
+                    settingsPanel.add(typeSelector2);
+
+                    binaryDataLabel = new JLabel("the following binary data:");
+                    binaryDataLabel.setEnabled(false);
+                    settingsPanel.add(binaryDataLabel);
+
+                }
+                contentPanel.add(settingsPanel);
+                settingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+                matchDataPanel = new JPanel();
+                {
+                    matchPanelBorder = new DynamicTitledBorder(null, "Binary data", TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
+                    matchDataPanel.setBorder(BorderFactory.createCompoundBorder(
+                            matchPanelBorder,
+                            new EmptyBorder(5, 5, 5, 5)));
+                    matchDataPanel.setLayout(new BorderLayout());
+                    binaryContent = new JTextArea();
+                    binaryContent.setRows(5);
+                    binaryContent.setEnabled(false);
+                    matchPanelBorder.setEnabled(false);
+                    matchDataPanel.add(binaryContent);
+                }
+                contentPanel.add(matchDataPanel);
+                matchDataPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+                JPanel matchPositionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+                {
+                    matchPositionLabel = new JLabel("starting at position ");
+                    matchPositionPanel.add(matchPositionLabel);
+                    matchPosition = new JTextField();
+                    matchPosition.setColumns(10);
+                    matchPositionPanel.add(matchPosition);
+                }
+                contentPanel.add(matchPositionPanel);
+                matchPositionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
             }
-            matchPositionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 
             splitter.setBorder(null);
-            splitter.setTopComponent(borderPanel);
-            splitter.setBottomComponent(matchPositionPanel);
+            splitter.setTopComponent(contentPanel);
+            splitter.setBottomComponent(createAboutPanel(this));
         }
         splitter.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         add(splitter);
@@ -97,10 +113,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                     typeSelector2.addItem("");
                     binaryDataLabel.setEnabled(false);
                     binaryContent.setEnabled(false);
-                    ((DynamicTitledBorder) borderPanel.getBorder()).setEnabled(false);
+                    matchPanelBorder.setEnabled(false);
                     matchPosition.setEnabled(false);
                     matchPositionLabel.setEnabled(false);
-                    borderPanel.repaint();
+                    matchDataPanel.repaint();
                     break;
                 case 1:
                     typeSelector2.addItem("contains"); typeSelector2.addItem("starts with"); typeSelector2.addItem("equals"); typeSelector2.addItem("ends with");
@@ -108,10 +124,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                         typeSelector2.setSelectedIndex(selectedItem);
                     binaryDataLabel.setEnabled(true);
                     binaryContent.setEnabled(true);
-                    ((DynamicTitledBorder) borderPanel.getBorder()).setEnabled(true);
+                    matchPanelBorder.setEnabled(true);
                     matchPosition.setEnabled(typeSelector2.getSelectedIndex() == 0);
                     matchPositionLabel.setEnabled(typeSelector2.getSelectedIndex() == 0);
-                    borderPanel.repaint();
+                    matchDataPanel.repaint();
                     break;
                 case 2:
                     typeSelector2.addItem("contain"); typeSelector2.addItem("start with"); typeSelector2.addItem("equal"); typeSelector2.addItem("end with");
@@ -119,10 +135,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
                         typeSelector2.setSelectedIndex(selectedItem);
                     binaryDataLabel.setEnabled(true);
                     binaryContent.setEnabled(true);
-                    ((DynamicTitledBorder) borderPanel.getBorder()).setEnabled(true);
+                    matchPanelBorder.setEnabled(true);
                     matchPosition.setEnabled(typeSelector2.getSelectedIndex() == 0);
                     matchPositionLabel.setEnabled(typeSelector2.getSelectedIndex() == 0);
-                    borderPanel.repaint();
+                    matchDataPanel.repaint();
             }
         });
         typeSelector2.addActionListener(e -> {
