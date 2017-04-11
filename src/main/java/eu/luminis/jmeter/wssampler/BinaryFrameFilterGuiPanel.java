@@ -21,6 +21,8 @@ package eu.luminis.jmeter.wssampler;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 import static eu.luminis.jmeter.wssampler.ComparisonType.*;
@@ -146,6 +148,18 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
             matchPosition.setEnabled(enableMatchPosition);
             matchPositionLabel.setEnabled(enableMatchPosition);
         });
+
+        binaryContent.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                checkContentIsBinary();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                checkContentIsBinary();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                checkContentIsBinary();
+            }
+        });
     }
 
     ComparisonType getComparisonType() {
@@ -188,6 +202,20 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
             default:
                 throw new RuntimeException("invalid comparison type");
         }
+    }
+
+    private void checkContentIsBinary() {
+        try {
+            BinaryUtils.parseBinaryString(stripJMeterVariables(binaryContent.getText()));
+            binaryContent.setForeground(Color.BLACK);
+        }
+        catch (NumberFormatException notNumber) {
+            binaryContent.setForeground(Color.RED);
+        }
+    }
+
+    protected String stripJMeterVariables(String data) {
+        return WebSocketSamplerGuiPanel.DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
 
     public static void main(String[] args) {
