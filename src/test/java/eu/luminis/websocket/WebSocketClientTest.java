@@ -218,6 +218,24 @@ public class WebSocketClientTest {
     }
 
     @Test
+    public void clientSuppliedHeaderShouldBeAddedToUpgradeUrl() {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("UserSuppliedHeader", "this header should be sent with the upgrade request!");
+        try {
+            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+        } catch (IOException e) {
+            // Expected, because no response.
+        }
+
+        String output = outputBuffer.toString();
+        List upgradeHeaders = Arrays.stream(output.split("\r\n")).filter(h -> h.startsWith("UserSuppliedHeader")).collect(Collectors.toList());
+        assertEquals(1, upgradeHeaders.size());
+        assertEquals("UserSuppliedHeader: this header should be sent with the upgrade request!", upgradeHeaders.get(0));
+    }
+
+    @Test
     public void clientSuppliedUpgradeHeaderShouldBeIgnored() throws MalformedURLException {
         ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
 
