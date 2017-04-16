@@ -79,7 +79,11 @@ Gradle is used as build tool, so execute
 
     gradle assemble
 
-to build. Almost any version of gradle will do (tested with 2.2). Gradle can also generate IntelliJ Idea project files for you:
+to build. Almost any version of gradle will do (tested with 2.2). If you don't have installed gradle, use the gradle wrapper:
+
+    ./gradlew
+    
+Gradle can also generate IntelliJ Idea project files for you:
 
     gradle idea
 
