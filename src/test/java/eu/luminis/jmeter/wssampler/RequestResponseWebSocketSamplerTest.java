@@ -25,10 +25,6 @@ import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,13 +34,15 @@ import static org.mockito.Mockito.when;
 
 public class RequestResponseWebSocketSamplerTest {
 
+    MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
     @Test
     public void testNormalRequestResponseSamplerSample() throws Exception {
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock();
+                return mocker.createTextReceiverClient();
             }
         };
 
@@ -57,7 +55,7 @@ public class RequestResponseWebSocketSamplerTest {
     @Test
     public void testSamplerThatReusesConnectionShouldntReportHeaders() throws Exception {
 
-        WebSocketClient mockWsClient = createDefaultWsClientMock();
+        WebSocketClient mockWsClient = mocker.createTextReceiverClient();
         when(mockWsClient.isConnected()).thenReturn(true);
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
@@ -75,7 +73,7 @@ public class RequestResponseWebSocketSamplerTest {
     @Test
     public void testFailingUpgradeRequest() throws Exception {
 
-        WebSocketClient mockWsClient = createDefaultWsClientMock();
+        WebSocketClient mockWsClient = mocker.createTextReceiverClient();
         when(mockWsClient.connect(anyInt(), anyInt())).thenThrow(new HttpUpgradeException(404));
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
@@ -90,23 +88,6 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
     }
 
-
-    WebSocketClient createDefaultWsClientMock() {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
-            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable {
-                    Thread.sleep(300);
-                    return "ws-response-data";
-                }
-            });
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     HeaderManager createSingleHeaderHeaderManager() {
         HeaderManager headerMgr = Mockito.mock(HeaderManager.class);

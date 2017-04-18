@@ -32,7 +32,9 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class TextFrameFilterTest extends FrameTest {
+public class TextFrameFilterTest {
+
+    MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
 
     private SampleResult result;
 
@@ -46,7 +48,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void plainTextFilterShouldDiscardAnyTextFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         exception.expect(EndOfStreamException.class);
@@ -55,7 +57,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void plainTextFilterShouldRetainBinaryFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new BinaryFrame(new byte[0]));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new BinaryFrame(new byte[0]));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         assertTrue(textFrameFilter.receiveFrame(wsClient, 1000, result).isBinary());
@@ -63,7 +65,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEqualsShouldKeepUnequalFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.Equals);
@@ -73,7 +75,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEqualsShouldDiscardEqualFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.Equals);
@@ -84,7 +86,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEqualsShouldKeepEqualFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEquals);
@@ -94,7 +96,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEqualsShouldDiscardUnequalFrame() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEquals);
@@ -105,7 +107,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterContainsShouldKeepFrameThatDoesNotContainMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.Contains);
@@ -115,7 +117,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterContainsShouldDiscardFrameThatContainMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello and goodbye, cruel world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello and goodbye, cruel world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.Contains);
@@ -126,7 +128,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotContainsShouldKeepFrameThatContainsMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotContains);
@@ -136,7 +138,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotContainsShouldDiscardFrameThatDoesNotContainMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello and goodbye, cruel world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello and goodbye, cruel world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotContains);
@@ -147,7 +149,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterStartsWithShouldKeepFrameThatDoesNotStartWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.StartsWith);
@@ -157,7 +159,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterStartsWithShouldDiscardFrameThatStartsWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.StartsWith);
@@ -168,7 +170,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotStartsWithShouldKeepFrameThatStartsWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotStartsWith);
@@ -178,7 +180,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotStartsWithShouldDiscardFrameThatDoesNotStartWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotStartsWith);
@@ -189,7 +191,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEndsWithShouldKeepFrameThatDoesNotEndWithMatchValue()  throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.EndsWith);
@@ -199,7 +201,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEndsWithShouldDiscardFrameThatEndWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.EndsWith);
@@ -210,7 +212,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEndsWithShouldKeepFrameThatEndsWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEndsWith);
@@ -220,7 +222,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEndsWithShouldDiscardFrameThatDoesNotEndWithMatchValue() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEndsWith);
@@ -231,7 +233,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterContainsRegexShouldKeepFrameThatDoesNotContainRegexMatch() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world!!!"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world!!!"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.ContainsRegex);
@@ -241,7 +243,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterContainsRegexShouldDiscardFrameThatContainsRegexMatch() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.ContainsRegex);
@@ -252,7 +254,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotContainsRegexShouldKeepFrameThatContainsRegexMatch() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world!!!"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world!!!"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotContainsRegex);
@@ -262,7 +264,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotContainsRegexShouldDiscardFrameThatDoesNotContainRegexMatch() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotContainsRegex);
@@ -273,7 +275,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEqualsRegexShouldKeepFrameThatDoesNotMatchRegex() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world!!!"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world!!!"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.EqualsRegex);
@@ -283,7 +285,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterEqualsRegexShouldDiscardFrameThatMatchesRegex() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.EqualsRegex);
@@ -294,7 +296,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEqualsRegexShouldKeepFrameThatMatchesRegex() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEqualsRegex);
@@ -304,7 +306,7 @@ public class TextFrameFilterTest extends FrameTest {
 
     @Test
     public void filterNotEqualsRegexShouldDiscardFrameThatDoesNotMatchRegex() throws IOException {
-        WebSocketClient wsClient = singleFrameClient(new TextFrame("Hello world"));
+        WebSocketClient wsClient = mocker.createSingleFrameClient(new TextFrame("Hello world"));
 
         TextFrameFilter textFrameFilter = new TextFrameFilter();
         textFrameFilter.setComparisonType(ComparisonType.NotEqualsRegex);
