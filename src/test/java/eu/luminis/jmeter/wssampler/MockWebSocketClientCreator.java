@@ -1,8 +1,6 @@
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.EndOfStreamException;
-import eu.luminis.websocket.Frame;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -48,5 +46,49 @@ public class MockWebSocketClientCreator {
         }
     }
 
+    /**
+     * Creates (mock) WebSocketClient that returns different message for each call of receiveFrame: "response x",
+     * where x is a increasing number.
+     */
+    public WebSocketClient createMultipleTextReceivingClient() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
+                private int callCount = 0;
 
+                @Override
+                public Frame answer(InvocationOnMock invocation) throws Throwable {
+                    return new TextFrame("response " + callCount++);
+                }
+            });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that, when receiveFrame is called, returns a number of text frames ended by a close frame.
+     */
+    public WebSocketClient createMultipleTextFollowedByCloseClient(int numberOfTextFrames) {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
+                private int callCount = 0;
+
+                @Override
+                public Frame answer(InvocationOnMock invocation) throws Throwable {
+                    if (callCount < numberOfTextFrames)
+                        return new TextFrame("response " + callCount++);
+                    else
+                        return new CloseFrame(1001, "bye");
+                }
+            });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

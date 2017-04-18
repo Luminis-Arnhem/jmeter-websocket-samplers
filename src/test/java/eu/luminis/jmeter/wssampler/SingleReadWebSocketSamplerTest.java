@@ -48,4 +48,21 @@ public class SingleReadWebSocketSamplerTest {
         assertFalse(result.getSamplerData().contains("ws-response-data"));
     }
 
+    @Test
+    public void testFrameFilter() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        TextFrameFilter filter = new TextFrameFilter();
+        filter.setComparisonType(ComparisonType.NotStartsWith);
+        filter.setMatchValue("response 7");
+        sampler.addTestElement(filter);
+
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 7", result.getResponseDataAsString());
+        assertEquals(7, result.getSubResults().length);
+    }
 }

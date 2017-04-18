@@ -18,7 +18,9 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.HttpUpgradeException;
+import eu.luminis.websocket.TextFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -88,8 +90,25 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
     }
 
+    @Test
+    public void testFrameFilter() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        TextFrameFilter filter = new TextFrameFilter();
+        filter.setComparisonType(ComparisonType.EqualsRegex);
+        filter.setMatchValue("response \\d");
+        sampler.addTestElement(filter);
 
-    HeaderManager createSingleHeaderHeaderManager() {
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 10", result.getResponseDataAsString());
+        assertEquals(10, result.getSubResults().length);
+    }
+
+    private HeaderManager createSingleHeaderHeaderManager() {
         HeaderManager headerMgr = Mockito.mock(HeaderManager.class);
         when(headerMgr.size()).thenReturn(1);
         when(headerMgr.get(0)).thenReturn(new Header("header-key", "header-value"));

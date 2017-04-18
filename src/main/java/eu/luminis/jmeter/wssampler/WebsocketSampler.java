@@ -142,18 +142,20 @@ abstract public class WebsocketSampler extends AbstractSampler {
             result.setResponseMessage(upgradeError.getMessage());
         }
         catch (IOException ioExc) {
-            result.sampleEnd(); // End timimg
+            if (result.getEndTime() == 0)
+                result.sampleEnd(); // End timimg
             getLogger().error("I/O Error in sampler '" + getName() + "'.", ioExc);
             result.setResponseCode("Websocket error");
             result.setResponseMessage("WebSocket error: " + ioExc);
         }
         catch (SamplingAbortedException abort) {
-            // Error should have been handled by subclass
             if (result.getEndTime() == 0)
                 result.sampleEnd(); // End timimg
+            // Error should have been handled by subclass
         }
         catch (Exception error) {
-            result.sampleEnd(); // End timimg
+            if (result.getEndTime() == 0)
+                result.sampleEnd(); // End timimg
             getLogger().error("Unhandled error in sampler '"  + getName() + "'.", error);
             result.setResponseCode("Sampler error");
             result.setResponseMessage("Sampler error: " + error);
