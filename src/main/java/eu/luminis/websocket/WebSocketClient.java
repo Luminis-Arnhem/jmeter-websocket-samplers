@@ -113,6 +113,14 @@ public class WebSocketClient {
         state = WebSocketState.CONNECTING;
 
         boolean connected = false;
+        log.debug("Creating connection with " + connectUrl.getHost() + ":" + connectUrl.getPort());
+        if (System.getProperty("http.proxyHost",null) != null) {
+            log.error("Proxy host is set, but http proxy is not supported.");
+        }
+        if (System.getProperty("socksProxyHost",null) != null) {
+            log.warn("Socks proxy host is set, but socks proxy is not officially supported.");
+        }
+
         wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
 
@@ -125,13 +133,17 @@ public class WebSocketClient {
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(socketOutputStream);
             httpWriter.print("GET " + path + " HTTP/1.1\r\n");
+            log.debug(">> GET " + path + " HTTP/1.1");
             httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+            log.debug(">> Host: " + connectUrl.getHost());
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 if (! UPGRADE_HEADERS.contains(header.getKey())) {
                     String headerLine = header.getKey() + ": " + header.getValue();
                     // Ensure header line does _not_ contain new line
-                    if (!headerLine.contains("\r") && !headerLine.contains("\n"))
+                    if (!headerLine.contains("\r") && !headerLine.contains("\n")) {
                         httpWriter.print(headerLine + "\r\n");
+                        log.debug(">> " + headerLine);
+                    }
                     else {
                         throw new IllegalArgumentException("Invalid header; contains new line.");
                     }
@@ -140,13 +152,18 @@ public class WebSocketClient {
                     log.error("Ignoring user supplied header '" + header + "'");
             }
             httpWriter.print("Upgrade: websocket\r\n");
+            log.debug(">> Upgrade: websocket");
             httpWriter.print("Connection: Upgrade\r\n");
+            log.debug(">> Connection: Upgrade");
             byte[] nonce = new byte[16];
             randomGenerator.nextBytes(nonce);
             String encodeNonce = new String(Base64.getEncoder().encode(nonce));
             httpWriter.print("Sec-WebSocket-Key: " + encodeNonce + "\r\n");
+            log.debug(">> Sec-WebSocket-Key: " + encodeNonce);
             httpWriter.print("Sec-WebSocket-Version: 13\r\n");
+            log.debug(">> Sec-WebSocket-Version: 13");
             httpWriter.print("\r\n");
+            log.debug(">>");
             httpWriter.flush();
 
             socketInputStream = wsSocket.getInputStream();
@@ -181,6 +198,7 @@ public class WebSocketClient {
             JsseSSLManager sslMgr = (JsseSSLManager) SSLManager.getInstance();
             try {
                 SSLSocketFactory tlsSocketFactory = sslMgr.getContext().getSocketFactory();
+                log.debug("Starting TLS connection.");
                 return tlsSocketFactory.createSocket(plainSocket, host, port, true);
             } catch (GeneralSecurityException e) {
                 throw new IOException(e);
@@ -301,14 +319,17 @@ public class WebSocketClient {
     protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {
         HttpLineReader httpReader = new HttpLineReader(inputStream);
         String line = httpReader.readLine();
-        if (line != null)
+        if (line != null) {
+            log.debug("<< " + line);
             checkHttpStatus(line, 101);
+        }
         else
             throw new HttpProtocolException("Empty response; connection closed.");
 
         Map<String, String> serverHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);  // Field names of Http Headers are case-insensitive, see https://tools.ietf.org/html/rfc2616#section-4.2
         do {
             line = httpReader.readLine();
+            log.debug("<< " + line);
             if (line != null) {
                 String[] values = line.split(":", 2);
                 if (values.length > 1) {
