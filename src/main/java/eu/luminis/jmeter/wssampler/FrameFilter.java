@@ -29,7 +29,7 @@ import java.io.IOException;
 
 public abstract class FrameFilter extends ConfigTestElement {
 
-    private FrameFilter next;
+    private volatile FrameFilter next;
 
     public FrameFilter() {
         super();

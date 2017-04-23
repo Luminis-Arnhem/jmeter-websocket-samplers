@@ -183,22 +183,25 @@ abstract public class WebsocketSampler extends AbstractSampler {
     }
 
     public void addTestElement(TestElement element) {
-        if (element instanceof HeaderManager) {
-            headerManager = (HeaderManager) element;
+        String logMsg = null;
+
+        synchronized (this) {
+            if (element instanceof HeaderManager) {
+                headerManager = (HeaderManager) element;
+            } else if (element instanceof CookieManager) {
+                cookieManager = (CookieManager) element;
+            } else if (element instanceof FrameFilter) {
+                if (frameFilterChain == null)
+                    frameFilterChain = (FrameFilter) element;
+                else
+                    frameFilterChain.setNext((FrameFilter) element);
+                logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilterChain.getChainAsString();
+            } else {
+                super.addTestElement(element);
+            }
         }
-        else if (element instanceof CookieManager) {
-            cookieManager = (CookieManager) element;
-        }
-        else if (element instanceof FrameFilter) {
-            if (frameFilterChain == null)
-                frameFilterChain = (FrameFilter) element;
-            else
-                frameFilterChain.setNext((FrameFilter) element);
-            getLogger().debug("Added filter to sampler " + this + "; filter list is now " + frameFilterChain.getChainAsString());
-        }
-        else {
-            super.addTestElement(element);
-        }
+        if (logMsg != null)
+            getLogger().debug(logMsg);
     }
 
     protected String getConnectUrl(URL url) {
