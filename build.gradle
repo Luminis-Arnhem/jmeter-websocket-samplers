@@ -13,6 +13,10 @@ dependencies {
         transitive = false    // Just avoid downloading half the internet
     }
 
+    compile('org.apache.jmeter:ApacheJMeter_components:3.0') {
+        transitive = false    // Just avoid downloading half the internet
+    }
+
     compile('org.apache.jmeter:ApacheJMeter_http:3.0') {
         transitive = false    // Just avoid downloading half the internet
     }
