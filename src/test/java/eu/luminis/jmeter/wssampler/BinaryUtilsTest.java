@@ -117,4 +117,75 @@ public class BinaryUtilsTest {
         assertFalse(test.contains(new byte[] { (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe }, new byte[] { (byte) 0xbe, (byte) 0xcc }));
     }
 
+    @Test
+    public void testBinaryTableWithDefaultWidth() {
+        byte[] data = new byte[36];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) i;
+
+        String formattedBin = test.formatBinaryInTable(data, 16, true, false);
+        assertEquals("0000  00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f\n0010  10 11 12 13 14 15 16 17  18 19 1a 1b 1c 1d 1e 1f\n0020  20 21 22 23\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableWithAscii() {
+        byte[] data = new byte[20];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) (100 + i);
+
+        String formattedBin = test.formatBinaryInTable(data, 16, true, true);
+        assertEquals("0000  64 65 66 67 68 69 6a 6b  6c 6d 6e 6f 70 71 72 73  defghijk lmnopqrs\n0010  74 75 76 77                                       tuvw\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableWithAscii2() {
+        byte[] data = new byte[36];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) (30 + i);
+
+        String formattedBin = test.formatBinaryInTable(data, 16, true, true);
+        assertEquals("0000  1e 1f 20 21 22 23 24 25  26 27 28 29 2a 2b 2c 2d  .. !\"#$% &'()*+,-\n0010  2e 2f 30 31 32 33 34 35  36 37 38 39 3a 3b 3c 3d  ./012345 6789:;<=\n0020"
+                + "  3e 3f 40 41                                       >?@A\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableWithAscii3() {
+        byte[] data = new byte[44];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) (30 + i);
+
+        String formattedBin = test.formatBinaryInTable(data, 16, true, true);
+        assertEquals("0000  1e 1f 20 21 22 23 24 25  26 27 28 29 2a 2b 2c 2d  .. !\"#$% &'()*+,-\n0010  2e 2f 30 31 32 33 34 35  36 37 38 39 3a 3b 3c 3d  ./012345 6789:;<=\n"
+                            + "0020  3e 3f 40 41 42 43 44 45  46 47 48 49              >?@ABCDE FGHI\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableNoAddress() {
+        byte[] data = new byte[36];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) i;
+
+        String formattedBin = test.formatBinaryInTable(data, 16, false, false);
+        assertEquals("00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f\n10 11 12 13 14 15 16 17  18 19 1a 1b 1c 1d 1e 1f\n20 21 22 23\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableWidth7() {
+        byte[] data = new byte[36];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) i;
+
+        String formattedBin = test.formatBinaryInTable(data, 7, true, false);
+        assertEquals("0000  00 01 02 03 04 05 06\n0007  07 08 09 0a 0b 0c 0d\n000e  0e 0f 10 11 12 13 14\n0015  15 16 17 18 19 1a 1b\n001c  1c 1d 1e 1f 20 21 22\n0023  23\n", formattedBin);
+    }
+
+    @Test
+    public void testBinaryTableWidth13() {
+        byte[] data = new byte[36];
+        for (int i = 0; i < data.length; i++)
+            data[i] = (byte) i;
+
+        String formattedBin = test.formatBinaryInTable(data, 13, true, false);
+        assertEquals("0000  00 01 02 03 04 05 06 07  08 09 0a 0b 0c\n000d  0d 0e 0f 10 11 12 13 14  15 16 17 18 19\n001a  1a 1b 1c 1d 1e 1f 20 21  22 23\n", formattedBin);
+    }
 }

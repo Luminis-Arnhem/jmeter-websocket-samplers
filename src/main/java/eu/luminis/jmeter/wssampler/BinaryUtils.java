@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +51,56 @@ public class BinaryUtils {
         return builder.toString().trim();
     }
 
+    public static String formatBinaryInTable(byte[] data, int rowLength, boolean showRowAddress, boolean showAscii) {
+        StringBuilder builder = new StringBuilder();
+        int i;
+        for (i = 0; i < data.length; i++) {
+            if (showRowAddress && i % rowLength == 0)
+                builder.append(String.format("%04x  ", i));
+            builder.append(String.format("%02x", data[i]));
+            if ( (i+1) % rowLength == 0) {
+                if (showAscii) {
+                    builder.append("  ");
+                    for (int j = i + 1 - rowLength; j <= i; j++) {
+                        if (isPrintableChar((char) data[j]))
+                            builder.append((char) data[j]);
+                        else
+                            builder.append(".");
+                        if ( (j+1) % rowLength % 8 == 0 && (j+1) % rowLength != 0)
+                            builder.append(" ");
+                    }
+                }
+                builder.append("\n");
+            }
+            else if ( (i+1) % rowLength % 8 == 0)
+                builder.append("  ");
+            else if (i != data.length -1)
+                builder.append(" ");
+            else {
+                if (showAscii) {
+                    for (int j = i+1; j % rowLength != 0; j++) {
+                        builder.append("   ");
+                        if (j % rowLength % 8 == 0)
+                            builder.append(" ");
+                    }
+                    builder.append("  ");
+                    int j;
+                    for (j = i - (i % rowLength); j <= i; j++) {
+                        if (isPrintableChar((char) data[j]))
+                            builder.append((char) data[j]);
+                        else
+                            builder.append(".");
+                        if ((j + 1) % rowLength % 8 == 0 && (j + 1) % rowLength != 0)
+                            builder.append(" ");
+                    }
+                }
+                builder.append("\n");
+            }
+        }
+
+        return builder.toString();
+    }
+
     public static boolean contains(byte[] source, byte[] value) {
         for (int i = 0; i < source.length; i++) {
             if (value[0] == source[i]) {
@@ -72,4 +123,11 @@ public class BinaryUtils {
         return result;
     }
 
+    public static boolean isPrintableChar( char c ) {
+        Character.UnicodeBlock block = Character.UnicodeBlock.of( c );
+        return (!Character.isISOControl(c)) &&
+                c != KeyEvent.CHAR_UNDEFINED &&
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS;
+    }
 }

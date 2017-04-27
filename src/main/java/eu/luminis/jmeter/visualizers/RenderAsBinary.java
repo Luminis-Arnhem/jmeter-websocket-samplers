@@ -23,15 +23,16 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.visualizers.ResultRenderer;
 import org.apache.jmeter.visualizers.SamplerResultTab;
 
-public class RenderAsBinary extends SamplerResultTab implements ResultRenderer {
+import java.awt.Font;
 
-    public RenderAsBinary() {
-    }
+public class RenderAsBinary extends SamplerResultTab implements ResultRenderer {
 
     @Override
     public void renderResult(SampleResult sampleResult) {
+        Font oldFont = results.getFont();
+        results.setFont(new Font(Font.MONOSPACED, Font.PLAIN, oldFont.getSize()));
         results.setContentType("text/plain");
-        results.setText(BinaryUtils.formatBinary(sampleResult.getResponseData()));
+        results.setText(BinaryUtils.formatBinaryInTable(sampleResult.getResponseData(), 16, true, true));
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
     }
