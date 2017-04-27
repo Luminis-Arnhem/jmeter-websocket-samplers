@@ -21,6 +21,7 @@ The WebSocket Samplers plugin provides the following features:
 * wss support fully compatible with JMeter's SSLManager, including client certificates
 * support for binary WebSocket frames
 * assertion for checking binary responses
+* view binary results in "View Results Tree"
 * integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
 * sends cookies defined by JMeter's Cookie Manager with each upgrade request (i.e. the HTTP request that initiates the WebSocket connection)
 * many sample JMeter test plans illustrate the various features.
@@ -40,7 +41,9 @@ The request-response sampler is the most commonly used one. With this sampler yo
 
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
-The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. Unfortunately, JMeter cannot display binary responses in the results viewers, e.g. when using a "View Results Tree" listener element, the "Response data" tab stays empty. There is a work around however: use a "Save Responses to a file" listener (see sample).
+The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
+
+![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/renderbinary/docs/binary-response.png)
 
 For examples of how to use the sampler, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
