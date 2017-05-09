@@ -133,9 +133,9 @@ public class WebSocketClient {
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(socketOutputStream);
             httpWriter.print("GET " + path + " HTTP/1.1\r\n");
-            log.debug(">> GET " + path + " HTTP/1.1");
-            httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
-            log.debug(">> Host: " + connectUrl.getHost());
+            log.debug(    ">> GET " + path + " HTTP/1.1");
+            httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + "\r\n");
+            log.debug(    ">> Host: " + connectUrl.getHost() + ":" + connectUrl.getPort());
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 if (! UPGRADE_HEADERS.contains(header.getKey())) {
                     String headerLine = header.getKey() + ": " + header.getValue();
