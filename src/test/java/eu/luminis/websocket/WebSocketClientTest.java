@@ -224,7 +224,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("UserSuppliedHeader", "this header should be sent with the upgrade request!");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -242,7 +242,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("Upgrade", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -260,7 +260,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("SEC-WEBSOCKET-KEY", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -285,8 +285,8 @@ public class WebSocketClientTest {
         }
     }
 
-    private WebSocketClient createMockWebSocketClientWithOutputBuffer(ByteArrayOutputStream outputBuffer) throws MalformedURLException {
-        return new WebSocketClient(new URL("http", "nowhere.com", 80, "/")) {
+    private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", host, port, "/")) {
             protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
                 Socket socket = Mockito.mock(Socket.class);
                 when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
