@@ -45,6 +45,9 @@ The request-response sampler, as well as the single-read and single-write sample
 
 ![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/renderbinary/docs/binary-response.png)
 
+The maximum number of bytes displayed is limited to 1 MB, set the JMeter property `view.results.tree.max_binary_size` to increase this value. 
+To make the "Binary" render type appear higher in the dropdown, insert the class name `eu.luminis.jmeter.visualizers.RenderAsBinary` in the `view.results.tree.renderers_order` property.
+
 For examples of how to use the sampler, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
 ### Connections

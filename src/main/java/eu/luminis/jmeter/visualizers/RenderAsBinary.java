@@ -20,6 +20,7 @@ package eu.luminis.jmeter.visualizers;
 
 import eu.luminis.jmeter.wssampler.BinaryUtils;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.ResultRenderer;
 import org.apache.jmeter.visualizers.SamplerResultTab;
 
@@ -27,12 +28,29 @@ import java.awt.Font;
 
 public class RenderAsBinary extends SamplerResultTab implements ResultRenderer {
 
+    private int maxDisplaySize;
+
+    public RenderAsBinary() {
+        maxDisplaySize = JMeterUtils.getPropDefault("view.results.tree.max_binary_size", -1);
+        if (maxDisplaySize == -1)
+            maxDisplaySize = 1024 * 1024;  // 1 MB
+        else if (maxDisplaySize < 64)
+            maxDisplaySize = 64;
+    }
+
     @Override
     public void renderResult(SampleResult sampleResult) {
         Font oldFont = results.getFont();
         results.setFont(new Font(Font.MONOSPACED, Font.PLAIN, oldFont.getSize()));
         results.setContentType("text/plain");
-        results.setText(BinaryUtils.formatBinaryInTable(sampleResult.getResponseData(), 16, true, true));
+        byte[] responseData = sampleResult.getResponseData();
+        if (responseData.length > maxDisplaySize) {
+            results.setText("Binary response is too large to display; showing first " + maxDisplaySize + " bytes.\n" +
+                    BinaryUtils.formatBinaryInTable(responseData, maxDisplaySize, 16, true, true));
+        }
+        else
+            results.setText(BinaryUtils.formatBinaryInTable(responseData,16, true, true));
+
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
     }

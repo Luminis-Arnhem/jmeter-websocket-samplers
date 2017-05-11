@@ -52,9 +52,13 @@ public class BinaryUtils {
     }
 
     public static String formatBinaryInTable(byte[] data, int rowLength, boolean showRowAddress, boolean showAscii) {
+        return formatBinaryInTable(data, data.length, rowLength, showRowAddress, showAscii);
+    }
+
+    public static String formatBinaryInTable(byte[] data, int dataSize, int rowLength, boolean showRowAddress, boolean showAscii) {
         StringBuilder builder = new StringBuilder();
         int i;
-        for (i = 0; i < data.length; i++) {
+        for (i = 0; i < dataSize; i++) {
             if (showRowAddress && i % rowLength == 0)
                 builder.append(String.format("%04x  ", i));
             builder.append(String.format("%02x", data[i]));
@@ -74,7 +78,7 @@ public class BinaryUtils {
             }
             else if ( (i+1) % rowLength % 8 == 0)
                 builder.append("  ");
-            else if (i != data.length -1)
+            else if (i != dataSize -1)
                 builder.append(" ");
             else {
                 if (showAscii) {
