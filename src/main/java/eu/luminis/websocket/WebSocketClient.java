@@ -28,10 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.URL;
+import java.net.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -68,6 +65,11 @@ public class WebSocketClient {
     private Random randomGenerator = new Random();
     private volatile WebSocketState state = WebSocketState.CLOSED;
     private Map<String, String> additionalHeaders;
+    private boolean useProxy;
+    private String proxyHost;
+    private int proxyPort;
+    private String proxyUsername;
+    private String proxyPassword;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = correctUrl(wsURL);
@@ -79,6 +81,14 @@ public class WebSocketClient {
 
     public void setAdditionalUpgradeRequestHeaders(Map<String, String> additionalHeaders) {
         this.additionalHeaders = additionalHeaders;
+    }
+
+    public void useProxy(String host, int port, String user, String password) {
+        useProxy = true;
+        proxyHost = host;
+        proxyPort = port;
+        proxyUsername = user;
+        proxyPassword = password;
     }
 
     public Map<String, String>  connect() throws IOException, HttpException {
@@ -114,12 +124,10 @@ public class WebSocketClient {
 
         boolean connected = false;
         log.debug("Creating connection with " + connectUrl.getHost() + ":" + connectUrl.getPort());
-        if (System.getProperty("http.proxyHost",null) != null) {
-            log.error("Proxy host is set, but http proxy is not supported.");
-        }
-        if (System.getProperty("socksProxyHost",null) != null) {
+        if (useProxy)
+            log.debug("Using http proxy " + proxyHost + ":" + proxyPort);
+        if (System.getProperty("socksProxyHost",null) != null)
             log.warn("Socks proxy host is set, but socks proxy is not officially supported.");
-        }
 
         wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
@@ -132,8 +140,8 @@ public class WebSocketClient {
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
             PrintWriter httpWriter = new PrintWriter(socketOutputStream);
-            httpWriter.print("GET " + path + " HTTP/1.1\r\n");
-            log.debug(">> GET " + path + " HTTP/1.1");
+            httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
+            log.debug(    ">> GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1");
             httpWriter.print("Host: " + connectUrl.getHost() + "\r\n");
             log.debug(">> Host: " + connectUrl.getHost());
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -190,22 +198,65 @@ public class WebSocketClient {
     }
 
     protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
-        Socket plainSocket = new Socket();
-        plainSocket.connect(new InetSocketAddress(host, port), connectTimeout);
+        Socket baseSocket = new Socket();
+        if (useProxy) {
+            baseSocket.connect(new InetSocketAddress(proxyHost, proxyPort), connectTimeout);
+            setupProxyConnection(baseSocket);
+        }
+        else
+            baseSocket.connect(new InetSocketAddress(host, port), connectTimeout);
+
         if ("https".equals(connectUrl.getProtocol())) {
-            plainSocket.setSoTimeout(readTimeout);
+            baseSocket.setSoTimeout(readTimeout);
 
             JsseSSLManager sslMgr = (JsseSSLManager) SSLManager.getInstance();
             try {
                 SSLSocketFactory tlsSocketFactory = sslMgr.getContext().getSocketFactory();
                 log.debug("Starting TLS connection.");
-                return tlsSocketFactory.createSocket(plainSocket, host, port, true);
+                return tlsSocketFactory.createSocket(baseSocket, host, port, true);
             } catch (GeneralSecurityException e) {
                 throw new IOException(e);
             }
         }
         else {
-            return plainSocket;
+            return baseSocket;
+        }
+    }
+
+    private void setupProxyConnection(Socket socket) throws IOException {
+        PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
+        proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
+        proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+        if (proxyUsername != null && proxyPassword != null) {
+            String authentication = proxyUsername + ":" + proxyPassword;
+            proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
+        }
+        proxyWriter.print("\r\n");
+        proxyWriter.flush();
+
+        try {
+            HttpLineReader httpReader = new HttpLineReader(socket.getInputStream());
+            String statusLine = httpReader.readLine();
+            checkHttpStatus(statusLine, 200);
+
+            String line;
+            do {
+                line = httpReader.readLine();
+            }
+            while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
+            log.debug("Using proxy " + proxyHost + ":" + proxyPort + " for " + connectUrl);
+        }
+        catch (HttpUpgradeException httpError) {
+            log.error("Proxy connection error", httpError);
+            throw new HttpProtocolException("Connecting proxy failed with status code " + httpError.getStatusCode());
+        }
+        catch (SocketTimeoutException timeout) {
+            log.error("Proxy connection timeout");
+            throw timeout;
+        }
+        catch (IOException ioError) {
+            log.error("Proxy connection setup error: ", ioError);
+            throw ioError;
         }
     }
 

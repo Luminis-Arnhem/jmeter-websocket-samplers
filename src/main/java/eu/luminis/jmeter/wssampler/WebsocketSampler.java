@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.HttpUpgradeException;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.JMeter;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -36,7 +37,9 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -58,9 +61,21 @@ abstract public class WebsocketSampler extends AbstractSampler {
     protected int readTimeout;
     protected int connectTimeout;
 
+    // Proxy configuration: only static proxy configuration is supported.
+    private static String proxyHost;
+    private static int proxyPort;
+    private static List<String> nonProxyHosts;
+    private static List<String> nonProxyWildcards;
+    private static String proxyUsername;
+    private static String proxyPassword;
+
     abstract protected String validateArguments();
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
+
+    static {
+        initProxyConfiguration();
+    }
 
     @Override
     public SampleResult sample(Entry entry) {
@@ -100,6 +115,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
             if (! wsClient.isConnected()) {
                 if (useTLS() && !USE_CACHED_SSL_CONTEXT)
                     ((JsseSSLManager) SSLManager.getInstance()).resetContext();
+                if (useProxy(wsClient.getConnectUrl().getHost()))
+                    wsClient.useProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
 
@@ -278,6 +295,24 @@ abstract public class WebsocketSampler extends AbstractSampler {
             return null;
     }
 
+    static void initProxyConfiguration() {
+        proxyHost = System.getProperty("http.proxyHost",null);
+        proxyPort = Integer.parseInt(System.getProperty("http.proxyPort","0"));
+        List<String> nonProxyHostList = Arrays.asList(System.getProperty("http.nonProxyHosts","").split("\\|"));
+        nonProxyHosts = nonProxyHostList.stream().filter(h -> !h.startsWith("*")).collect(Collectors.toList());
+        nonProxyWildcards = nonProxyHostList.stream().filter(h -> h.startsWith("*")).map(w -> w.substring(1)).collect(Collectors.toList());
+        proxyUsername = JMeterUtils.getPropDefault(JMeter.HTTP_PROXY_USER,null);
+        proxyPassword = JMeterUtils.getPropDefault(JMeter.HTTP_PROXY_PASS,null);
+    }
+
+    boolean useProxy(String host) {
+        // Check for (what JMeter calls) "static" proxy
+        if (proxyHost != null && proxyHost.trim().length() > 0) {
+            return !nonProxyHosts.contains(host) && nonProxyWildcards.stream().filter(wildcard -> host.endsWith(wildcard)).count() == 0;
+        }
+        else
+            return false;
+    }
 
     protected boolean useTLS() {
         return getTLS();
