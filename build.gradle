@@ -13,6 +13,10 @@ dependencies {
         transitive = false    // Just avoid downloading half the internet
     }
 
+    compile('org.apache.jmeter:ApacheJMeter_components:3.0') {
+        transitive = false    // Just avoid downloading half the internet
+    }
+
     compile('org.apache.jmeter:ApacheJMeter_http:3.0') {
         transitive = false    // Just avoid downloading half the internet
     }
@@ -63,3 +67,13 @@ task determineVersion << {
 }
 
 compileJava.dependsOn determineVersion
+
+test {
+  testLogging {
+    afterSuite { desc, result ->
+      if (!desc.parent) { // will match the outermost suite
+        println "Test results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+      }
+    }
+  }
+}
