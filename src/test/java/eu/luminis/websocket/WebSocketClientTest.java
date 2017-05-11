@@ -28,10 +28,7 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -224,7 +221,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("UserSuppliedHeader", "this header should be sent with the upgrade request!");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -242,7 +239,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("Upgrade", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -260,7 +257,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("SEC-WEBSOCKET-KEY", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer(outputBuffer).connect(headers);
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -270,6 +267,21 @@ public class WebSocketClientTest {
         assertEquals(1, upgradeHeaders.size());
         String base64chars = "A-Za-z0-9+/=";
         assertTrue(Pattern.compile("Sec-WebSocket-Key: [" + base64chars + "]+").matcher(upgradeHeaders.get(0)).matches());
+    }
+
+    @Test
+    public void hostHeaderShouldIncludePortNumberWhenNotDefault() {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        try {
+            createMockWebSocketClientWithOutputBuffer("nowhere.com", 8023, outputBuffer).connect(Collections.emptyMap());
+        } catch (IOException e) {
+            // Expected, because no response.
+        }
+
+        String output = outputBuffer.toString();
+        List<String> hostHeaders = Arrays.stream(output.split("\r\n")).filter(h -> h.toLowerCase().startsWith("host")).collect(Collectors.toList());
+        assertEquals("Host: nowhere.com:8023", hostHeaders.get(0));
     }
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
@@ -285,8 +297,8 @@ public class WebSocketClientTest {
         }
     }
 
-    private WebSocketClient createMockWebSocketClientWithOutputBuffer(ByteArrayOutputStream outputBuffer) throws MalformedURLException {
-        return new WebSocketClient(new URL("http", "nowhere.com", 80, "/")) {
+    private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", host, port, "/")) {
             protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
                 Socket socket = Mockito.mock(Socket.class);
                 when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
