@@ -31,7 +31,16 @@ public class HttpUpgradeException extends HttpException {
         super(msg);
     }
 
-    public String getStatusCode() {
+    public HttpUpgradeException(String msg, int statusCode) {
+        super(msg);
+        this.statusCode = statusCode;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusCodeAsString() {
         return "" + (statusCode != null? statusCode: "");
     }
 }

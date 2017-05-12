@@ -152,14 +152,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
         catch (HttpUpgradeException upgradeError) {
             result.sampleEnd(); // End timimg
             getLogger().error("Http upgrade error in sampler '" + getName() + "'.", upgradeError);
-            result.setResponseCode(upgradeError.getStatusCode());
+            result.setResponseCode(upgradeError.getStatusCodeAsString());
             result.setResponseMessage(upgradeError.getMessage());
         }
         catch (IOException ioExc) {
             result.sampleEnd(); // End timimg
             getLogger().error("I/O Error in sampler '" + getName() + "'.", ioExc);
-            result.setResponseCode("Websocket error");
-            result.setResponseMessage("WebSocket error: " + ioExc);
+            result.setResponseCode("Websocket I/O error");
+            result.setResponseMessage("WebSocket I/O error: " + ioExc.getMessage());
         }
         catch (SamplingAbortedException abort) {
             // Error should have been handled by subclass

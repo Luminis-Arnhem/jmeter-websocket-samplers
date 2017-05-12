@@ -124,8 +124,6 @@ public class WebSocketClient {
 
         boolean connected = false;
         log.debug("Creating connection with " + connectUrl.getHost() + ":" + connectUrl.getPort());
-        if (useProxy)
-            log.debug("Using http proxy " + proxyHost + ":" + proxyPort);
         if (System.getProperty("socksProxyHost",null) != null)
             log.warn("Socks proxy host is set, but socks proxy is not officially supported.");
 
@@ -200,8 +198,8 @@ public class WebSocketClient {
     protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
         Socket baseSocket = new Socket();
         if (useProxy) {
-            baseSocket.connect(new InetSocketAddress(proxyHost, proxyPort), connectTimeout);
-            setupProxyConnection(baseSocket);
+            log.debug("Using http proxy " + proxyHost + ":" + proxyPort + " for " + connectUrl);
+            setupProxyConnection(baseSocket, connectTimeout);
         }
         else
             baseSocket.connect(new InetSocketAddress(host, port), connectTimeout);
@@ -223,18 +221,19 @@ public class WebSocketClient {
         }
     }
 
-    private void setupProxyConnection(Socket socket) throws IOException {
-        PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
-        proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
-        proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
-        if (proxyUsername != null && proxyPassword != null) {
-            String authentication = proxyUsername + ":" + proxyPassword;
-            proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
-        }
-        proxyWriter.print("\r\n");
-        proxyWriter.flush();
-
+    private void setupProxyConnection(Socket socket, int connectTimeout) throws IOException {
         try {
+            socket.connect(new InetSocketAddress(proxyHost, proxyPort), connectTimeout);
+            PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
+            proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
+            proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+            if (proxyUsername != null && proxyPassword != null) {
+                String authentication = proxyUsername + ":" + proxyPassword;
+                proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
+            }
+            proxyWriter.print("\r\n");
+            proxyWriter.flush();
+
             HttpLineReader httpReader = new HttpLineReader(socket.getInputStream());
             String statusLine = httpReader.readLine();
             checkHttpStatus(statusLine, 200);
@@ -244,15 +243,18 @@ public class WebSocketClient {
                 line = httpReader.readLine();
             }
             while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
-            log.debug("Using proxy " + proxyHost + ":" + proxyPort + " for " + connectUrl);
         }
         catch (HttpUpgradeException httpError) {
             log.error("Proxy connection error", httpError);
-            throw new HttpProtocolException("Connecting proxy failed with status code " + httpError.getStatusCode());
+            throw new HttpUpgradeException("Connecting proxy failed with status code " + httpError.getStatusCodeAsString(), httpError.getStatusCode());
         }
         catch (SocketTimeoutException timeout) {
             log.error("Proxy connection timeout");
             throw timeout;
+        }
+        catch (ConnectException cantConnect) {
+            log.error("Proxy connection setup error: ", cantConnect);
+            throw new ConnectException("Proxy connection setup error: " + cantConnect.getMessage());
         }
         catch (IOException ioError) {
             log.error("Proxy connection setup error: ", ioError);
