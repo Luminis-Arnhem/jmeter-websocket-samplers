@@ -226,23 +226,27 @@ public class WebSocketClient {
             socket.connect(new InetSocketAddress(proxyHost, proxyPort), connectTimeout);
             PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
             proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
+            log.debug(">proxy> CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1");
             proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+            log.debug(">proxy> Host: " + connectUrl.getHost());
             if (proxyUsername != null && proxyPassword != null) {
                 String authentication = proxyUsername + ":" + proxyPassword;
                 proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
+                log.debug(">proxy> Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()));
             }
             proxyWriter.print("\r\n");
             proxyWriter.flush();
 
             HttpLineReader httpReader = new HttpLineReader(socket.getInputStream());
             String statusLine = httpReader.readLine();
-            checkHttpStatus(statusLine, 200);
 
             String line;
             do {
                 line = httpReader.readLine();
+                log.debug("<proxy< " + line);
             }
             while (line != null && line.trim().length() > 0);  // HTTP response ends with an empty line.
+            checkHttpStatus(statusLine, 200);
         }
         catch (HttpUpgradeException httpError) {
             log.error("Proxy connection error", httpError);
