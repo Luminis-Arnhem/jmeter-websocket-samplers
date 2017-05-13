@@ -49,7 +49,7 @@ The request-response sampler, as well as the single-read and single-write sample
 The maximum number of bytes displayed is limited to 1 MB, set the JMeter property `view.results.tree.max_binary_size` to increase this value. 
 To make the "Binary" render type appear higher in the dropdown, insert the class name `eu.luminis.jmeter.visualizers.RenderAsBinary` in the `view.results.tree.renderers_order` property.
 
-For examples of how to use the sampler, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
+For examples of how to use the request-response sampler as well as the other samplers, see the JMeter .jmx files in the [samples directory](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/?at=master)!
 
 ### Connections
 
@@ -76,7 +76,7 @@ This assertion element is of course very usefull when load testing binary websoc
 
 Note that the assertion element does not check the type of the response: it simply takes the binary value of the response and checks it against the match value provided. In that sense, it is completely analogous to the standard JMeter Response Assertion, except that this one provides a convenient way for specifying a binary match value.
 
-## Proxy
+### Proxy
 
 The plugin respects standard JMeter proxy support: if you provide the `"-H <proxyHost>"` and `"-P <proxyPort>"` options on the command line, websocket connections are set up using that proxy.
 As with standard JMeter, use `"-N <nonProxyHosts>"` to specify which hosts should not be proxied (supports wildcards like `*.apache.org`)
