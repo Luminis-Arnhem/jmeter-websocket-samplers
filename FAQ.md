@@ -12,5 +12,5 @@ As you probably know, HTTP status code 404 means "NOT FOUND", so the problem is 
 ## When running the "Basic request-response sample" sample test plan, it fails with a time out error. Shouldn't this sample work?
 
 Of course, the sample should work. If it doesn't and you did not change it, please check the [websocket.org](http://www.websocket.org/echo.html) website and try the echo demo in your browser; sometimes their websocket server is down or otherwise not fully available.
-Another reason could be that you are using a proxy; current (0.7.x) version of the plugin does not yet support http proxy.
+Another reason could be that you are using a proxy; older (0.7.x and before) versions of the plugin does not yet support http proxy.
 
