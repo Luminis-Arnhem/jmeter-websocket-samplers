@@ -86,7 +86,7 @@ Tested with Apache HTTPD and Fiddler.
 
 ## Status
 
-Even though the project is fairly new, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
+Even though the project hasn't released a 1.0 version yet, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
 
 ## Building
 
