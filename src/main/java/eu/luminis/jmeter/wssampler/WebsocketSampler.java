@@ -32,6 +32,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
+import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import java.io.IOException;
@@ -75,6 +76,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     static {
         initProxyConfiguration();
+        checkForOtherWebsocketPlugins();
     }
 
     @Override
@@ -343,4 +345,17 @@ abstract public class WebsocketSampler extends AbstractSampler {
     }
 
     abstract protected Logger getLogger();
+
+    private static void checkForOtherWebsocketPlugins() {
+        try {
+            WebsocketSampler.class.getClassLoader().loadClass("JMeter.plugins.functional.samplers.websocket.WebSocketSampler");
+            LoggingManager.getLoggerForClass().warn("Detected Maciej Zaleski's WebSocket Sampler plugin is installed too, which is not compatible with this plugin (but both can co-exist).");
+        } catch (ClassNotFoundException e) {
+            // Ok, it's not there.
+        } catch (Exception e) {
+            // Never let any exception leave this method
+            LoggingManager.getLoggerForClass().error("Error while loading class", e);
+        }
+    }
+
 }
