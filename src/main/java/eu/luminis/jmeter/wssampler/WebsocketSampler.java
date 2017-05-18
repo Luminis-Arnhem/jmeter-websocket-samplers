@@ -38,6 +38,7 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -228,7 +229,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
             getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary((byte[]) response));
         }
         else {
-            result.setResponseData((String) response, null);
+            result.setResponseData((String) response, StandardCharsets.UTF_8.name());
             getLogger().debug("Sampler '" + getName() + "' received text: '" + response + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
