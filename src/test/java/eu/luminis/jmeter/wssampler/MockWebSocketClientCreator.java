@@ -91,4 +91,29 @@ public class MockWebSocketClientCreator {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Creates (mock) WebSocketClient that, when receiveFrame is called, returns a given number of text frames and one pong frame.
+     */
+    public WebSocketClient createTextFollowedByPongFrameReturningClient(int numberOfTextFrames) {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
+                private int callCount = 0;
+
+                @Override
+                public Frame answer(InvocationOnMock invocation) throws Throwable {
+                    if (callCount < numberOfTextFrames)
+                        return new TextFrame("response " + callCount++);
+                    else
+                        return new PongFrame(new byte[0]);
+                }
+            });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
