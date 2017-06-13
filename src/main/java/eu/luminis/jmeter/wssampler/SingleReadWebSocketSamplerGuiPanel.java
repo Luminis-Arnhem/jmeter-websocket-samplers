@@ -76,7 +76,7 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
 
             JPanel optionalSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             {
-                optionalSampler = new JCheckBox("Optional read ");
+                optionalSampler = new JCheckBox("Optional read (read timeout will not lead to sampler error)");
                 optionalSettingsPanel.add(optionalSampler);
             }
 
