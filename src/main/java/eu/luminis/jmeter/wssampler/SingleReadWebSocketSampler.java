@@ -82,8 +82,8 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
         if (response == null && getOptional()) {
             log.debug("Sampler '" + getName() + "' received no response (read timeout).");
             result.setSuccessful(true);
-            result.setResponseCode("408");
-            result.setResponseMessage("read timeout, no response received");
+            result.setResponseCode("No response");
+            result.setResponseMessage("Read timeout, no response received.");
         }
         else
             processDefaultReadResponse(response, getBinary(), result);

@@ -99,8 +99,8 @@ public class SingleReadWebSocketSamplerTest {
         assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);
         assertTrue(result.isSuccessful());
-        assertEquals("408", result.getResponseCode());
-        assertEquals("read timeout, no response received", result.getResponseMessage());
+        assertEquals("No response", result.getResponseCode());
+        assertEquals("Read timeout, no response received.", result.getResponseMessage());
     }
 
     @Test
