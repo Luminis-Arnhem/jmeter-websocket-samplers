@@ -18,17 +18,8 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
+import javax.swing.*;
+import java.awt.*;
 
 import static javax.swing.BoxLayout.Y_AXIS;
 
@@ -38,6 +29,7 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
     public static final String TEXT = "Text";
 
     JComboBox typeSelector;
+    JCheckBox optionalSampler;
 
     public SingleReadWebSocketSamplerGuiPanel() {
         init();
@@ -81,6 +73,14 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
                 requestSettingsPanel.add(readTimeoutErrorField);
             }
             dataPanel.add(requestSettingsPanel);
+
+            JPanel optionalSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                optionalSampler = new JCheckBox("Optional read (read timeout will not lead to sampler error)");
+                optionalSettingsPanel.add(optionalSampler);
+            }
+
+            dataPanel.add(optionalSettingsPanel);
         }
         boxPanel.add(dataPanel);
         boxPanel.add(createAboutPanel(this));

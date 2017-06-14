@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.EndOfStreamException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
@@ -25,6 +26,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
@@ -41,31 +43,93 @@ public class SingleReadWebSocketSamplerTest {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock();
+                return createDefaultWsClientMock(null);
             }
         };
 
         SampleResult result = sampler.sample(null);
-        assertTrue(result.getTime() > 300);
+        assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);  // A bit tricky of course, but on decent computers the call should not take more than 100 ms....
         assertEquals("ws-response-data", result.getResponseDataAsString());
         assertFalse(result.getSamplerData().contains("Request data:"));
         assertFalse(result.getSamplerData().contains("ws-response-data"));
     }
 
+    @Test
+    public void readTimeoutLeadsToUnsccessfulResult() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
+            }
+        };
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.getTime() >= 300);
+        assertTrue(result.getTime() < 400);
+        assertFalse(result.isSuccessful());
+    }
+
+    @Test
+    public void lostConnectionLeadsToUnsuccessfulResult() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createDefaultWsClientMock(new EndOfStreamException("end of stream"));
+            }
+        };
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.getTime() >= 300);
+        assertTrue(result.getTime() < 400);
+        assertFalse(result.isSuccessful());
+    }
+
+    @Test
+    public void optionalReadShouldBeSuccessfulOnReadTimeout() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
+            }
+        };
+        sampler.setOptional(true);
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.getTime() >= 300);
+        assertTrue(result.getTime() < 400);
+        assertTrue(result.isSuccessful());
+        assertEquals("No response", result.getResponseCode());
+        assertEquals("Read timeout, no response received.", result.getResponseMessage());
+    }
+
+    @Test
+    public void lostConnectionOnOptionalReadShouldResultInUnsuccessfulResult() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createDefaultWsClientMock(new EndOfStreamException("end of stream"));
+            }
+        };
+        sampler.setOptional(true);
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.getTime() >= 300);
+        assertTrue(result.getTime() < 400);
+        assertFalse(result.isSuccessful());
+    }
 
 
-
-
-    WebSocketClient createDefaultWsClientMock() {
+    private WebSocketClient createDefaultWsClientMock(Exception exception) {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com"));
-            //when(mockWsClient.receiveText(anyInt())).thenReturn("ws-response-data");
             when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
                 @Override
                 public String answer(InvocationOnMock invocation) throws Throwable {
                     Thread.sleep(300);
+                    if (exception != null)
+                        throw exception;
                     return "ws-response-data";
                 }
             });

@@ -26,6 +26,7 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 
@@ -65,12 +66,27 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
-        return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        try {
+            return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        }
+        catch (SocketTimeoutException readTimeout) {
+            if (getOptional())
+                return null;
+            else
+                throw readTimeout;
+        }
     }
 
     @Override
     protected void postProcessResponse(Object response, SampleResult result) {
-        processDefaultReadResponse(response, getBinary(), result);
+        if (response == null && getOptional()) {
+            log.debug("Sampler '" + getName() + "' received no response (read timeout).");
+            result.setSuccessful(true);
+            result.setResponseCode("No response");
+            result.setResponseMessage("Read timeout, no response received.");
+        }
+        else
+            processDefaultReadResponse(response, getBinary(), result);
     }
 
 
@@ -151,5 +167,13 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     public void setReadTimeout(String readTimeout) {
         setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
+    }
+
+    public boolean getOptional() {
+        return getPropertyAsBoolean("optional");
+    }
+
+    public void setOptional(boolean optional) {
+        setProperty("optional", optional);
     }
 }
