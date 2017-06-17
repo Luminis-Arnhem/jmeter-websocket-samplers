@@ -47,9 +47,14 @@ public class WebSocketClient {
 
     enum WebSocketState {
         CLOSED,
-        CLOSING,
+        CLOSED_CLIENT,  // This side has closed
+        CLOSED_SERVER,  // Other side has closed
         CONNECTED,
-        CONNECTING
+        CONNECTING;
+
+        public boolean isClosing() {
+            return this == CLOSED_CLIENT || this == CLOSED_SERVER;
+        }
     }
 
     private final URL connectUrl;
@@ -198,22 +203,8 @@ public class WebSocketClient {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot close when state is " + state);
         }
-        state = WebSocketState.CLOSED;
-        socketOutputStream.write(new CloseFrame(status, requestData).getFrameBytes());
+        sendClose(status, requestData);
         return receiveClose(readTimeout);
-    }
-
-    public CloseFrame receiveClose(int timeout) throws IOException, UnexpectedFrameException {
-
-        wsSocket.setSoTimeout(timeout);
-
-        Frame frame = Frame.parseFrame(socketInputStream);
-        if (frame.isClose()) {
-            state = WebSocketState.CLOSED;
-            return (CloseFrame) frame;
-        }
-        else
-            throw new UnexpectedFrameException(frame);
     }
 
     public void sendTextFrame(String requestData) throws IOException {
@@ -252,13 +243,53 @@ public class WebSocketClient {
         socketOutputStream.write(new PongFrame(new byte[0]).getFrameBytes());
     }
 
+    public void sendClose(int closeStatus, String reason) throws IOException {
+        if (state != WebSocketState.CONNECTED && state != WebSocketState.CLOSED_SERVER) {
+            throw new IllegalStateException("Cannot close when state is " + state);
+        }
+        socketOutputStream.write(new CloseFrame(closeStatus, reason).getFrameBytes());
+
+        if (state == WebSocketState.CONNECTED)
+            state = WebSocketState.CLOSED_CLIENT;
+        else
+            state = WebSocketState.CLOSED;
+    }
+
+    public CloseFrame receiveClose(int timeout) throws IOException, UnexpectedFrameException {
+        if (state != WebSocketState.CONNECTED && state != WebSocketState.CLOSED_CLIENT) {
+            throw new IllegalStateException("Cannot close when state is " + state);
+        }
+
+        wsSocket.setSoTimeout(timeout);
+
+        Frame frame = Frame.parseFrame(socketInputStream);
+        if (frame.isClose()) {
+            if (state == WebSocketState.CONNECTED)
+                state = WebSocketState.CLOSED_SERVER;
+            else
+                state = WebSocketState.CLOSED;
+
+            return (CloseFrame) frame;
+        }
+        else
+            throw new UnexpectedFrameException(frame);
+    }
+
     public Frame receiveFrame(int readTimeout) throws IOException {
-        if (state != WebSocketState.CONNECTED) {
+        if (state != WebSocketState.CONNECTED && state != WebSocketState.CLOSED_CLIENT) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
 
         wsSocket.setSoTimeout(readTimeout);
-        return Frame.parseFrame(socketInputStream);
+        Frame receivedFrame = Frame.parseFrame(socketInputStream);
+        if (receivedFrame.isClose()) {
+            if (state == WebSocketState.CONNECTED)
+                state = WebSocketState.CLOSED_SERVER;
+            else
+                state = WebSocketState.CLOSED;
+        }
+
+        return receivedFrame;
     }
 
     public String receiveText(int timeout) throws IOException, UnexpectedFrameException {
