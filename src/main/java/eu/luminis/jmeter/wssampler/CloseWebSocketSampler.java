@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.CloseFrame;
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
@@ -51,9 +52,18 @@ public class CloseWebSocketSampler extends WebsocketSampler {
         String reason = "sampler requested close";
         result.setSamplerData("Requested connection close with status " + closeStatus + " and reason '" + reason + "'.");
 
-        CloseFrame frame = wsClient.close(closeStatus, reason, readTimeout);
+        wsClient.sendClose(closeStatus, reason);
 
-        return frame;
+        synchronized (this) {
+            if (frameFilterChain != null) {
+                Frame receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
+                if (receivedFrame.isClose())
+                    return receivedFrame;
+                else
+                    throw new UnexpectedFrameException(receivedFrame);
+            } else
+                return wsClient.receiveClose(readTimeout);
+        }
     }
 
     @Override
