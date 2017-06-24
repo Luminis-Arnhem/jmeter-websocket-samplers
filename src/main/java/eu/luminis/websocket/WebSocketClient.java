@@ -229,7 +229,7 @@ public class WebSocketClient {
 
     public void sendPingFrame(byte[] requestData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
-            throw new IllegalStateException("Cannot send data frame when state is " + state);
+            throw new IllegalStateException("Cannot send ping frame when state is " + state);
         }
 
         socketOutputStream.write(new PingFrame(requestData).getFrameBytes());
@@ -237,7 +237,7 @@ public class WebSocketClient {
 
     public void sendPongFrame() throws IOException {
         if (state != WebSocketState.CONNECTED) {
-            throw new IllegalStateException("Cannot send data frame when state is " + state);
+            throw new IllegalStateException("Cannot send pong frame when state is " + state);
         }
 
         socketOutputStream.write(new PongFrame(new byte[0]).getFrameBytes());
