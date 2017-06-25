@@ -67,7 +67,7 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
-        log.error("Sampler '"+ getName() + "': close request was not answered with close response, but " + e.getReceivedFrame());
+        log.debug("Sampler '"+ getName() + "': close request was not answered with close response, but " + e.getReceivedFrame());
         result.setResponseCode("WebSocket error: unsuccesful close.");
         result.setResponseMessage("WebSocket error: received not a close frame, but " + e.getReceivedFrame());
     }
