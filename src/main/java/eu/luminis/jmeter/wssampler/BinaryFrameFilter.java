@@ -61,7 +61,7 @@ public class BinaryFrameFilter extends FrameFilter {
     protected boolean matchesFilter(Frame frame) {
         if (frame.isBinary()) {
             BinaryFrame receivedFrame = (BinaryFrame) frame;
-            byte[] frameBytes = receivedFrame.getData();
+            byte[] frameBytes = receivedFrame.getBinaryData();
 
             switch (filterType) {
                 case IsPlain:

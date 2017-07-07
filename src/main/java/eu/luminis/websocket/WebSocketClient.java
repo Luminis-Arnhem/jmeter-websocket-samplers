@@ -315,7 +315,7 @@ public class WebSocketClient {
 
         Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isBinary())
-            return ((BinaryFrame) frame).getData();
+            return ((BinaryFrame) frame).getBinaryData();
         else
             throw new UnexpectedFrameException(frame);
     }

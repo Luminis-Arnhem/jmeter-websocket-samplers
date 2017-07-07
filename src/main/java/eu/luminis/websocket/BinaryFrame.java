@@ -30,7 +30,7 @@ public class BinaryFrame extends Frame {
         data = payload;
     }
 
-    public byte[] getData() {
+    public byte[] getBinaryData() {
         return data;
     }
 
