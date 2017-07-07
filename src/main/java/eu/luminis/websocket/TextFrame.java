@@ -36,6 +36,12 @@ public class TextFrame extends DataFrame {
         return text;
     }
 
+    @Override
+    public Object getData() {
+        return text;
+    }
+
+    @Override
     public boolean isText() {
         return true;
     }
@@ -59,4 +65,5 @@ public class TextFrame extends DataFrame {
     public String getTypeAsString() {
         return "text";
     }
+
 }

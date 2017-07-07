@@ -19,4 +19,6 @@
 package eu.luminis.websocket;
 
 public abstract class DataFrame extends Frame {
+
+    public abstract Object getData();
 }

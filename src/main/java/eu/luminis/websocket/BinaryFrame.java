@@ -34,6 +34,12 @@ public class BinaryFrame extends DataFrame {
         return data;
     }
 
+    @Override
+    public Object getData() {
+        return data;
+    }
+
+    @Override
     public boolean isBinary() {
         return true;
     }
@@ -60,5 +66,6 @@ public class BinaryFrame extends DataFrame {
     public String getTypeAsString() {
         return "binary";
     }
+
 }
 
