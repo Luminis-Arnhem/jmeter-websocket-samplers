@@ -22,10 +22,10 @@ import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 
 public abstract class FrameFilter extends ConfigTestElement {
 
@@ -44,7 +44,7 @@ public abstract class FrameFilter extends ConfigTestElement {
         do {
             long start = System.currentTimeMillis();
             receivedFrame = next != null? next.receiveFrame(wsClient, socketTimeout, result): wsClient.receiveFrame(socketTimeout);
-            long duration = System.currentTimeMillis() - start;
+            long timeSpent = System.currentTimeMillis() - start;
 
             matchesFilter = matchesFilter(receivedFrame);
             if (matchesFilter) {
@@ -58,10 +58,12 @@ public abstract class FrameFilter extends ConfigTestElement {
                 result.addRawSubResult(subResult);
             }
 
-            if (duration < socketTimeout)
-                socketTimeout -= duration;
-            else
-                socketTimeout = 0;
+            if (timeSpent < socketTimeout)
+                socketTimeout -= timeSpent;
+            else {
+                // Time spent waiting for a valid frame (one that passed the filter) is now equal to original read timeout, so do not wait any longer.
+                throw new SocketTimeoutException("Read timed out");
+            }
         }
         while (matchesFilter);
 
