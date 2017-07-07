@@ -21,7 +21,7 @@ package eu.luminis.websocket;
 import eu.luminis.jmeter.wssampler.BinaryUtils;
 
 
-public class BinaryFrame extends Frame {
+public class BinaryFrame extends DataFrame {
 
     private byte[] data;
     int nrBytesPrintedInToString = 16;

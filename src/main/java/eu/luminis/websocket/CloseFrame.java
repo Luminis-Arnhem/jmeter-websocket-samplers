@@ -20,7 +20,7 @@ package eu.luminis.websocket;
 
 import java.nio.charset.StandardCharsets;
 
-public class CloseFrame extends Frame {
+public class CloseFrame extends ControlFrame {
 
     private Integer closeStatus;
     private String closeReason;

@@ -18,7 +18,7 @@
  */
 package eu.luminis.websocket;
 
-public class PongFrame extends Frame {
+public class PongFrame extends ControlFrame {
 
     private byte[] applicationData;
 
