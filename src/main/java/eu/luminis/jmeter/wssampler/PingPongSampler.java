@@ -49,17 +49,15 @@ public class PingPongSampler extends WebsocketSampler {
         wsClient.sendPingFrame();
 
         Frame receivedFrame;
-        synchronized (this) {
-            if (frameFilterChain != null) {
-                receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
-                if (receivedFrame.isPong())
-                    return receivedFrame;
-                else
-                    throw new UnexpectedFrameException(receivedFrame);
-            }
+        if (frameFilterChain != null) {
+            receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
+            if (receivedFrame.isPong())
+                return receivedFrame;
             else
-                wsClient.receivePong(readTimeout);
+                throw new UnexpectedFrameException(receivedFrame);
         }
+        else
+            wsClient.receivePong(readTimeout);
         return null;
     }
 

@@ -65,16 +65,14 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     @Override
     protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         Frame receivedFrame;
-        synchronized (this) {
-            if (frameFilterChain != null) {
-                receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
-                if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
-                    return ((DataFrame) receivedFrame).getData();
-                else
-                    throw new UnexpectedFrameException(receivedFrame);
-            } else
-                return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
-        }
+        if (frameFilterChain != null) {
+            receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
+            if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
+                return ((DataFrame) receivedFrame).getData();
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        } else
+            return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
     }
 
     @Override

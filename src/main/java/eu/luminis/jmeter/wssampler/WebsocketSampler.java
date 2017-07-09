@@ -42,6 +42,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Base class for websocket samplers.
+ * Note on synchronization: JMeter operates samplers from one thread only (the Thread-Group's sampling thread). Only
+ * instantiation of these objects is done on another thread (StandardJMeterEngine main thread). Hence, only members
+ * set in the constructor must be made thread safe.
+ */
 abstract public class WebsocketSampler extends AbstractSampler {
 
     public static final int MIN_CONNECTION_TIMEOUT = 1;
@@ -185,21 +191,20 @@ abstract public class WebsocketSampler extends AbstractSampler {
     public void addTestElement(TestElement element) {
         String logMsg = null;
 
-        synchronized (this) {
-            if (element instanceof HeaderManager) {
-                headerManager = (HeaderManager) element;
-            } else if (element instanceof CookieManager) {
-                cookieManager = (CookieManager) element;
-            } else if (element instanceof FrameFilter) {
-                if (frameFilterChain == null)
-                    frameFilterChain = (FrameFilter) element;
-                else
-                    frameFilterChain.setNext((FrameFilter) element);
-                logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilterChain.getChainAsString();
-            } else {
-                super.addTestElement(element);
-            }
+        if (element instanceof HeaderManager) {
+            headerManager = (HeaderManager) element;
+        } else if (element instanceof CookieManager) {
+            cookieManager = (CookieManager) element;
+        } else if (element instanceof FrameFilter) {
+            if (frameFilterChain == null)
+                frameFilterChain = (FrameFilter) element;
+            else
+                frameFilterChain.setNext((FrameFilter) element);
+            logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilterChain.getChainAsString();
+        } else {
+            super.addTestElement(element);
         }
+
         if (logMsg != null)
             getLogger().debug(logMsg);
     }

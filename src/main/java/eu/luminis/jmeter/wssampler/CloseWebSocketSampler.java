@@ -54,16 +54,14 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
         wsClient.sendClose(closeStatus, reason);
 
-        synchronized (this) {
-            if (frameFilterChain != null) {
-                Frame receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
-                if (receivedFrame.isClose())
-                    return receivedFrame;
-                else
-                    throw new UnexpectedFrameException(receivedFrame);
-            } else
-                return wsClient.receiveClose(readTimeout);
-        }
+        if (frameFilterChain != null) {
+            Frame receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
+            if (receivedFrame.isClose())
+                return receivedFrame;
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        } else
+            return wsClient.receiveClose(readTimeout);
     }
 
     @Override

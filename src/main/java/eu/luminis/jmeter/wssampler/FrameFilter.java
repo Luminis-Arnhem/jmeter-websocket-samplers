@@ -27,9 +27,14 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
+/**
+ * Base class for frame filters.
+ * This class (and thus it's descendants) are not thread-safe: they don't have to, because JMeter accesses filters only
+ * from one thread.
+ */
 public abstract class FrameFilter extends ConfigTestElement {
 
-    private volatile FrameFilter next;
+    private FrameFilter next;
 
     public FrameFilter() {
         super();
