@@ -127,11 +127,13 @@ abstract public class WebsocketSampler extends AbstractSampler {
                 result.connectEnd();
                 gotNewConnection = true;
             }
+            else {
+                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection)\n");
+
+            }
             Object response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
 
-            result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl())
-                    + (!gotNewConnection? "\n(using existing connection)": "") + "\n");
 
             if (gotNewConnection) {
                 result.setResponseCode("101");
