@@ -18,8 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.Frame;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.log.Logger;
@@ -60,6 +59,11 @@ public abstract class FrameFilter extends ConfigTestElement {
                 subResult.setSampleLabel("Discarded " + receivedFrame.getTypeAsString() + " frame (by filter '" + getName() + "')");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
+                if (receivedFrame.isText())
+                    subResult.setResponseData(((TextFrame) receivedFrame).getText(), null);
+                else if (receivedFrame.isBinary())
+                    subResult.setResponseData(((BinaryFrame) receivedFrame).getBinaryData());
+
                 result.addRawSubResult(subResult);
             }
 
