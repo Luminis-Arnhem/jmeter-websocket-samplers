@@ -133,7 +133,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     }
 
     public String toString() {
-        return "WS Read sampler: " + getServer() + ":" + getPort() + getPath();
+        return "WS Read sampler '" + getName() + "'";
     }
 
     public boolean getCreateNewConnection() {

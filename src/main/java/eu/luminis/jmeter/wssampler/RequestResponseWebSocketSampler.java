@@ -163,7 +163,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
     }
 
     public String toString() {
-        return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
+        return "WS Req/resp sampler '" + getName() + "'";
     }
 
     public boolean getCreateNewConnection() {

@@ -144,7 +144,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
     }
 
     public String toString() {
-        return "WS Single Write sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
+        return "WS Single Write sampler '" + getName() + "'";
     }
 
     public boolean getCreateNewConnection() {
