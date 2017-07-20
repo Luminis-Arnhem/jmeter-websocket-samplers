@@ -67,20 +67,26 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
-        if (getBinary())
+        if (getBinary()) {
+            byte[] requestData;
             try {
-                wsClient.sendBinaryFrame(BinaryUtils.parseBinaryString(getRequestData()));
-            }
-            catch (NumberFormatException noNumber) {
+                requestData = BinaryUtils.parseBinaryString(getRequestData());
+            } catch (NumberFormatException noNumber) {
                 // Thrown by BinaryUtils.parseBinaryString
                 result.sampleEnd(); // End timimg
-                log.error("Sampler '"+ getName() + "': request data is not binary: " + getRequestData());
+                log.error("Sampler '" + getName() + "': request data is not binary: " + getRequestData());
                 result.setResponseCode("Sampler Error");
                 result.setResponseMessage("Request data is not binary: " + getRequestData());
                 throw new SamplingAbortedException();
             }
-        else
+            // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
+            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
+            wsClient.sendBinaryFrame(requestData);
+        }
+        else {
+            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
             wsClient.sendTextFrame(getRequestData());
+        }
 
         Frame receivedFrame;
         if (frameFilterChain != null) {
@@ -95,10 +101,8 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected void postProcessResponse(Object response, SampleResult result) {
-        result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
         processDefaultReadResponse(response, getBinary(), result);
     }
-
 
     @Override
     protected Logger getLogger() {

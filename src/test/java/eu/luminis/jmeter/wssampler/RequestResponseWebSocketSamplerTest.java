@@ -18,20 +18,22 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.Frame;
+import eu.luminis.websocket.EndOfStreamException;
 import eu.luminis.websocket.HttpUpgradeException;
-import eu.luminis.websocket.TextFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class RequestResponseWebSocketSamplerTest {
@@ -102,13 +104,114 @@ public class RequestResponseWebSocketSamplerTest {
         filter.setComparisonType(ComparisonType.EqualsRegex);
         filter.setMatchValue("response \\d");
         sampler.addTestElement(filter);
-
         SampleResult result = sampler.sample(null);
         assertEquals("response 10", result.getResponseDataAsString());
         assertEquals(10, result.getSubResults().length);
     }
 
-    private HeaderManager createSingleHeaderHeaderManager() {
+    public void samplerResultShouldContainConnectInfoAndRequestData() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createDefaultWsClientMock();
+            }
+        };
+        sampler.setRequestData("goodbye");
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
+        assertTrue(result.getSamplerData().contains("Request data:\ngoodbye"));
+    }
+
+    @Test
+    public void readTimeoutShouldShowRequestDataInResult() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createNoResponseWsClientMock();
+            }
+        };
+        sampler.setRequestData("goodbye");
+
+        SampleResult result = sampler.sample(null);
+        assertFalse(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Request data:\ngoodbye"));
+    }
+
+    @Test
+    public void failingToSendTextMessageShouldShowRequestDataInResult() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createErrorOnWriteWsClientMock();
+            }
+        };
+        sampler.setBinary(false);
+        sampler.setRequestData("goodbye");
+
+        SampleResult result = sampler.sample(null);
+        assertFalse(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Request data:\ngoodbye"));
+    }
+
+    @Test
+    public void failingToSendBinaryMessageShouldShowRequestDataInResult() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return createErrorOnWriteWsClientMock();
+            }
+        };
+        sampler.setBinary(true);
+        sampler.setRequestData("0xba 0xbe");
+
+        SampleResult result = sampler.sample(null);
+        assertFalse(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Request data:\n0xba 0xbe"));
+    }
+
+    WebSocketClient createDefaultWsClientMock() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
+                @Override
+                public String answer(InvocationOnMock invocation) throws Throwable {
+                    Thread.sleep(300);
+                    return "ws-response-data";
+                }
+            });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    WebSocketClient createNoResponseWsClientMock() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.receiveText(anyInt())).thenThrow(new SocketTimeoutException("timeout"));
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    WebSocketClient createErrorOnWriteWsClientMock() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
+            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    HeaderManager createSingleHeaderHeaderManager() {
         HeaderManager headerMgr = Mockito.mock(HeaderManager.class);
         when(headerMgr.size()).thenReturn(1);
         when(headerMgr.get(0)).thenReturn(new Header("header-key", "header-value"));
