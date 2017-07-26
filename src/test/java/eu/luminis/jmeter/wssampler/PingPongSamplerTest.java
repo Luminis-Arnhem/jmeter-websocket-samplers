@@ -45,4 +45,31 @@ public class PingPongSamplerTest {
         assertEquals("", result.getResponseDataAsString());
         assertEquals(1, result.getSubResults().length);
     }
+
+    @Test
+    public void shouldSupportMultipleFilters() {
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createTextFollowedByPongFrameReturningClient(3);
+            }
+        };
+
+        TextFrameFilter filter0 = new TextFrameFilter();
+        filter0.setComparisonType(ComparisonType.Contains);
+        filter0.setMatchValue("0");
+        TextFrameFilter filter1 = new TextFrameFilter();
+        filter1.setComparisonType(ComparisonType.Contains);
+        filter1.setMatchValue("1");
+        TextFrameFilter filter2 = new TextFrameFilter();
+        filter2.setComparisonType(ComparisonType.Contains);
+        filter2.setMatchValue("2");
+
+        sampler.addTestElement(filter0);
+        sampler.addTestElement(filter1);
+        sampler.addTestElement(filter2);
+
+        SampleResult result = sampler.sample(null);
+        assertEquals(3, result.getSubResults().length);
+    }
 }
