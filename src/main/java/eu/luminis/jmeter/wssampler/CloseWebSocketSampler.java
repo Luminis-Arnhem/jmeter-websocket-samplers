@@ -54,8 +54,8 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
         wsClient.sendClose(closeStatus, reason);
 
-        if (frameFilterChain != null) {
-            Frame receivedFrame = frameFilterChain.receiveFrame(wsClient, readTimeout, result);
+        if (!frameFilters.isEmpty()) {
+            Frame receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
             if (receivedFrame.isClose())
                 return receivedFrame;
             else

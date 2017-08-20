@@ -25,6 +25,8 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base class for frame filters.
@@ -33,13 +35,15 @@ import java.net.SocketTimeoutException;
  */
 public abstract class FrameFilter extends ConfigTestElement {
 
-    private FrameFilter next;
-
     public FrameFilter() {
         super();
     }
 
     public Frame receiveFrame(WebSocketClient wsClient, int readTimeout, SampleResult result) throws IOException {
+        return receiveFrame(Collections.emptyList(), wsClient, readTimeout, result);
+    }
+
+    public Frame receiveFrame(List<FrameFilter> filterList, WebSocketClient wsClient, int readTimeout, SampleResult result) throws IOException {
         prepareFilter();
 
         Frame receivedFrame;
@@ -47,7 +51,10 @@ public abstract class FrameFilter extends ConfigTestElement {
         boolean matchesFilter;
         do {
             long start = System.currentTimeMillis();
-            receivedFrame = next != null? next.receiveFrame(wsClient, socketTimeout, result): wsClient.receiveFrame(socketTimeout);
+            receivedFrame =
+                    !filterList.isEmpty()?
+                            filterList.get(0).receiveFrame(filterList.subList(1, filterList.size()), wsClient, socketTimeout, result):
+                            wsClient.receiveFrame(socketTimeout);
             long timeSpent = System.currentTimeMillis() - start;
 
             matchesFilter = matchesFilter(receivedFrame);
@@ -95,18 +102,5 @@ public abstract class FrameFilter extends ConfigTestElement {
     @Override
     public String toString() {
         return "Frame Filter '" + getName() + "'";
-    }
-
-    public void setNext(FrameFilter nextFilter) {
-        if (nextFilter == this)
-            getLogger().debug("Ignoring additional filter '" + nextFilter + "'; already present in chain.");
-        else if (next == null)
-            this.next = nextFilter;
-        else
-            next.setNext(nextFilter);
-    }
-
-    public String getChainAsString() {
-        return toString() + (next != null? " -> " + next.getChainAsString(): "");
     }
 }

@@ -63,7 +63,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
-    protected FrameFilter frameFilterChain;
+    protected List<FrameFilter> frameFilters = new ArrayList<>();
     protected int readTimeout;
     protected int connectTimeout;
 
@@ -198,11 +198,13 @@ abstract public class WebsocketSampler extends AbstractSampler {
         } else if (element instanceof CookieManager) {
             cookieManager = (CookieManager) element;
         } else if (element instanceof FrameFilter) {
-            if (frameFilterChain == null)
-                frameFilterChain = (FrameFilter) element;
-            else
-                frameFilterChain.setNext((FrameFilter) element);
-            logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilterChain.getChainAsString();
+            if (! frameFilters.contains(element)) {
+                frameFilters.add((FrameFilter) element);
+                logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilters;
+            }
+            else {
+                logMsg = "Ignoring additional filter " + element + "; already present in chain.";
+            }
         } else {
             super.addTestElement(element);
         }
