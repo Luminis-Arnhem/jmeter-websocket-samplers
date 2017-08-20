@@ -195,8 +195,6 @@ abstract public class WebsocketSampler extends AbstractSampler {
     }
 
     public void addTestElement(TestElement element) {
-        String logMsg = null;
-
         if (element instanceof HeaderManager) {
             headerManager = (HeaderManager) element;
         } else if (element instanceof CookieManager) {
@@ -204,17 +202,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
         } else if (element instanceof FrameFilter) {
             if (! frameFilters.contains(element)) {
                 frameFilters.add((FrameFilter) element);
-                logMsg = "Added filter " + element + " to sampler " + this + "on thread " + Thread.currentThread() + "; filter list is now " + frameFilters;
+                getLogger().debug("Added filter " + element + " to sampler " + this + "; filter list is now " + frameFilters);
             }
             else {
-                logMsg = "Ignoring additional filter " + element + "; already present in chain.";
+                getLogger().debug("Ignoring additional filter " + element + "; already present in chain.");
             }
         } else {
             super.addTestElement(element);
         }
-
-        if (logMsg != null)
-            getLogger().debug(logMsg);
     }
 
     protected String getConnectUrl(URL url) {
