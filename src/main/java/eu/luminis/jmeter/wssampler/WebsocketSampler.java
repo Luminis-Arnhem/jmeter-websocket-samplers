@@ -71,6 +71,10 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
 
+    public void clearTestElementChildren() {
+        frameFilters.clear();
+    }
+
     @Override
     public SampleResult sample(Entry entry) {
         Logger log = getLogger();
