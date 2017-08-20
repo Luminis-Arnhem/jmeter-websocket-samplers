@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
@@ -46,7 +47,17 @@ public class PingPongSampler extends WebsocketSampler {
     @Override
     public Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         wsClient.sendPingFrame();
-        wsClient.receivePong(readTimeout);
+
+        Frame receivedFrame;
+        if (! frameFilters.isEmpty()) {
+            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+            if (receivedFrame.isPong())
+                return receivedFrame;
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        }
+        else
+            wsClient.receivePong(readTimeout);
         return null;
     }
 

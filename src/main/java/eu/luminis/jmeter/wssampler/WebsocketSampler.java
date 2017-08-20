@@ -40,11 +40,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Base class for websocket samplers.
+ * Note on synchronization: JMeter operates samplers from one thread only (the Thread-Group's sampling thread). Only
+ * instantiation of these objects is done on another thread (StandardJMeterEngine main thread). Hence, only members
+ * set in the constructor must be made thread safe.
+ */
 abstract public class WebsocketSampler extends AbstractSampler {
 
     public static final int MIN_CONNECTION_TIMEOUT = 1;
@@ -60,6 +67,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
+    protected List<FrameFilter> frameFilters = new ArrayList<>();
     protected int readTimeout;
     protected int connectTimeout;
 
@@ -75,9 +83,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
 
+
     static {
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
+    }
+
+    public void clearTestElementChildren() {
+        frameFilters.clear();
     }
 
     @Override
@@ -161,18 +174,20 @@ abstract public class WebsocketSampler extends AbstractSampler {
             result.setResponseMessage(upgradeError.getMessage());
         }
         catch (IOException ioExc) {
-            result.sampleEnd(); // End timimg
+            if (result.getEndTime() == 0)
+                result.sampleEnd(); // End timimg
             getLogger().debug("I/O Error in sampler '" + getName() + "'.", ioExc);
             result.setResponseCode("Websocket I/O error");
             result.setResponseMessage("WebSocket I/O error: " + ioExc.getMessage());
         }
         catch (SamplingAbortedException abort) {
-            // Error should have been handled by subclass
             if (result.getEndTime() == 0)
                 result.sampleEnd(); // End timimg
+            // Error should have been handled by subclass
         }
         catch (Exception error) {
-            result.sampleEnd(); // End timimg
+            if (result.getEndTime() == 0)
+                result.sampleEnd(); // End timimg
             getLogger().error("Unhandled error in sampler '"  + getName() + "'.", error);
             result.setResponseCode("Sampler error");
             result.setResponseMessage("Sampler error: " + error);
@@ -199,14 +214,21 @@ abstract public class WebsocketSampler extends AbstractSampler {
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
-    public void addTestElement(TestElement el) {
-        if (el instanceof HeaderManager) {
-            headerManager = (HeaderManager) el;
-        }
-        else if (el instanceof CookieManager) {
-            cookieManager = (CookieManager) el;
+    public void addTestElement(TestElement element) {
+        if (element instanceof HeaderManager) {
+            headerManager = (HeaderManager) element;
+        } else if (element instanceof CookieManager) {
+            cookieManager = (CookieManager) element;
+        } else if (element instanceof FrameFilter) {
+            if (! frameFilters.contains(element)) {
+                frameFilters.add((FrameFilter) element);
+                getLogger().debug("Added filter " + element + " to sampler " + this + "; filter list is now " + frameFilters);
+            }
+            else {
+                getLogger().debug("Ignoring additional filter " + element + "; already present in chain.");
+            }
         } else {
-            super.addTestElement(el);
+            super.addTestElement(element);
         }
     }
 

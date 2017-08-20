@@ -18,8 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.UnexpectedFrameException;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -67,7 +66,15 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     @Override
     protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         try {
-            return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+            Frame receivedFrame;
+            if (! frameFilters.isEmpty()) {
+                receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+                if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
+                    return ((DataFrame) receivedFrame).getData();
+                else
+                    throw new UnexpectedFrameException(receivedFrame);
+            } else
+                return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
         }
         catch (SocketTimeoutException readTimeout) {
             if (getOptional())
@@ -142,7 +149,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     }
 
     public String toString() {
-        return "WS Read sampler: " + getServer() + ":" + getPort() + getPath();
+        return "WS Read sampler '" + getName() + "'";
     }
 
     public boolean getCreateNewConnection() {

@@ -18,8 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.UnexpectedFrameException;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -89,7 +88,15 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             wsClient.sendTextFrame(getRequestData());
         }
 
-        return getBinary()? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        Frame receivedFrame;
+        if (! frameFilters.isEmpty()) {
+            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+            if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
+                return ((DataFrame) receivedFrame).getData();
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        } else
+            return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
     }
 
     @Override
@@ -160,7 +167,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
     }
 
     public String toString() {
-        return "WS Req/resp sampler: " + getServer() + ":" + getPort() + getPath() + " - '" + getRequestData() + "'";
+        return "WS Req/resp sampler '" + getName() + "'";
     }
 
     public boolean getCreateNewConnection() {

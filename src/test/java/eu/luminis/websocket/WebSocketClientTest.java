@@ -111,13 +111,70 @@ public class WebSocketClientTest {
     @Test(expected = IllegalStateException.class)
     public void testDoubleCloseConnection() throws IOException, UnexpectedFrameException {
         WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
-        setPrivateClientState(client, WebSocketClient.WebSocketState.CLOSING);
+        client.close(1000, "illegal close", 3000);
         client.close(1000, "illegal close", 3000);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testReceiveOnClosedConnection() throws IOException, UnexpectedFrameException {
         new WebSocketClient(new URL("http://nowhere")).receiveText(3000);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void receiveMultipleCloseMessages() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new CloseFrame(1000, "").getFrameBytes()));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new CloseFrame(1000, "").getFrameBytes()));
+        client.receiveFrame(1);
+    }
+
+    @Test
+    public void receiveCloseLeadsToClosingState() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new CloseFrame(1000, "").getFrameBytes()));
+        Frame receivedFrame = client.receiveFrame(1);
+        assertTrue(receivedFrame.isClose());
+        assertTrue( ((WebSocketClient.WebSocketState) getPrivateClientField(client, "state")).isClosing());
+    }
+
+    @Test
+    public void receiveCloseAndSendCloseLeadsToClosedState() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new CloseFrame(1000, "").getFrameBytes()));
+        setPrivateClientField(client, "socketOutputStream", new ByteArrayOutputStream(1024));
+        client.receiveFrame(1);
+        client.sendClose(1000, "whatever");
+        assertEquals(WebSocketClient.WebSocketState.CLOSED, getPrivateClientField(client, "state"));
+    }
+
+    @Test
+    public void sendCloseLeadsToClosingState() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[0]));
+        setPrivateClientField(client, "socketOutputStream", new ByteArrayOutputStream(1024));
+        client.sendClose(1000, "whatever");
+        assertTrue( ((WebSocketClient.WebSocketState) getPrivateClientField(client, "state")).isClosing());
+    }
+
+    @Test
+    public void sendCloseAndReceiveCloseLeadsToClosedState() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new CloseFrame(1000, "").getFrameBytes()));
+        setPrivateClientField(client, "socketOutputStream", new ByteArrayOutputStream(1024));
+        client.sendClose(1000, "whatever");
+        client.receiveFrame(1);
+        assertEquals(WebSocketClient.WebSocketState.CLOSED, getPrivateClientField(client, "state"));
     }
 
     @Test
@@ -284,17 +341,37 @@ public class WebSocketClientTest {
         assertEquals("Host: nowhere.com:8023", hostHeaders.get(0));
     }
 
-    private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
-        Field field = null;
+
+    private Object getPrivateClientField(WebSocketClient client, String fieldName) {
+        Field field;
         try {
-            field = WebSocketClient.class.getDeclaredField("state");
+            field = WebSocketClient.class.getDeclaredField(fieldName);
             field.setAccessible(true);
-            field.set(client, newState);
+            return field.get(client);
+        } catch (NoSuchFieldException e) {
+            // Impossible
+            return null;
+        } catch (IllegalAccessException e) {
+            // Impossible
+            return null;
+        }
+    }
+
+    private void setPrivateClientField(WebSocketClient client, String fieldName, Object value) {
+        Field field;
+        try {
+            field = WebSocketClient.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(client, value);
         } catch (NoSuchFieldException e) {
             // Impossible
         } catch (IllegalAccessException e) {
             // Impossible
         }
+    }
+
+    private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
+        setPrivateClientField(client, "state", newState);
     }
 
     private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {

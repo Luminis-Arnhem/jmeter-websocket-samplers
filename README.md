@@ -25,6 +25,7 @@ The WebSocket Samplers plugin provides the following features:
 * integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
 * sends cookies defined by JMeter's Cookie Manager with each upgrade request (i.e. the HTTP request that initiates the WebSocket connection)
 * proxy support
+* provides filters for discarding frames that are not relevant for the test
 * many sample JMeter test plans illustrate the various features.
 
 ### Samplers
@@ -70,7 +71,7 @@ Using client certificates is also fully supported. It works exactly the same as 
 
 In addition to WebSocket samplers, the plugin also provides an generic JMeter assertion element that can be used for veryfying binary responses. It's usage is pretty straight forward:
 
-![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/binary-assertion-sample.png)
+![Binary assertion](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/binary-assertion-sample.png)
 
 This assertion element is of course very usefull when load testing binary websocket calls, but it is not limited to websocket tests in any way. It can be used with any sampler in the JMeter toolbox. For example, you could use it to check that an image result in a HTTP sampler, is a proper PNG file (see sample).
 
@@ -83,6 +84,32 @@ As with standard JMeter, use `"-N <nonProxyHosts>"` to specify which hosts shoul
 and `"-u <username>"` `"-a <password>"` for proxy authentication.
 
 Tested with Apache HTTPD and Fiddler.
+
+### Filters
+
+To handle situations in which the server sends unsolicited messages and the occurrence of such messages is hard to predict or otherwise hard to take into account in the test plan, filters can be used to discard such messages before they are seen by a sampler.
+There are three different kinds of filters: 
+ 
+- Ping/Pong frame filter: discards all ping and pong frames and has an option to automatically respond to pings (with a pong of course)
+- Binary frame filter: discards any binary frame, or binary frames that match a given sequence of bytes
+- Text frame filter: discards any text frame, or text frames that contain/match a given substring or regular expression.
+The text filter also provides a regular expression tester that can be used to quickly check whether the given regular expression matches or does not match, a number of test strings. 
+
+![Text frame filter](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/filter/docs/text-frame-filter-with-regex-test-dialog-sample.png)
+
+The filters can be found in the (`Edit->Add`) `Config Element` menu. 
+
+Filters operate in the scope they are defined and can be combined in arbitrary ways. Of course, when multiple frames apply, only frames that do not match any of the filters in scope for a given sampler, will reach the sampler.
+
+When filters apply, the plugin treats read timeouts a little different. This is best to explain with an example. 
+Suppose you want to test a simple request-response exchange and because your requirement is that response messages should be send within 30 seconds, you set the read timeout to 30 seconds.
+Even though setting the read timeout is not exactly the same has having an answer within 30 seconds (the read timeout is applied on the socket, when parts of the message arrive within 30 seconds periods, receiving the message might take much longer),
+it will at least avoid the test from waiting too long, because if nothing is received for 30 seconds, the read (and thus the sampler), will time out.
+When you add a filter, e.g. a ping/pong filter to ignore pong messages send by the server, the read timeout on the socket might never be reached when the server _never_ replies to the request, but does send pings every 30 seconds, because the read timeout on the filter is never reached!
+To avoid the sampler waiting forever in such cases, the read timeout is treated differently: the time the filter has been waiting for an message, is subtracted from the read timeout that is used for the remainder.
+This is a simple solution that probably works well in most cases, but you need to realize that in such cases, you should consider the read-timeout more as a "maximum time to wait for a message" 
+(which probably is how most people think about the read time out anyway). Future releases of this plugin might change this behaviour or provide a better solution; please check the documentation if it matters to you. 
+
 
 ## Status
 

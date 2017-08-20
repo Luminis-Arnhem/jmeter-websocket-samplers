@@ -62,7 +62,7 @@ public class BinaryUtils {
             if (showRowAddress && i % rowLength == 0)
                 builder.append(String.format("%04x  ", i));
             builder.append(String.format("%02x", data[i]));
-            if ( (i+1) % rowLength == 0) {
+            if ((i + 1) % rowLength == 0) {
                 if (showAscii) {
                     builder.append("  ");
                     for (int j = i + 1 - rowLength; j <= i; j++) {
@@ -70,19 +70,18 @@ public class BinaryUtils {
                             builder.append((char) data[j]);
                         else
                             builder.append(".");
-                        if ( (j+1) % rowLength % 8 == 0 && (j+1) % rowLength != 0)
+                        if ((j + 1) % rowLength % 8 == 0 && (j + 1) % rowLength != 0)
                             builder.append(" ");
                     }
                 }
                 builder.append("\n");
-            }
-            else if ( (i+1) % rowLength % 8 == 0)
+            } else if ((i + 1) % rowLength % 8 == 0)
                 builder.append("  ");
-            else if (i != dataSize -1)
+            else if (i != dataSize - 1)
                 builder.append(" ");
             else {
                 if (showAscii) {
-                    for (int j = i+1; j % rowLength != 0; j++) {
+                    for (int j = i + 1; j % rowLength != 0; j++) {
                         builder.append("   ");
                         if (j % rowLength % 8 == 0)
                             builder.append(" ");
@@ -105,7 +104,17 @@ public class BinaryUtils {
         return builder.toString();
     }
 
+    public static String formatBinary(byte[] data, int maxBytes) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < Math.min(data.length, maxBytes); i++)
+            builder.append(String.format("%#04x ", data[i]));  // # defines the leading 0x, which takes 2 chars, hence width is 2 + 2 = 4
+        return builder.toString().trim();
+    }
+
     public static boolean contains(byte[] source, byte[] value) {
+        if (value.length == 0)
+            return false;
+
         for (int i = 0; i < source.length; i++) {
             if (value[0] == source[i]) {
                 boolean equal = true;

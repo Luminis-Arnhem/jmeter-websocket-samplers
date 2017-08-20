@@ -198,4 +198,9 @@ public class BinaryUtilsTest {
         String formattedBin = test.formatBinaryInTable(data, 13, true, false);
         assertEquals("0000  00 01 02 03 04 05 06 07  08 09 0a 0b 0c\n000d  0d 0e 0f 10 11 12 13 14  15 16 17 18 19\n001a  1a 1b 1c 1d 1e 1f 20 21  22 23\n", formattedBin);
     }
+
+    public void testContainsWithEmptyValue() {
+        assertFalse(test.contains(new byte[] { 0x01 }, new byte[0]));
+    }
+
 }

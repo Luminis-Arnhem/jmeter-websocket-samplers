@@ -18,25 +18,38 @@
  */
 package eu.luminis.websocket;
 
-public class BinaryFrame extends Frame {
+import eu.luminis.jmeter.wssampler.BinaryUtils;
+
+
+public class BinaryFrame extends DataFrame {
 
     private byte[] data;
+    int nrBytesPrintedInToString = 16;
 
     public BinaryFrame(byte[] payload) {
         data = payload;
     }
 
-    public byte[] getData() {
+    public byte[] getBinaryData() {
         return data;
     }
 
+    @Override
+    public Object getData() {
+        return data;
+    }
+
+    @Override
     public boolean isBinary() {
         return true;
     }
 
     @Override
     public String toString() {
-        return "Binary frame with length " + data.length;
+        if (data.length > 0)
+            return "Binary frame, payload (length " + data.length + "): " + BinaryUtils.formatBinary(data, nrBytesPrintedInToString) + (data.length > nrBytesPrintedInToString? " ...": "");
+        else
+            return "Binary frame, empty payload";
     }
 
     @Override
@@ -48,5 +61,11 @@ public class BinaryFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_BINARY;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "binary";
+    }
+
 }
 

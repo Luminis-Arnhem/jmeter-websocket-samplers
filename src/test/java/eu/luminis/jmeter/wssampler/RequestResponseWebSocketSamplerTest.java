@@ -42,13 +42,15 @@ import static org.mockito.Mockito.when;
 
 public class RequestResponseWebSocketSamplerTest {
 
+    MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
     @Test
     public void testNormalRequestResponseSamplerSample() throws Exception {
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock();
+                return mocker.createTextReceiverClient();
             }
         };
 
@@ -61,7 +63,7 @@ public class RequestResponseWebSocketSamplerTest {
     @Test
     public void testSamplerThatReusesConnectionShouldntReportHeaders() throws Exception {
 
-        WebSocketClient mockWsClient = createDefaultWsClientMock();
+        WebSocketClient mockWsClient = mocker.createTextReceiverClient();
         when(mockWsClient.isConnected()).thenReturn(true);
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
@@ -79,7 +81,7 @@ public class RequestResponseWebSocketSamplerTest {
     @Test
     public void testFailingUpgradeRequest() throws Exception {
 
-        WebSocketClient mockWsClient = createDefaultWsClientMock();
+        WebSocketClient mockWsClient = mocker.createTextReceiverClient();
         when(mockWsClient.connect(anyInt(), anyInt())).thenThrow(new HttpUpgradeException(404));
 
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
@@ -95,7 +97,51 @@ public class RequestResponseWebSocketSamplerTest {
     }
 
     @Test
-    public void samplerResultShouldContainConnectInfoAndRequestDaa() {
+    public void testFrameFilter() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        TextFrameFilter filter = new TextFrameFilter();
+        filter.setComparisonType(ComparisonType.EqualsRegex);
+        filter.setMatchValue("response \\d");
+        sampler.addTestElement(filter);
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 10", result.getResponseDataAsString());
+        assertEquals(10, result.getSubResults().length);
+    }
+
+    @Test
+    public void shouldSupportMultipleFilters() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        TextFrameFilter filter0 = new TextFrameFilter();
+        filter0.setComparisonType(ComparisonType.Contains);
+        filter0.setMatchValue("0");
+        TextFrameFilter filter1 = new TextFrameFilter();
+        filter1.setComparisonType(ComparisonType.Contains);
+        filter1.setMatchValue("1");
+        TextFrameFilter filter2 = new TextFrameFilter();
+        filter2.setComparisonType(ComparisonType.Contains);
+        filter2.setMatchValue("2");
+
+        sampler.addTestElement(filter0);
+        sampler.addTestElement(filter1);
+        sampler.addTestElement(filter2);
+
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 3", result.getResponseDataAsString());
+        assertEquals(3, result.getSubResults().length);
+    }
+
+    @Test
+    public void samplerResultShouldContainConnectInfoAndRequestData() {
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {

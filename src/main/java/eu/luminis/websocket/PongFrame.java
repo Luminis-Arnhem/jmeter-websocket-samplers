@@ -18,7 +18,7 @@
  */
 package eu.luminis.websocket;
 
-public class PongFrame extends Frame {
+public class PongFrame extends ControlFrame {
 
     private byte[] applicationData;
 
@@ -48,5 +48,10 @@ public class PongFrame extends Frame {
     @Override
     protected byte getOpCode() {
         return OPCODE_PONG;
+    }
+
+    @Override
+    public String getTypeAsString() {
+        return "pong";
     }
 }

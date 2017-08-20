@@ -20,7 +20,7 @@ package eu.luminis.websocket;
 
 import java.nio.charset.StandardCharsets;
 
-public class TextFrame extends Frame {
+public class TextFrame extends DataFrame {
 
     private String text;
 
@@ -36,6 +36,12 @@ public class TextFrame extends Frame {
         return text;
     }
 
+    @Override
+    public Object getData() {
+        return text;
+    }
+
+    @Override
     public boolean isText() {
         return true;
     }
@@ -54,4 +60,10 @@ public class TextFrame extends Frame {
     protected byte getOpCode() {
         return OPCODE_TEXT;
     }
+
+    @Override
+    public String getTypeAsString() {
+        return "text";
+    }
+
 }

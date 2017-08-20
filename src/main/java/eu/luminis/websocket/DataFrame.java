@@ -18,40 +18,7 @@
  */
 package eu.luminis.websocket;
 
-public class PingFrame extends ControlFrame {
+public abstract class DataFrame extends Frame {
 
-    private byte[] applicationData;
-
-    public PingFrame(byte[] payload) {
-        applicationData = payload;
-    }
-
-    public byte[] getData() {
-        return applicationData;
-    }
-
-    @Override
-    public String toString() {
-        return "Ping frame with application data '" + new String(applicationData) + "'";
-    }
-
-    @Override
-    public boolean isPing() {
-        return true;
-    }
-
-    @Override
-    protected byte[] getPayload() {
-        return applicationData;
-    }
-
-    @Override
-    protected byte getOpCode() {
-        return OPCODE_PING;
-    }
-
-    @Override
-    public String getTypeAsString() {
-        return "ping";
-    }
+    public abstract Object getData();
 }

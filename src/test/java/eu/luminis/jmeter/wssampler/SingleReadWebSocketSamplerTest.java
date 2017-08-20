@@ -37,13 +37,15 @@ import static org.mockito.Mockito.when;
 
 public class SingleReadWebSocketSamplerTest {
 
+    MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
     @Test
     public void testSingleReadSamplerSample() throws Exception {
 
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock(null);
+                return mocker.createTextReceiverClient();
             }
         };
 
@@ -119,6 +121,51 @@ public class SingleReadWebSocketSamplerTest {
         assertFalse(result.isSuccessful());
     }
 
+    @Test
+    public void testFrameFilter() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        TextFrameFilter filter = new TextFrameFilter();
+        filter.setComparisonType(ComparisonType.NotStartsWith);
+        filter.setMatchValue("response 7");
+        sampler.addTestElement(filter);
+
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 7", result.getResponseDataAsString());
+        assertEquals(7, result.getSubResults().length);
+    }
+
+    @Test
+    public void shouldSupportMultipleFilters() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+
+        TextFrameFilter filter0 = new TextFrameFilter();
+        filter0.setComparisonType(ComparisonType.Contains);
+        filter0.setMatchValue("0");
+        TextFrameFilter filter1 = new TextFrameFilter();
+        filter1.setComparisonType(ComparisonType.Contains);
+        filter1.setMatchValue("1");
+        TextFrameFilter filter2 = new TextFrameFilter();
+        filter2.setComparisonType(ComparisonType.Contains);
+        filter2.setMatchValue("2");
+
+        sampler.addTestElement(filter0);
+        sampler.addTestElement(filter1);
+        sampler.addTestElement(filter2);
+
+        SampleResult result = sampler.sample(null);
+        assertEquals("response 3", result.getResponseDataAsString());
+        assertEquals(3, result.getSubResults().length);
+    }
 
     private WebSocketClient createDefaultWsClientMock(Exception exception) {
         try {
@@ -138,5 +185,4 @@ public class SingleReadWebSocketSamplerTest {
             throw new RuntimeException(e);
         }
     }
-
 }

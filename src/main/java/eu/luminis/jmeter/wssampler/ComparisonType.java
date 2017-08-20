@@ -16,42 +16,25 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package eu.luminis.websocket;
+package eu.luminis.jmeter.wssampler;
 
-public class PingFrame extends ControlFrame {
+public enum ComparisonType {
 
-    private byte[] applicationData;
+    IsPlain,
+    Equals,
+    EqualsRegex,
+    Contains,
+    ContainsRegex,
+    StartsWith,
+    EndsWith,
+    NotEquals,
+    NotEqualsRegex,
+    NotContains,
+    NotContainsRegex,
+    NotStartsWith,
+    NotEndsWith;
 
-    public PingFrame(byte[] payload) {
-        applicationData = payload;
-    }
-
-    public byte[] getData() {
-        return applicationData;
-    }
-
-    @Override
-    public String toString() {
-        return "Ping frame with application data '" + new String(applicationData) + "'";
-    }
-
-    @Override
-    public boolean isPing() {
-        return true;
-    }
-
-    @Override
-    protected byte[] getPayload() {
-        return applicationData;
-    }
-
-    @Override
-    protected byte getOpCode() {
-        return OPCODE_PING;
-    }
-
-    @Override
-    public String getTypeAsString() {
-        return "ping";
+    public boolean isRegexComparison() {
+        return this == EqualsRegex || this == ContainsRegex || this == NotContainsRegex || this == NotEqualsRegex;
     }
 }
