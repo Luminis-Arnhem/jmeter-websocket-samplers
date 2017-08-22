@@ -105,7 +105,7 @@ When filters apply, the plugin treats read timeouts a little different. This is 
 Suppose you want to test a simple request-response exchange and because your requirement is that response messages should be send within 30 seconds, you set the read timeout to 30 seconds.
 Even though setting the read timeout is not exactly the same has having an answer within 30 seconds (the read timeout is applied on the socket, when parts of the message arrive within 30 seconds periods, receiving the message might take much longer),
 it will at least avoid the test from waiting too long, because if nothing is received for 30 seconds, the read (and thus the sampler), will time out.
-When you add a filter, e.g. a ping/pong filter to ignore pong messages send by the server, the read timeout on the socket might never be reached when the server _never_ replies to the request, but does send pings every 30 seconds, because the read timeout on the filter is never reached!
+When you add a filter, e.g. a ping/pong filter to ignore pong messages send by the server, the read timeout on the socket might never be reached when the server _never_ replies to the request, but _does_ send pings every 30 seconds, because the read timeout on the filter is never reached!
 To avoid the sampler waiting forever in such cases, the read timeout is treated differently: the time the filter has been waiting for an message, is subtracted from the read timeout that is used for the remainder.
 This is a simple solution that probably works well in most cases, but you need to realize that in such cases, you should consider the read-timeout more as a "maximum time to wait for a message" 
 (which probably is how most people think about the read time out anyway). Future releases of this plugin might change this behaviour or provide a better solution; please check the documentation if it matters to you. 
@@ -137,7 +137,7 @@ Questions, problems, or other feedback? Please mail the author (peter dot doornb
 
 ## Acknowledgements
 
-The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker.
+The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov.
 
 
 ## License
