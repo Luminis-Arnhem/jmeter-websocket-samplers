@@ -96,21 +96,21 @@ public class WebSocketClient {
         proxyPassword = password;
     }
 
-    public Map<String, String>  connect() throws IOException, HttpException {
+    public HttpResult connect() throws IOException, HttpException {
         return connect(Collections.EMPTY_MAP, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
-    public Map<String, String> connect(int connectTimeout, int readTimeout) throws IOException, HttpException {
+    public HttpResult connect(int connectTimeout, int readTimeout) throws IOException, HttpException {
         return connect(Collections.EMPTY_MAP, connectTimeout, readTimeout);
     }
 
-    public Map<String, String> connect(Map<String, String> headers) throws IOException, HttpException {
+    public HttpResult connect(Map<String, String> headers) throws IOException, HttpException {
         if (additionalHeaders != null && ! additionalHeaders.isEmpty() && headers != null && !headers.isEmpty())
             throw new IllegalArgumentException("Cannot pass headers when setAdditionalUpgradeRequestHeaders is called before");
         return connect(headers, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
-    public Map<String, String> connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
+    public HttpResult connect(Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException, HttpException {
         if (headers != null && ! headers.isEmpty()) {
             if (additionalHeaders != null && !additionalHeaders.isEmpty())
                 throw new IllegalArgumentException("Cannot pass headers when setAdditionalUpgradeRequestHeaders is called before");
@@ -193,7 +193,7 @@ public class WebSocketClient {
                 state = WebSocketState.CLOSED;
             }
         }
-        return responseHeaders;
+        return new HttpResult(responseHeaders);
     }
 
     public boolean isConnected() {
@@ -501,6 +501,18 @@ public class WebSocketClient {
                 // Impossible
                 throw new RuntimeException();
             }
+    }
+
+    public static class HttpResult {
+        public Map<String, String> responseHeaders;
+
+        public HttpResult() {
+            responseHeaders = Collections.emptyMap();
+        }
+
+        public HttpResult(Map<String, String> responseHeaders) {
+            this.responseHeaders = responseHeaders;
+        }
     }
 
 }

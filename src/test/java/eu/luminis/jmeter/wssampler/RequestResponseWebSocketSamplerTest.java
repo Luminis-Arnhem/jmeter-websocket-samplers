@@ -31,6 +31,7 @@ import org.mockito.stubbing.Answer;
 
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,6 +56,7 @@ public class RequestResponseWebSocketSamplerTest {
         };
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);  // A bit tricky of course, but on decent computers the call should not take more than 100 ms....
         assertEquals("ws-response-data", result.getResponseDataAsString());
@@ -109,6 +111,7 @@ public class RequestResponseWebSocketSamplerTest {
         filter.setMatchValue("response \\d");
         sampler.addTestElement(filter);
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertEquals("response 10", result.getResponseDataAsString());
         assertEquals(10, result.getSubResults().length);
     }
@@ -136,6 +139,7 @@ public class RequestResponseWebSocketSamplerTest {
         sampler.addTestElement(filter2);
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertEquals("response 3", result.getResponseDataAsString());
         assertEquals(3, result.getSubResults().length);
     }
@@ -207,6 +211,7 @@ public class RequestResponseWebSocketSamplerTest {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
             when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
                 @Override
                 public String answer(InvocationOnMock invocation) throws Throwable {
@@ -224,6 +229,7 @@ public class RequestResponseWebSocketSamplerTest {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
             when(mockWsClient.receiveText(anyInt())).thenThrow(new SocketTimeoutException("timeout"));
             return mockWsClient;
         } catch (Exception e) {
@@ -235,6 +241,7 @@ public class RequestResponseWebSocketSamplerTest {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
             Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
             Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
             return mockWsClient;
