@@ -50,7 +50,10 @@ public abstract class FrameFilter extends ConfigTestElement {
         int socketTimeout = readTimeout;
         boolean matchesFilter;
         do {
+            SampleResult subResult = new SampleResult();
+            subResult.sampleStart();
             long start = System.currentTimeMillis();
+
             receivedFrame =
                     !filterList.isEmpty()?
                             filterList.get(0).receiveFrame(filterList.subList(1, filterList.size()), wsClient, socketTimeout, result):
@@ -59,10 +62,10 @@ public abstract class FrameFilter extends ConfigTestElement {
 
             matchesFilter = matchesFilter(receivedFrame);
             if (matchesFilter) {
+                subResult.sampleEnd();
                 getLogger().debug("Filter discards " + receivedFrame);
                 performReplyAction(wsClient, receivedFrame);
 
-                SampleResult subResult = new SampleResult();
                 subResult.setSampleLabel("Discarded " + receivedFrame.getTypeAsString() + " frame (by filter '" + getName() + "')");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
