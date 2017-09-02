@@ -137,7 +137,7 @@ Questions, problems, or other feedback? Please mail the author (peter dot doornb
 
 ## Acknowledgements
 
-The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov.
+The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov, David Hubbard.
 
 
 ## License
