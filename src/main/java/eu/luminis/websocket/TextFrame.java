@@ -28,7 +28,8 @@ public class TextFrame extends DataFrame {
         this.text = text;
     }
 
-    public TextFrame(byte[] payload) {
+    public TextFrame(byte[] payload, int size) {
+        super(size);
         text = new String(payload, StandardCharsets.UTF_8);
     }
 

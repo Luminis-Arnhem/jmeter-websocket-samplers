@@ -27,6 +27,12 @@ public class BinaryFrame extends DataFrame {
     int nrBytesPrintedInToString = 16;
 
     public BinaryFrame(byte[] payload) {
+        super(0);
+        data = payload;
+    }
+
+    public BinaryFrame(byte[] payload, int size) {
+        super(size);
         data = payload;
     }
 

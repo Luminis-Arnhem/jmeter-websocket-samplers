@@ -145,7 +145,8 @@ abstract public class WebsocketSampler extends AbstractSampler {
             }
             Frame response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
-
+            if (response != null)
+                result.setBodySize(response.getSize());
 
             if (gotNewConnection) {
                 result.setResponseCode("101");

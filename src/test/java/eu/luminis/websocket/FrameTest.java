@@ -39,6 +39,7 @@ public class FrameTest {
     public void parseEmptyTextFrame() throws IOException {
         Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ));
         assertTrue(frame.isText());
+        assertEquals(2, frame.getSize());
     }
 
     @Test
@@ -46,6 +47,7 @@ public class FrameTest {
         Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
+        assertEquals(7, frame.getSize());
     }
 
     @Test
@@ -53,6 +55,7 @@ public class FrameTest {
         Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ));
         assertTrue(frame.isPong());
         assertEquals(0, ((PongFrame) frame).getData().length);
+        assertEquals(2, frame.getSize());
     }
 
     @Test
@@ -61,6 +64,7 @@ public class FrameTest {
         assertTrue(frame.isClose());
         assertEquals(null, ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
+        assertEquals(4, frame.getSize());
     }
 
     @Test
@@ -69,6 +73,7 @@ public class FrameTest {
         assertTrue(frame.isClose());
         assertEquals("going away", ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
+        assertEquals(14, frame.getSize());
     }
 
     @Test

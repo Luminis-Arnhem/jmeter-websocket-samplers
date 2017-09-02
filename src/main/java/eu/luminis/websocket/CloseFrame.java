@@ -30,7 +30,8 @@ public class CloseFrame extends ControlFrame {
         closeReason = requestData;
     }
 
-    public CloseFrame(byte[] payload) {
+    public CloseFrame(byte[] payload, int size) {
+        super(size);
         if (payload.length >= 2) {
             closeStatus = (payload[0] << 8) | (payload[1] & 0xff);
         }

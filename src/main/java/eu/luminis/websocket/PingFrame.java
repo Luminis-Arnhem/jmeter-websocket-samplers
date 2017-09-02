@@ -23,6 +23,12 @@ public class PingFrame extends ControlFrame {
     private byte[] applicationData;
 
     public PingFrame(byte[] payload) {
+        super(0);
+        applicationData = payload;
+    }
+
+    public PingFrame(byte[] payload, int size) {
+        super(size);
         applicationData = payload;
     }
 
