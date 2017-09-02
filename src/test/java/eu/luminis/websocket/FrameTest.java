@@ -27,10 +27,49 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 public class FrameTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void parseEmptyTextFrame() throws IOException {
+        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ));
+        assertTrue(frame.isText());
+    }
+
+    @Test
+    public void parseTextFrame() throws IOException {
+        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        assertTrue(frame.isText());
+        assertEquals("Hello", ((TextFrame) frame).getText());
+    }
+
+    @Test
+    public void parsePongFrame() throws IOException {
+        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ));
+        assertTrue(frame.isPong());
+        assertEquals(0, ((PongFrame) frame).getData().length);
+    }
+
+    @Test
+    public void parseCloseFrameNoCloseReason() throws IOException {
+        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ));
+        assertTrue(frame.isClose());
+        assertEquals(null, ((CloseFrame) frame).getCloseReason());
+        assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
+    }
+
+    @Test
+    public void parseCloseFrame() throws IOException {
+        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ));
+        assertTrue(frame.isClose());
+        assertEquals("going away", ((CloseFrame) frame).getCloseReason());
+        assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
+    }
 
     @Test
     public void parseLargestJavaFramePossible() throws Exception {
@@ -115,7 +154,7 @@ public class FrameTest {
         };
 
         byte[] outputBuffer = new byte[256];
-        Assert.assertEquals(inputBuffer.length, Frame.readFromStream(input, outputBuffer));
+        assertEquals(inputBuffer.length, Frame.readFromStream(input, outputBuffer));
         Assert.assertArrayEquals(inputBuffer, outputBuffer);
     }
 
@@ -139,11 +178,11 @@ public class FrameTest {
 
         byte[] outputBuffer = new byte[222];
         int bytesRead = Frame.readFromStream(input, outputBuffer);
-        Assert.assertEquals(outputBuffer.length, bytesRead);
+        assertEquals(outputBuffer.length, bytesRead);
         for (int i = 0; i < 222; i++)
-            Assert.assertEquals(inputBuffer[i], outputBuffer[i]);
+            assertEquals(inputBuffer[i], outputBuffer[i]);
         for (int i = 222; i < 256; i++)
-            Assert.assertEquals(inputBuffer[i], (byte) input.read());
+            assertEquals(inputBuffer[i], (byte) input.read());
     }
 
     @Test
@@ -166,10 +205,10 @@ public class FrameTest {
 
         byte[] outputBuffer = new byte[512];
         int bytesRead = Frame.readFromStream(input, outputBuffer);
-        Assert.assertEquals(inputBuffer.length, bytesRead);
+        assertEquals(inputBuffer.length, bytesRead);
         for (int i = 0; i < 256; i++)
-            Assert.assertEquals(inputBuffer[i], outputBuffer[i]);
-        Assert.assertEquals(-1, input.read());
+            assertEquals(inputBuffer[i], outputBuffer[i]);
+        assertEquals(-1, input.read());
     }
 
 }
