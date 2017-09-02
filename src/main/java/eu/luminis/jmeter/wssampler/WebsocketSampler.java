@@ -18,9 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.HttpUpgradeException;
-import eu.luminis.websocket.UnexpectedFrameException;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
@@ -145,7 +143,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
             else {
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection)\n");
             }
-            Object response = doSample(wsClient, result);
+            Frame response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
 
 
@@ -204,9 +202,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
         return result;
     }
 
-    abstract protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException;
+    abstract protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException;
 
-    protected void postProcessResponse(Object response, SampleResult result) {}
+    protected void postProcessResponse(Frame response, SampleResult result) {}
 
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
         result.sampleEnd(); // End timimg
@@ -248,13 +246,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
     }
 
-    protected void processDefaultReadResponse(Object response, boolean binary, SampleResult result) {
+    protected void processDefaultReadResponse(Frame response, boolean binary, SampleResult result) {
         if (binary) {
-            result.setResponseData((byte[]) response);
-            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary((byte[]) response));
+            byte[] responseData = ((BinaryFrame) response).getBinaryData();
+            result.setResponseData(responseData);
+            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary(responseData));
         }
         else {
-            result.setResponseData((String) response, StandardCharsets.UTF_8.name());
+            result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
             getLogger().debug("Sampler '" + getName() + "' received text: '" + response + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);

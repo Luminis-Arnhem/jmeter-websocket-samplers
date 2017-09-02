@@ -7,10 +7,8 @@ import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,11 +34,11 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
+            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<TextFrame>(){
                 @Override
-                public String answer(InvocationOnMock invocation) throws Throwable {
+                public TextFrame answer(InvocationOnMock invocation) throws Throwable {
                     Thread.sleep(300);
-                    return "ws-response-data";
+                    return new TextFrame("ws-response-data");
                 }
             });
             return mockWsClient;

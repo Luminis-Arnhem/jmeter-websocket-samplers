@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
@@ -64,7 +65,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
+    protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         if (getBinary()) {
             byte[] requestData;
             try {

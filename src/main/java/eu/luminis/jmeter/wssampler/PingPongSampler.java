@@ -45,7 +45,7 @@ public class PingPongSampler extends WebsocketSampler {
     }
 
     @Override
-    public Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
+    public Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         wsClient.sendPingFrame();
 
         Frame receivedFrame;
@@ -57,8 +57,7 @@ public class PingPongSampler extends WebsocketSampler {
                 throw new UnexpectedFrameException(receivedFrame);
         }
         else
-            wsClient.receivePong(readTimeout);
-        return null;
+            return wsClient.receivePong(readTimeout);
     }
 
     @Override

@@ -383,7 +383,7 @@ public class WebSocketClient {
         return receivedFrame;
     }
 
-    public String receiveText(int timeout) throws IOException, UnexpectedFrameException {
+    public TextFrame receiveText(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
@@ -392,12 +392,12 @@ public class WebSocketClient {
 
         Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isText())
-            return ((TextFrame) frame).getText();
+            return ((TextFrame) frame);
         else
             throw new UnexpectedFrameException(frame);
     }
 
-    public byte[] receiveBinaryData(int timeout) throws IOException, UnexpectedFrameException {
+    public BinaryFrame receiveBinaryData(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
@@ -406,12 +406,12 @@ public class WebSocketClient {
 
         Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isBinary())
-            return ((BinaryFrame) frame).getBinaryData();
+            return ((BinaryFrame) frame);
         else
             throw new UnexpectedFrameException(frame);
     }
 
-    public byte[] receivePong(int timeout) throws IOException, UnexpectedFrameException {
+    public PongFrame receivePong(int timeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot receive data frame when state is " + state);
         }
@@ -420,7 +420,7 @@ public class WebSocketClient {
 
         Frame frame = Frame.parseFrame(socketInputStream);
         if (frame.isPong())
-            return ((PongFrame) frame).getData();
+            return (PongFrame) frame;
         else
             throw new UnexpectedFrameException(frame);
     }

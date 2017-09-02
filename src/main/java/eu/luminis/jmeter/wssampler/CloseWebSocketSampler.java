@@ -47,7 +47,7 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
+    protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         int closeStatus = Integer.parseInt(getStatusCode());
         String reason = "sampler requested close";
         result.setSamplerData("Requested connection close with status " + closeStatus + " and reason '" + reason + "'.");
@@ -65,7 +65,7 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected void postProcessResponse(Object response, SampleResult result) {
+    protected void postProcessResponse(Frame response, SampleResult result) {
         CloseFrame frame = (CloseFrame) response;
         result.setResponseMessage("Connection closed.");
         result.setResponseCode(frame.getCloseStatus().toString());

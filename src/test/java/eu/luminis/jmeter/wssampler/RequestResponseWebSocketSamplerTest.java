@@ -20,6 +20,7 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.EndOfStreamException;
 import eu.luminis.websocket.HttpUpgradeException;
+import eu.luminis.websocket.TextFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -31,7 +32,6 @@ import org.mockito.stubbing.Answer;
 
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -212,11 +212,11 @@ public class RequestResponseWebSocketSamplerTest {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
+            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<TextFrame>(){
                 @Override
-                public String answer(InvocationOnMock invocation) throws Throwable {
+                public TextFrame answer(InvocationOnMock invocation) throws Throwable {
                     Thread.sleep(300);
-                    return "ws-response-data";
+                    return new TextFrame("ws-response-data");
                 }
             });
             return mockWsClient;
