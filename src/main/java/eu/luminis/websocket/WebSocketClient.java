@@ -134,6 +134,8 @@ public class WebSocketClient {
 
         wsSocket = createSocket(connectUrl.getHost(), connectUrl.getPort(), connectTimeout, readTimeout);
         Map<String, String> responseHeaders = null;
+        CountingOutputStream outStream = null;
+        CountingInputStream inStream = null;
 
         try {
             wsSocket.setSoTimeout(readTimeout);
@@ -142,7 +144,8 @@ public class WebSocketClient {
             String path = connectUrl.getFile();  // getFile includes path and query string
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
-            PrintWriter httpWriter = new PrintWriter(socketOutputStream);
+            outStream = new CountingOutputStream(socketOutputStream);
+            PrintWriter httpWriter = new PrintWriter(outStream);
             httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
             log.debug(    ">> GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1");
             httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + "\r\n");
@@ -176,9 +179,10 @@ public class WebSocketClient {
             httpWriter.print("\r\n");
             log.debug(">>");
             httpWriter.flush();
-
+            
             socketInputStream = wsSocket.getInputStream();
-            responseHeaders = checkServerResponse(socketInputStream, encodeNonce);
+            inStream = new CountingInputStream(socketInputStream);
+            responseHeaders = checkServerResponse(inStream, encodeNonce);
             connected = true;
             state = WebSocketState.CONNECTED;
         }
@@ -193,7 +197,7 @@ public class WebSocketClient {
                 state = WebSocketState.CLOSED;
             }
         }
-        return new HttpResult(responseHeaders);
+        return new HttpResult(responseHeaders, outStream.getCount(), inStream.getCount());
     }
 
     public boolean isConnected() {
@@ -505,13 +509,17 @@ public class WebSocketClient {
 
     public static class HttpResult {
         public Map<String, String> responseHeaders;
+        public int requestSize;
+        public int responseSize;
 
         public HttpResult() {
             responseHeaders = Collections.emptyMap();
         }
 
-        public HttpResult(Map<String, String> responseHeaders) {
+        public HttpResult(Map<String, String> responseHeaders, int requestSize, int responseSize) {
             this.responseHeaders = responseHeaders;
+            this.requestSize = requestSize;
+            this.responseSize = responseSize;
         }
     }
 

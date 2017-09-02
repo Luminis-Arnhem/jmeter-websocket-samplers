@@ -341,6 +341,19 @@ public class WebSocketClientTest {
         assertEquals("Host: nowhere.com:8023", hostHeaders.get(0));
     }
 
+    @Test
+    public void connectResultShouldCountReqAndRespBytes() {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        WebSocketClient.HttpResult result = null;
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n";
+        try {
+            result = createMockWebSocketClientWithResponse("nowhere.com", 80, outputBuffer, serverResponse).connect();
+        } catch (IOException e) {}
+
+        assertEquals(outputBuffer.size(), result.requestSize);
+        assertEquals(serverResponse.length(), result.responseSize);
+    }
 
     private Object getPrivateClientField(WebSocketClient client, String fieldName) {
         Field field;
@@ -372,6 +385,26 @@ public class WebSocketClientTest {
 
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         setPrivateClientField(client, "state", newState);
+    }
+
+    private WebSocketClient createMockWebSocketClientWithResponse(String host, int port, ByteArrayOutputStream outputBuffer, String response) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", host, port, "/")) {
+            protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+                Socket socket = Mockito.mock(Socket.class);
+                when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(response.getBytes()));
+                when(socket.getOutputStream()).thenReturn(outputBuffer);
+                return socket;
+            }
+
+            @Override
+            protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {
+                try {
+                    super.checkServerResponse(inputStream, nonce);
+                }
+                catch (HttpUpgradeException ignore) {}
+                return Collections.emptyMap();
+            }
+        };
     }
 
     private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {

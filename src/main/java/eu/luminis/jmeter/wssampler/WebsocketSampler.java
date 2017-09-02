@@ -136,13 +136,14 @@ abstract public class WebsocketSampler extends AbstractSampler {
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
 
-                responseHeaders = wsClient.connect(connectTimeout, readTimeout).responseHeaders;
+                WebSocketClient.HttpResult httpResult = wsClient.connect(connectTimeout, readTimeout);
+                responseHeaders = httpResult.responseHeaders;
                 result.connectEnd();
+                result.setHeadersSize(httpResult.responseSize);
                 gotNewConnection = true;
             }
             else {
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection)\n");
-
             }
             Object response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
