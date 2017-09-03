@@ -1,12 +1,19 @@
-package eu.luminis.jmeter.wssampler;
+package eu.luminis.websocket;
 
 import eu.luminis.websocket.*;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -18,12 +25,16 @@ public class MockWebSocketClientCreator {
      * Creates (mock) WebSocketClient that just returns one frame when receiveFrame is called.
      * When receiveFrame is called multiple times, all but the first invocation will throw an EndOfStreamException.
      */
-    public WebSocketClient createSingleFrameClient(Frame frame) throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt()))
-                .thenReturn(frame)
-                .thenThrow(new EndOfStreamException("end of stream"));
-        return mockWsClient;
+    public WebSocketClient createSingleFrameClient(Frame frame) {
+        try {
+            WebSocketClient mockWsClient = mock(WebSocketClient.class);
+            when(mockWsClient.receiveFrame(anyInt()))
+                    .thenReturn(frame)
+                    .thenThrow(new EndOfStreamException("end of stream"));
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -119,5 +130,27 @@ public class MockWebSocketClientCreator {
             throw new RuntimeException(e);
         }
     }
+
+
+    public WebSocketClient createMockWebSocketClientWithResponse(String host, int port, ByteArrayOutputStream outputBuffer, byte[] response) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", host, port, "/")) {
+            protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+                Socket socket = Mockito.mock(Socket.class);
+                when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(response));
+                when(socket.getOutputStream()).thenReturn(outputBuffer);
+                return socket;
+            }
+
+            @Override
+            protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {
+                try {
+                    super.checkServerResponse(inputStream, nonce);
+                }
+                catch (HttpUpgradeException ignore) {}
+                return Collections.emptyMap();
+            }
+        };
+    }
+
 
 }

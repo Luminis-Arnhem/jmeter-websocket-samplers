@@ -18,10 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.BinaryFrame;
-import eu.luminis.websocket.EndOfStreamException;
-import eu.luminis.websocket.TextFrame;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.Rule;
