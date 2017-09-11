@@ -18,26 +18,23 @@
  */
 package eu.luminis.websocket;
 
-public abstract class DataFrame extends Frame {
 
-    protected boolean finalFragment = true;
+public class TextContinuationFrame extends TextFrame {
 
-    public DataFrame() {
-        super(0);
+    public TextContinuationFrame(boolean fin, byte[] payload, int size) {
+        super(fin, payload, size);
     }
 
-    public DataFrame(boolean fin, int size) {
-        super(size);
-        finalFragment = fin;
+    @Override
+    public String getTypeAsString() {
+        if (isFinalFragment())
+            return "final continuation";
+        else
+            return "continuation";
     }
 
-    public abstract Object getData();
-
-    public boolean isFinalFragment() {
-        return finalFragment;
-    }
-
+    @Override
     public boolean isContinuationFrame() {
-        return false;
+        return true;
     }
 }

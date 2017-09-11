@@ -26,13 +26,16 @@ import org.mockito.Mockito;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -356,6 +359,173 @@ public class WebSocketClientTest {
         assertEquals(outputBuffer.size(), result.requestSize);
         assertEquals(serverResponse.length(), result.responseSize);
     }
+
+    @Test
+    public void receivingFinalDataFrameShouldNotSetStoredType() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x81, 0x02, 0x68, 0x69 }));
+        Frame frame = client.receiveFrame(1);
+        assertTrue(frame.isText());
+        assertTrue(((DataFrame) frame).isFinalFragment());
+
+        assertNotNull(frame);
+        assertEquals(Frame.DataFrameType.NONE, getPrivateClientField(client, "lastDataFrameStatus"));
+    }
+
+    @Test
+    public void continuationFrameShouldGetTypeOfPreviousDataFrame() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        Frame frame1 = client.receiveFrame(1);
+        assertTrue(frame1.isText());
+        assertTrue(! ((DataFrame) frame1).isFinalFragment());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x00, 0x02, 0x68, 0x69 }));
+        Frame frame2 = client.receiveFrame(1);
+
+        assertNotNull(frame2);
+        assertTrue(frame2.isText());
+        assertTrue(! ((DataFrame) frame2).isFinalFragment());
+        assertTrue(((DataFrame) frame2).isContinuationFrame());
+        assertEquals(Frame.DataFrameType.TEXT, getPrivateClientField(client, "lastDataFrameStatus"));
+    }
+
+    @Test
+    public void continuationFrameAfterControlFrameShouldGetTypeOfPreviousDataFrame() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        Frame frame1 = client.receiveFrame(1);
+        assertTrue(frame1.isText());
+        assertFalse(((DataFrame) frame1).isFinalFragment());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x89, 0x00 }));
+        Frame frame2 = client.receiveFrame(1);
+        assertTrue(frame2.isControl());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x00, 0x02, 0x68, 0x69 }));
+        Frame frame3 = client.receiveFrame(1);
+
+        assertNotNull(frame3);
+        assertTrue(frame3.isText());
+        assertEquals(Frame.DataFrameType.TEXT, getPrivateClientField(client, "lastDataFrameStatus"));
+    }
+
+    @Test
+    public void finalContinuationFrameShouldResetStoredType() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x80, 0x02, 0x68, 0x69 }));
+        Frame frame2 = client.receiveFrame(1);
+        assertNotNull(frame2);
+        assertTrue(((DataFrame) frame2).isContinuationFrame());
+        assertTrue(((DataFrame) frame2).isFinalFragment());
+
+        assertEquals(Frame.DataFrameType.NONE, getPrivateClientField(client, "lastDataFrameStatus"));
+    }
+
+    @Test
+    public void finalContinuationFrameAfterControlFrameShouldResetStoredType() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x89, 0x00 }));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x80, 0x02, 0x68, 0x69 }));
+        Frame frame = client.receiveFrame(1);
+
+        assertNotNull(frame);
+        assertEquals(Frame.DataFrameType.NONE, getPrivateClientField(client, "lastDataFrameStatus"));
+    }
+
+    @Test
+    public void missingContinuationFrameShouldThrow() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        Frame frame1 = client.receiveFrame(1);
+        assertFalse(((DataFrame) frame1).isFinalFragment());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x81, 0x02, 0x68, 0x69 }));
+        thrown.expect(ProtocolException.class);
+        client.receiveFrame(1);
+    }
+
+    @Test
+    public void missingContinuationFrameAfterControlFrameShouldThrow() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x01, 0x02, 0x68, 0x69 }));
+        Frame frame1 = client.receiveFrame(1);
+        assertFalse(((DataFrame) frame1).isFinalFragment());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x89, 0x00 }));
+        Frame frame2 = client.receiveFrame(1);
+        assertTrue(frame2.isControl());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x81, 0x02, 0x68, 0x69 }));
+        thrown.expect(ProtocolException.class);
+        client.receiveFrame(1);
+    }
+
+    @Test
+    public void unexpectedContinuationFrameShouldThrow() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x81, 0x02, 0x68, 0x69 }));
+        Frame frame1 = client.receiveFrame(1);
+        assertTrue(((DataFrame) frame1).isFinalFragment());
+
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x80, 0x02, 0x68, 0x69 }));
+        thrown.expect(ProtocolException.class);
+        client.receiveFrame(1);
+    }
+
+    @Test
+    public void unexpectedContinuationFrameAfterControlFrameShouldThrow() throws IOException {
+        WebSocketClient client = new WebSocketClient(new URL("http://nowhere"));
+        setPrivateClientField(client, "state", WebSocketClient.WebSocketState.CONNECTED);
+        setPrivateClientField(client, "wsSocket", new Socket());
+
+        setPrivateClientField(client, "lastDataFrameStatus", Frame.DataFrameType.NONE);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x81, 0x02, 0x68, 0x69 }));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x89, 0x00 }));
+        client.receiveFrame(1);
+        setPrivateClientField(client, "socketInputStream", new ByteArrayInputStream(new byte[] {(byte) 0x80, 0x02, 0x68, 0x69 }));
+        thrown.expect(ProtocolException.class);
+        client.receiveFrame(1);
+    }
+
 
     private Object getPrivateClientField(WebSocketClient client, String fieldName) {
         Field field;
