@@ -255,7 +255,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
         else {
             result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
-            getLogger().debug("Sampler '" + getName() + "' received text: '" + response + "'");
+            getLogger().debug("Sampler '" + getName() + "' received text: '" + ((TextFrame) response).getText() + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
     }
