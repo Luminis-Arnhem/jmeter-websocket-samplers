@@ -29,6 +29,7 @@ import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
@@ -52,7 +53,11 @@ import java.util.stream.Collectors;
  * instantiation of these objects is done on another thread (StandardJMeterEngine main thread). Hence, only members
  * set in the constructor must be made thread safe.
  */
-abstract public class WebsocketSampler extends AbstractSampler {
+abstract public class WebsocketSampler extends AbstractSampler implements ThreadListener {
+
+    enum ThreadStopPolicy { NONE, TCPCLOSE, WSCLOSE };
+
+    public static final String WS_THREAD_STOP_POLICY_PROPERTY = "websocket.thread.stop.policy";
 
     public static final int MIN_CONNECTION_TIMEOUT = 1;
     public static final int MAX_CONNECTION_TIMEOUT = 999999;
@@ -79,6 +84,9 @@ abstract public class WebsocketSampler extends AbstractSampler {
     private static String proxyUsername;
     private static String proxyPassword;
 
+    // Thread stop policy: what to do with connection when thread ends?
+    private  static ThreadStopPolicy threadStopPolicy = ThreadStopPolicy.NONE;
+
     abstract protected String validateArguments();
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
@@ -87,6 +95,7 @@ abstract public class WebsocketSampler extends AbstractSampler {
     static {
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
+        initThreadStopPolicy();
     }
 
     public void clearTestElementChildren() {
@@ -232,6 +241,32 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
     }
 
+    @Override
+    public void threadStarted() {
+    }
+
+    @Override
+    public void threadFinished() {
+        if (threadStopPolicy != ThreadStopPolicy.NONE) {
+            WebSocketClient webSocketClient = threadLocalCachedConnection.get();
+            if (webSocketClient != null) {
+                if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
+                    try {
+                        getLogger().debug("Sampler " + this + ": closing WebSocket connection");
+                        webSocketClient.close(1000, "end of test", Integer.parseInt(getReadTimeout()));
+                    } catch (Exception e) {
+                        getLogger().error("Closing WebSocket connection failed", e);
+                    }
+                }
+                else {
+                    getLogger().debug("Sampler " + this + ": closing connection");
+                }
+                webSocketClient.dispose();
+                threadLocalCachedConnection.remove();
+            }
+        }
+    }
+
     protected String getConnectUrl(URL url) {
         String path = url.getFile();
         if (! path.startsWith("/"))
@@ -339,6 +374,15 @@ abstract public class WebsocketSampler extends AbstractSampler {
         }
         else
             return false;
+    }
+
+    static void initThreadStopPolicy() {
+        String propertyValue = JMeterUtils.getPropDefault(WS_THREAD_STOP_POLICY_PROPERTY, "none");
+        try {
+            threadStopPolicy = ThreadStopPolicy.valueOf(propertyValue.trim().toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+        }
     }
 
     protected boolean useTLS() {
