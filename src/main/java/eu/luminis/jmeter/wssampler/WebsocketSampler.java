@@ -253,7 +253,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
                     try {
                         getLogger().debug("Sampler " + this + ": closing WebSocket connection");
-                        webSocketClient.close(1000, "end of test", Integer.parseInt(getReadTimeout()));
+                        webSocketClient.sendClose(1000, "test thread finished");
                     } catch (Exception e) {
                         getLogger().error("Closing WebSocket connection failed", e);
                     }
