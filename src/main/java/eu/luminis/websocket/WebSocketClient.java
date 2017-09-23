@@ -338,8 +338,10 @@ public class WebSocketClient {
 
         if (state == WebSocketState.CONNECTED)
             state = WebSocketState.CLOSED_CLIENT;
-        else
+        else {
             state = WebSocketState.CLOSED;
+            dispose();
+        }
     }
 
     public CloseFrame receiveClose(int timeout) throws IOException, UnexpectedFrameException {
@@ -353,9 +355,10 @@ public class WebSocketClient {
         if (frame.isClose()) {
             if (state == WebSocketState.CONNECTED)
                 state = WebSocketState.CLOSED_SERVER;
-            else
+            else {
                 state = WebSocketState.CLOSED;
-
+                dispose();
+            }
             return (CloseFrame) frame;
         }
         else
@@ -372,8 +375,10 @@ public class WebSocketClient {
         if (receivedFrame.isClose()) {
             if (state == WebSocketState.CONNECTED)
                 state = WebSocketState.CLOSED_SERVER;
-            else
+            else {
                 state = WebSocketState.CLOSED;
+                dispose();
+            }
         }
 
         return receivedFrame;
