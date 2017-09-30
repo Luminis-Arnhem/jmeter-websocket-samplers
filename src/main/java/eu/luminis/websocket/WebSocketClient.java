@@ -283,6 +283,19 @@ public class WebSocketClient {
         } catch (IOException e) {}
     }
 
+    public void finalize() {
+        log.debug("WebSocket client is being garbage collected; underlying TCP connection will be closed");
+        // If this object is being gc'd, it's very likely that the streams and socket used by this object will also be gc'd and thus closed,
+        // but we'll make it explicit anyway so the side effect of closing the TCP connection when this class is gc'd, is deterministic.
+        try {
+            dispose();
+        }
+        catch (Exception error) {
+            // Ensure no exceptions thrown by the finalizer ever.
+            log.error("Exception thrown during finalize", error);
+        }
+    }
+
     /**
      * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
      */
