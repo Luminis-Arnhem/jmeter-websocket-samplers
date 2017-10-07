@@ -58,6 +58,10 @@ Each JMeter (ThreadGroup) thread can have at most one active WebSocket connectio
 
 There is also a WebSocket Open Connection sampler that only opens the WebSocket connection (i.e. sends an upgrade request) and sends no data once the websocket connection is established.
 
+If you do not close the WebSocket connection yourself, it will stay open at the end of the test. This is usually pretty harmless, also because JMeter will initiate a gc (just) before the next test is run and that will cause all open connections to be closed (at TCP level).
+If you want the connections to be closed immediately at the end of the test, you can set the JMeter property `websocket.thread.stop.policy`. As the name indicates, this determines what is done when the JMeter test thread finishes. If you set it to `tcpClose`, the connection will be closed at TCP level, but no WebSocket close will be sent. If you set it to `wsClose`, the WebSocket connection will be properly closed by sending a close frame. 
+The property value is case insensative, so you might for example also write `tcpclose`. To set the property, add it to one of the `.properties` files in JMeter's `bin` directory, or use the `-J` option on the command line, e.g. `-J websocket.thread.stop.policy=wsclose`. Setting it to any other value than the ones mentioned will simply lead to the default behaviour, so if it doesn't work like expected, check for typo's.
+
 ### WebSockets over TLS
 
 To use the wss (WebSockets over TLS) protocol instead of plain ws, simply select the wss protocol in the Server URL settings. Make sure you also change the port number (e.g. to 443, the default wss port), or you'll get confusing results when trying to set up a TLS connection with a normal HTTP port.
@@ -137,7 +141,7 @@ Questions, problems, or other feedback? Please mail the author (peter dot doornb
 
 ## Acknowledgements
 
-The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov, David Hubbard.
+The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov, David Hubbard, Ray Oei.
 
 
 ## License

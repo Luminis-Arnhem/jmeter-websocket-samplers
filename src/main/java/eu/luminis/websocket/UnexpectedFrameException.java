@@ -23,6 +23,7 @@ public class UnexpectedFrameException extends Exception {
     private Frame frame;
 
     public UnexpectedFrameException(Frame frame) {
+        super("Unexpected frame: " + frame);
         this.frame = frame;
     }
 
