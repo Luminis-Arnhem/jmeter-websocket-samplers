@@ -310,7 +310,10 @@ abstract public class WebsocketSampler extends AbstractSampler {
         if (headerManager != null)
             for (int i = 0; i < headerManager.size(); i++) {
                 Header header = headerManager.get(i);
-                headers.put(header.getName(), header.getValue());
+                if (header.getName().trim().length() > 0)
+                    headers.put(header.getName(), header.getValue());
+                else
+                    getLogger().debug("Ignoring header with no name");
             }
         return headers;
     }
