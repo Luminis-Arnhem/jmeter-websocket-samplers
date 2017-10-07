@@ -60,4 +60,9 @@ public class PongFrame extends ControlFrame {
     public String getTypeAsString() {
         return "pong";
     }
+
+    @Override
+    public int getPayloadSize() {
+        return applicationData.length;
+    }
 }

@@ -77,6 +77,11 @@ public class CloseFrame extends ControlFrame {
     public String getTypeAsString() {
         return "close";
     }
+
+    @Override
+    public int getPayloadSize() {
+        return 0;
+    }
 }
 
 

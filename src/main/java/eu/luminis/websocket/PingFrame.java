@@ -60,4 +60,9 @@ public class PingFrame extends ControlFrame {
     public String getTypeAsString() {
         return "ping";
     }
+
+    @Override
+    public int getPayloadSize() {
+        return applicationData.length;
+    }
 }

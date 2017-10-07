@@ -73,5 +73,10 @@ public class BinaryFrame extends DataFrame {
         return "binary";
     }
 
+    @Override
+    public int getPayloadSize() {
+        return data.length;
+    }
+
 }
 

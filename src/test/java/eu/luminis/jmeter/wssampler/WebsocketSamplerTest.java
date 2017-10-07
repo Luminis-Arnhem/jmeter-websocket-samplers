@@ -103,8 +103,8 @@ public class WebsocketSamplerTest {
 
         SampleResult result = sampler.sample(null);
         assertTrue(result.isSuccessful());
-        assertEquals(httpResponse.length(), result.getHeadersSize());
-        assertEquals(4, result.getBodySize());
+        assertEquals(httpResponse.length() + 2, result.getHeadersSize());
+        assertEquals(2, result.getBodySize());
     }
 
     /**

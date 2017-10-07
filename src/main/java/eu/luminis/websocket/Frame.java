@@ -206,4 +206,7 @@ public abstract class Frame {
     public int getSize() {
         return frameSize;
     }
+
+    public abstract int getPayloadSize();
+
 }
