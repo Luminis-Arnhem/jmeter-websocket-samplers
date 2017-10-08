@@ -24,14 +24,20 @@ public class CloseFrame extends ControlFrame {
 
     private Integer closeStatus;
     private String closeReason;
+    private int payloadSize;
 
     public CloseFrame(int status, String requestData) {
         closeStatus = status;
         closeReason = requestData;
+        payloadSize = requestData.getBytes().length;
     }
+
+    public CloseFrame(){}
 
     public CloseFrame(byte[] payload, int size) {
         super(size);
+        payloadSize = payload.length;
+
         if (payload.length >= 2) {
             closeStatus = (payload[0] << 8) | (payload[1] & 0xff);
         }
@@ -59,13 +65,17 @@ public class CloseFrame extends ControlFrame {
 
     @Override
     protected byte[] getPayload() {
-        byte[] data = closeReason.getBytes(StandardCharsets.UTF_8);
-        byte[] payload = new byte[2 + data.length];
-        System.arraycopy(data, 0, payload, 2, data.length);
+        if (closeStatus != null) {
+            byte[] data = closeReason != null ? closeReason.getBytes(StandardCharsets.UTF_8) : new byte[0];
+            byte[] payload = new byte[2 + data.length];
+            System.arraycopy(data, 0, payload, 2, data.length);
 
-        payload[0] = (byte) (closeStatus >> 8);
-        payload[1] = (byte) (closeStatus & 0xff);
-        return payload;
+            payload[0] = (byte) (closeStatus >> 8);
+            payload[1] = (byte) (closeStatus & 0xff);
+            return payload;
+        }
+        else
+            return new byte[0];
     }
 
     @Override
@@ -80,7 +90,7 @@ public class CloseFrame extends ControlFrame {
 
     @Override
     public int getPayloadSize() {
-        return 0;
+        return payloadSize;
     }
 }
 

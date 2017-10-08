@@ -67,9 +67,10 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     @Override
     protected void postProcessResponse(Frame response, SampleResult result) {
         CloseFrame frame = (CloseFrame) response;
-        result.setResponseMessage("Connection closed.");
-        result.setResponseCode(frame.getCloseStatus().toString());
-        result.setResponseData("" + frame.getCloseStatus() + ": " + frame.getCloseReason(), StandardCharsets.UTF_8.name());
+        result.setResponseMessage("Connection closed" + (frame.getCloseReason() != null? "; close reason: '" + frame.getCloseReason() + "'.": "."));
+        result.setResponseCode(frame.getCloseStatus() != null? frame.getCloseStatus().toString(): "");
+        result.setResponseData("" + (frame.getCloseStatus() != null? frame.getCloseStatus(): "") +
+                (frame.getCloseReason() != null? ": " + frame.getCloseReason(): ""), StandardCharsets.UTF_8.name());
         result.setDataType(SampleResult.TEXT);
     }
 
