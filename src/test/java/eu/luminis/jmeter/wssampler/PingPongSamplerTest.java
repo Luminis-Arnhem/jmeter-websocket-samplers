@@ -23,6 +23,7 @@ import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 public class PingPongSamplerTest {
@@ -72,5 +73,19 @@ public class PingPongSamplerTest {
 
         SampleResult result = sampler.sample(null);
         assertEquals(3, result.getSubResults().length);
+    }
+
+    @Test
+    public void sendingFrameShouldSetResultSentSize() {
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createTextReceiverClient();
+            }
+        };
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertEquals(0 + 6 + 0, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
 }

@@ -67,6 +67,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
+        Frame sentFrame;
         if (getBinary()) {
             byte[] requestData;
             try {
@@ -81,12 +82,13 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             }
             // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
             result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            wsClient.sendBinaryFrame(requestData);
+            sentFrame = wsClient.sendBinaryFrame(requestData);
         }
         else {
             result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            wsClient.sendTextFrame(getRequestData());
+            sentFrame = wsClient.sendTextFrame(getRequestData());
         }
+        result.setSentBytes(result.getSentBytes() + sentFrame.getSize());
 
         Frame receivedFrame;
         if (! frameFilters.isEmpty()) {

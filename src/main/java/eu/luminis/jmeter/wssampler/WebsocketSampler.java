@@ -147,6 +147,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 responseHeaders = httpResult.responseHeaders;
                 result.connectEnd();
                 result.setHeadersSize(httpResult.responseSize);
+                result.setSentBytes(httpResult.requestSize);
                 gotNewConnection = true;
             }
             else {
