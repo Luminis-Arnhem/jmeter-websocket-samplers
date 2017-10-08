@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.protocol.http.control.Header;
@@ -51,7 +52,7 @@ public class OpenWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
+    protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         // Intentionally left empty: this sampler does nothing but open the connection.
         return null;
     }

@@ -25,10 +25,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.net.URL;
+import java.util.Collections;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +74,7 @@ public class SingleWriteWebSocketSamplerTest {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
             Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
             Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
             return mockWsClient;

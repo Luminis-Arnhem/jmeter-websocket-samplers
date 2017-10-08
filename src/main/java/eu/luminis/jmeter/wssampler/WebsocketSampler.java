@@ -18,9 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.HttpUpgradeException;
-import eu.luminis.websocket.UnexpectedFrameException;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
@@ -145,17 +143,21 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
 
-                responseHeaders = wsClient.connect(connectTimeout, readTimeout);
+                WebSocketClient.HttpResult httpResult = wsClient.connect(connectTimeout, readTimeout);
+                responseHeaders = httpResult.responseHeaders;
                 result.connectEnd();
+                result.setHeadersSize(httpResult.responseSize);
                 gotNewConnection = true;
             }
             else {
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection)\n");
-
             }
-            Object response = doSample(wsClient, result);
+            Frame response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
-
+            if (response != null) {
+                result.setHeadersSize(result.getHeadersSize() + response.getSize() - response.getPayloadSize());
+                result.setBodySize(response.getPayloadSize());
+            }
 
             if (gotNewConnection) {
                 result.setResponseCode("101");
@@ -212,9 +214,9 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         return result;
     }
 
-    abstract protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException;
+    abstract protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException;
 
-    protected void postProcessResponse(Object response, SampleResult result) {}
+    protected void postProcessResponse(Frame response, SampleResult result) {}
 
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
         result.sampleEnd(); // End timimg
@@ -282,14 +284,15 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    protected void processDefaultReadResponse(Object response, boolean binary, SampleResult result) {
+    protected void processDefaultReadResponse(Frame response, boolean binary, SampleResult result) {
         if (binary) {
-            result.setResponseData((byte[]) response);
-            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary((byte[]) response));
+            byte[] responseData = ((BinaryFrame) response).getBinaryData();
+            result.setResponseData(responseData);
+            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary(responseData));
         }
         else {
-            result.setResponseData((String) response, StandardCharsets.UTF_8.name());
-            getLogger().debug("Sampler '" + getName() + "' received text: '" + response + "'");
+            result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
+            getLogger().debug("Sampler '" + getName() + "' received text: '" + ((TextFrame) response).getText() + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
     }

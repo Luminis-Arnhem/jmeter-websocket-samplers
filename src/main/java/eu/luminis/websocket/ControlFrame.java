@@ -19,4 +19,12 @@
 package eu.luminis.websocket;
 
 public abstract class ControlFrame extends Frame {
+
+    public ControlFrame() {
+        super(0);
+    }
+
+    public ControlFrame(int size) {
+        super(size);
+    }
 }

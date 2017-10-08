@@ -23,6 +23,12 @@ public class PongFrame extends ControlFrame {
     private byte[] applicationData;
 
     public PongFrame(byte[] payload) {
+        super(0);
+        applicationData = payload;
+    }
+
+    public PongFrame(byte[] payload, int size) {
+        super(size);
         applicationData = payload;
     }
 
@@ -53,5 +59,10 @@ public class PongFrame extends ControlFrame {
     @Override
     public String getTypeAsString() {
         return "pong";
+    }
+
+    @Override
+    public int getPayloadSize() {
+        return applicationData.length;
     }
 }

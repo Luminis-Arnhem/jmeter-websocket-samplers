@@ -33,7 +33,9 @@ public abstract class Frame {
     public static final int FIN_BIT_ON = 0x80;
     public static final int MASK_BIT_MASKED = 0x80;
 
-    private Random randomGenerator = new Random();
+    static private Random randomGenerator = new Random();
+
+    private int frameSize;
 
 
     static Frame parseFrame(InputStream istream) throws IOException {
@@ -47,6 +49,7 @@ public abstract class Frame {
         int opCode = byte1 & 0x0f;
         int firstLengthByte = byte2 & 0x7f;
         int length;
+        int nrOfLenghtBytes = 0;
         if (firstLengthByte < 126)
             length = firstLengthByte;
         else if (firstLengthByte == 126) {
@@ -57,6 +60,7 @@ public abstract class Frame {
             if (byte2 == -1)
                 throw new EndOfStreamException("end of stream");
             length = ((byte1 & 0xff) << 8) | (byte2 & 0xff);
+            nrOfLenghtBytes = 2;
         }
         else {
             byte[] lengthBytes = new byte[8];
@@ -70,6 +74,7 @@ public abstract class Frame {
             if ( (lengthBytes[4] & 0x80) == 128)
                 throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
             length = ( (lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
+            nrOfLenghtBytes = 8;
         }
         byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
         int bytesRead = readFromStream(istream, payload);
@@ -79,21 +84,22 @@ public abstract class Frame {
             throw new EndOfStreamException("WebSocket protocol error: expected payload of length " + length + ", but can only read " + bytesRead + " bytes");
         switch (opCode) {
             case OPCODE_TEXT:
-                return new TextFrame(payload);
+                return new TextFrame(payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_BINARY:
-                return new BinaryFrame(payload);
+                return new BinaryFrame(payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_CLOSE:
-                return new CloseFrame(payload);
+                return new CloseFrame(payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_PING:
-                return new PingFrame(payload);
+                return new PingFrame(payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_PONG:
-                return new PongFrame(payload);
+                return new PongFrame(payload, 2 + nrOfLenghtBytes + length);
             default:
                 throw new RuntimeException("unsupported frame type: " + opCode);
         }
     }
 
-    protected Frame() {
+    protected Frame(int size) {
+        frameSize = size;
     }
 
     public byte[] getFrameBytes() {
@@ -196,5 +202,11 @@ public abstract class Frame {
     protected abstract byte getOpCode();
 
     public abstract String getTypeAsString();
+
+    public int getSize() {
+        return frameSize;
+    }
+
+    public abstract int getPayloadSize();
 
 }

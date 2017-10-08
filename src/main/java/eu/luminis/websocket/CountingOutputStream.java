@@ -18,51 +18,52 @@
  */
 package eu.luminis.websocket;
 
-public class PingFrame extends ControlFrame {
+import java.io.IOException;
+import java.io.OutputStream;
 
-    private byte[] applicationData;
+public class CountingOutputStream extends OutputStream {
 
-    public PingFrame(byte[] payload) {
-        super(0);
-        applicationData = payload;
+    private OutputStream wrappedStream;
+    private int count = 0;
+
+    public CountingOutputStream(OutputStream out) {
+        this.wrappedStream = out;
     }
 
-    public PingFrame(byte[] payload, int size) {
-        super(size);
-        applicationData = payload;
+    public int getCount() {
+        return count;
     }
 
-    public byte[] getData() {
-        return applicationData;
-    }
-
-    @Override
-    public String toString() {
-        return "Ping frame with application data '" + new String(applicationData) + "'";
+    public void resetCount() {
+        count = 0;
     }
 
     @Override
-    public boolean isPing() {
-        return true;
+    public void write(int b) throws IOException {
+        wrappedStream.write(b);
+        count++;
     }
 
     @Override
-    protected byte[] getPayload() {
-        return applicationData;
+    public void write(byte[] b) throws IOException {
+        wrappedStream.write(b);
+        count += b.length;
     }
 
     @Override
-    protected byte getOpCode() {
-        return OPCODE_PING;
+    public void write(byte[] b, int off, int len) throws IOException {
+        wrappedStream.write(b, off, len);
+        count += len;
     }
 
     @Override
-    public String getTypeAsString() {
-        return "ping";
+    public void flush() throws IOException {
+        wrappedStream.flush();
     }
 
     @Override
-    public int getPayloadSize() {
-        return applicationData.length;
+    public void close() throws IOException {
+        wrappedStream.close();
     }
+
 }

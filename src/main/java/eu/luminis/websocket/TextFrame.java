@@ -23,12 +23,16 @@ import java.nio.charset.StandardCharsets;
 public class TextFrame extends DataFrame {
 
     private String text;
+    private int payloadSize;
 
     public TextFrame(String text) {
         this.text = text;
+        payloadSize = text.getBytes().length;
     }
 
-    public TextFrame(byte[] payload) {
+    public TextFrame(byte[] payload, int size) {
+        super(size);
+        payloadSize = payload.length;
         text = new String(payload, StandardCharsets.UTF_8);
     }
 
@@ -64,6 +68,11 @@ public class TextFrame extends DataFrame {
     @Override
     public String getTypeAsString() {
         return "text";
+    }
+
+    @Override
+    public int getPayloadSize() {
+        return payloadSize;
     }
 
 }

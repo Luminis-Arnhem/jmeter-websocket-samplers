@@ -18,6 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;

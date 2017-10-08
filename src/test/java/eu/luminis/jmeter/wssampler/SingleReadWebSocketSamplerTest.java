@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.EndOfStreamException;
+import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
@@ -50,6 +51,7 @@ public class SingleReadWebSocketSamplerTest {
         };
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);  // A bit tricky of course, but on decent computers the call should not take more than 100 ms....
         assertEquals("ws-response-data", result.getResponseDataAsString());
@@ -98,6 +100,7 @@ public class SingleReadWebSocketSamplerTest {
         sampler.setOptional(true);
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertTrue(result.getTime() >= 300);
         assertTrue(result.getTime() < 400);
         assertTrue(result.isSuccessful());
@@ -135,6 +138,7 @@ public class SingleReadWebSocketSamplerTest {
         sampler.addTestElement(filter);
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertEquals("response 7", result.getResponseDataAsString());
         assertEquals(7, result.getSubResults().length);
     }
@@ -163,6 +167,7 @@ public class SingleReadWebSocketSamplerTest {
         sampler.addTestElement(filter2);
 
         SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
         assertEquals("response 3", result.getResponseDataAsString());
         assertEquals(3, result.getSubResults().length);
     }
@@ -171,6 +176,7 @@ public class SingleReadWebSocketSamplerTest {
         try {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
             when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
                 @Override
                 public String answer(InvocationOnMock invocation) throws Throwable {

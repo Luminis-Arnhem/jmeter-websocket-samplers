@@ -341,6 +341,19 @@ public class WebSocketClientTest {
         assertEquals("Host: nowhere.com:8023", hostHeaders.get(0));
     }
 
+    @Test
+    public void connectResultShouldCountReqAndRespBytes() {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+
+        WebSocketClient.HttpResult result = null;
+        String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n";
+        try {
+            result = new MockWebSocketClientCreator().createMockWebSocketClientWithResponse("nowhere.com", 80, outputBuffer, serverResponse.getBytes()).connect();
+        } catch (IOException e) {}
+
+        assertEquals(outputBuffer.size(), result.requestSize);
+        assertEquals(serverResponse.length(), result.responseSize);
+    }
 
     private Object getPrivateClientField(WebSocketClient client, String fieldName) {
         Field field;
@@ -373,6 +386,7 @@ public class WebSocketClientTest {
     private void setPrivateClientState(WebSocketClient client, WebSocketClient.WebSocketState newState) {
         setPrivateClientField(client, "state", newState);
     }
+
 
     private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {
         return new WebSocketClient(new URL("http", host, port, "/")) {

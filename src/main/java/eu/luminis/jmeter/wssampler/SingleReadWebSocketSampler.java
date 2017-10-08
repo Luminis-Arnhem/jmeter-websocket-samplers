@@ -64,13 +64,13 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected Object doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
+    protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         try {
             Frame receivedFrame;
             if (! frameFilters.isEmpty()) {
                 receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
                 if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
-                    return ((DataFrame) receivedFrame).getData();
+                    return receivedFrame;
                 else
                     throw new UnexpectedFrameException(receivedFrame);
             } else
@@ -85,7 +85,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
-    protected void postProcessResponse(Object response, SampleResult result) {
+    protected void postProcessResponse(Frame response, SampleResult result) {
         if (response == null && getOptional()) {
             log.debug("Sampler '" + getName() + "' received no response (read timeout).");
             result.setSuccessful(true);

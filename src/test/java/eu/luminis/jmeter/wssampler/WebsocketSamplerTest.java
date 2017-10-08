@@ -18,12 +18,23 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import eu.luminis.websocket.MockWebSocketClientCreator;
+import eu.luminis.websocket.TextFrame;
+import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class WebsocketSamplerTest {
+
+    MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
 
     @Test
     public void defaultDoesNotUseProxy() {
@@ -69,6 +80,31 @@ public class WebsocketSamplerTest {
             assertFalse(sampler.useProxy("gmail.google.com"));
             assertTrue(sampler.useProxy("google.com"));
         }
+    }
+
+    @Test
+    public void readingFrameFromNewWebsocketConnectionShouldReturnCorrectHeaderAndBodySize() throws IOException {
+        ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
+        String httpResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n";
+        byte[] serverResponse = new byte[httpResponse.getBytes().length + 4];
+        System.arraycopy(httpResponse.getBytes(), 0, serverResponse, 0, httpResponse.getBytes().length);
+        System.arraycopy(new byte[]{ (byte) 0x81, 0x02, 0x68, 0x69 }, 0, serverResponse, httpResponse.getBytes().length, 4);
+
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                try {
+                    return mocker.createMockWebSocketClientWithResponse("nowhere.com", 80, outputBuffer, serverResponse);
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException();
+                }
+            }
+        };
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertEquals(httpResponse.length() + 2, result.getHeadersSize());
+        assertEquals(2, result.getBodySize());
     }
 
     /**
