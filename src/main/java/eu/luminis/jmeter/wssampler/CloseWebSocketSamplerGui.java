@@ -55,9 +55,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
                     closeStatusPanel.add(closeStatusField);
                     JErrorMessageLabel closeStatusErrorField = new JErrorMessageLabel();
                     closeStatusPanel.add(closeStatusErrorField);
-                    // needs to support custom code 4000-4999 too
-                    // don't know how to support 2 ranges hence use the enclosing one
-                    // see https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+                    // According to WebSocket specifcation (RFC 6455), status codes in the range 1000-4999 can be used.
                     layoutPanel.addIntegerRangeCheck(closeStatusField, 1000, 4999, closeStatusErrorField);
                 }
                 settingsPanel.add(closeStatusPanel);
