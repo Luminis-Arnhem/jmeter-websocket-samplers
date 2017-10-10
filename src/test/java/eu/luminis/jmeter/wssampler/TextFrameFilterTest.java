@@ -312,4 +312,23 @@ public class TextFrameFilterTest {
         textFrameFilter.receiveFrame(wsClient, 1000, result);
     }
 
+    @Test
+    public void filteredFrameShouldHaveProperSizesInResult() throws IOException {
+        WebSocketClient wsClient = mocker.createMultipleTextReceivingClient();
+
+        TextFrameFilter textFrameFilter = new TextFrameFilter();
+        textFrameFilter.setComparisonType(ComparisonType.Contains);
+        textFrameFilter.setMatchValue("response 0");
+
+        SampleResult result = new SampleResult();
+        textFrameFilter.receiveFrame(wsClient, 1000, result);
+        assertTrue(result.getSubResults().length > 0);
+        SampleResult filterResult = result.getSubResults()[0];
+        assertEquals(2, filterResult.getHeadersSize());
+        assertEquals(10, filterResult.getBodySize());
+        assertEquals(12, filterResult.getBytes());
+        assertEquals(0, result.getBodySize());  // Filtered frame does not count for main result.
+    }
+
+
 }

@@ -69,6 +69,8 @@ public abstract class FrameFilter extends ConfigTestElement {
                 subResult.setSampleLabel("Discarded " + receivedFrame.getTypeAsString() + " frame (by filter '" + getName() + "')");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
+                subResult.setHeadersSize(receivedFrame.getSize() - receivedFrame.getPayloadSize());
+                subResult.setBodySize(receivedFrame.getPayloadSize());
                 if (receivedFrame.isText())
                     subResult.setResponseData(((TextFrame) receivedFrame).getText(), null);
                 else if (receivedFrame.isBinary())
