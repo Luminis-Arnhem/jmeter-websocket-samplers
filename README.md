@@ -43,7 +43,9 @@ The request-response sampler is the most commonly used one. With this sampler yo
 
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
-The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
+The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. 
+For binary frames, enter the payload in hexadecimal format, e.g. `0xca 0xfe` or `ba be`; JMeter variables can be used, but should resolve to hex format at runtime. 
+Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
 
 ![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/renderbinary/docs/binary-response.png)
 
