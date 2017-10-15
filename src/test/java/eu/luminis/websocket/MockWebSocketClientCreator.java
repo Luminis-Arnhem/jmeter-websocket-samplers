@@ -1,9 +1,11 @@
 package eu.luminis.websocket;
 
-import eu.luminis.websocket.*;
+import org.apache.jmeter.protocol.http.control.Header;
+import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,11 +13,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +58,24 @@ public class MockWebSocketClientCreator {
                     return new TextFrame("ws-response-data");
                 }
             });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that returns the given frames.
+     */
+    public WebSocketClient createMultipleFrameClient(Frame[] frames) {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            OngoingStubbing<Frame> when = when(mockWsClient.receiveFrame(anyInt()));
+            for (Frame f: frames) {
+                when = when.thenReturn(f);
+            }
             return mockWsClient;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -131,9 +155,12 @@ public class MockWebSocketClientCreator {
         }
     }
 
-
-    public WebSocketClient createMockWebSocketClientWithResponse(String host, int port, ByteArrayOutputStream outputBuffer, byte[] response) throws MalformedURLException {
-        return new WebSocketClient(new URL("http", host, port, "/")) {
+    /**
+     * Creates (mock) WebSocketClient that writes its output (http request, frames sent) to the given output buffer
+     * and reads the response (http response, frames received) from the given response.
+     */
+    public WebSocketClient createMockWebSocketClientWithResponse(ByteArrayOutputStream outputBuffer, byte[] response) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", "nowhere.com", 80, "/")) {
             protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
                 Socket socket = Mockito.mock(Socket.class);
                 when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(response));
@@ -150,6 +177,75 @@ public class MockWebSocketClientCreator {
                 return Collections.emptyMap();
             }
         };
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that writes its output (http request, frames sent) to the given output buffer
+     * and has no response.
+     */
+    public WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {
+        return new WebSocketClient(new URL("http", host, port, "/")) {
+            protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
+                Socket socket = Mockito.mock(Socket.class);
+                when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+                when(socket.getOutputStream()).thenReturn(outputBuffer);
+                return socket;
+            }
+        };
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that, when receiveFrame is called, throws a SocketTimeoutException
+     */
+    public WebSocketClient createNoResponseWsClientMock() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.receiveText(anyInt())).thenThrow(new SocketTimeoutException("timeout"));
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that throws an EndOfStreamException when attempting to send a text or binary frame.
+     */
+    public WebSocketClient createErrorOnWriteWsClientMock() {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
+            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates (mock) WebSocketClient that throws the given exception when attempting to send a text or binary frame.
+     */
+    public WebSocketClient createDefaultWsClientMock(Exception exception) {
+        try {
+            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
+                @Override
+                public String answer(InvocationOnMock invocation) throws Throwable {
+                    Thread.sleep(300);
+                    //if (exception != null)
+                        throw exception;
+                    //return "ws-response-data";
+                }
+            });
+            return mockWsClient;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

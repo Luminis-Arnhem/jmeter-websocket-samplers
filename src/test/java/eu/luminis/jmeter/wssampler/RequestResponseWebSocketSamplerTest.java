@@ -24,8 +24,6 @@ import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -146,7 +144,7 @@ public class RequestResponseWebSocketSamplerTest {
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock();
+                return mocker.createTextReceiverClient();
             }
         };
         sampler.setRequestData("goodbye");
@@ -162,7 +160,7 @@ public class RequestResponseWebSocketSamplerTest {
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createNoResponseWsClientMock();
+                return mocker.createNoResponseWsClientMock();
             }
         };
         sampler.setRequestData("goodbye");
@@ -177,7 +175,7 @@ public class RequestResponseWebSocketSamplerTest {
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createErrorOnWriteWsClientMock();
+                return mocker.createErrorOnWriteWsClientMock();
             }
         };
         sampler.setBinary(false);
@@ -193,7 +191,7 @@ public class RequestResponseWebSocketSamplerTest {
         RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createErrorOnWriteWsClientMock();
+                return mocker.createErrorOnWriteWsClientMock();
             }
         };
         sampler.setBinary(true);
@@ -204,53 +202,14 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Request data:\n0xba 0xbe"));
     }
 
-    WebSocketClient createDefaultWsClientMock() {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
-            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<TextFrame>(){
-                @Override
-                public TextFrame answer(InvocationOnMock invocation) throws Throwable {
-                    Thread.sleep(300);
-                    return new TextFrame("ws-response-data");
-                }
-            });
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    WebSocketClient createNoResponseWsClientMock() {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
-            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            when(mockWsClient.receiveText(anyInt())).thenThrow(new SocketTimeoutException("timeout"));
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    WebSocketClient createErrorOnWriteWsClientMock() {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
-            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
-            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * Creates a JMeter HeaderManager that provides exactly one (dummy) header.
+     */
     HeaderManager createSingleHeaderHeaderManager() {
         HeaderManager headerMgr = Mockito.mock(HeaderManager.class);
         when(headerMgr.size()).thenReturn(1);
         when(headerMgr.get(0)).thenReturn(new Header("header-key", "header-value"));
         return headerMgr;
     }
+
 }

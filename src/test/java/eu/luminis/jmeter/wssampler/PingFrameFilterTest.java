@@ -35,20 +35,24 @@ public class PingFrameFilterTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
+    private MockWebSocketClientCreator mocker;
+
     @Test
     public void filterShouldDropPingFrame() throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt())).thenReturn(new PingFrame(new byte[0])).thenThrow(new EndOfStreamException("end of stream"));
+        mocker = new MockWebSocketClientCreator();
+        WebSocketClient mockWsClient = mocker.createSingleFrameClient(new PingFrame(new byte[0]));
         exception.expect(EndOfStreamException.class);
         new PingFrameFilter().receiveFrame(mockWsClient, 1000, new SampleResult());
     }
 
     @Test
     public void filterShouldNotDropTextFrames() throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt())).thenReturn(new TextFrame("whatever"))
-                .thenReturn(new PingFrame(new byte[0]))
-                .thenReturn(new TextFrame("last frame"));
+        WebSocketClient mockWsClient = new MockWebSocketClientCreator().createMultipleFrameClient(new Frame[] {
+                new TextFrame("whatever"),
+                new PingFrame(new byte[0]),
+                new TextFrame("last frame")
+        });
+
         Frame receivedFrame = new PingFrameFilter().receiveFrame(mockWsClient, 1000, new SampleResult());
         assertTrue(receivedFrame.isText());
         assertTrue(receivedFrame.isText());
@@ -56,11 +60,13 @@ public class PingFrameFilterTest {
 
     @Test
     public void filterShouldAddSubResultForEachFilteredFrame() throws IOException {
-        WebSocketClient mockWsClient = mock(WebSocketClient.class);
-        when(mockWsClient.receiveFrame(anyInt())).thenReturn(new TextFrame("whatever"))
-                .thenReturn(new PingFrame(new byte[0]))
-                .thenReturn(new PingFrame(new byte[0]))
-                .thenReturn(new TextFrame("last frame"));
+
+        WebSocketClient mockWsClient = new MockWebSocketClientCreator().createMultipleFrameClient(new Frame[] {
+                new TextFrame("whatever"),
+                new PingFrame(new byte[0]),
+                new PingFrame(new byte[0]),
+                new TextFrame("last frame")
+        });
         SampleResult result = new SampleResult();
         FrameFilter filter = new PingFrameFilter();
         assertTrue(filter.receiveFrame(mockWsClient, 1000, result).isText());

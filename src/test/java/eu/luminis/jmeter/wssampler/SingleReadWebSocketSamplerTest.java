@@ -64,7 +64,7 @@ public class SingleReadWebSocketSamplerTest {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
+                return mocker.createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
             }
         };
 
@@ -79,7 +79,7 @@ public class SingleReadWebSocketSamplerTest {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock(new EndOfStreamException("end of stream"));
+                return mocker.createDefaultWsClientMock(new EndOfStreamException("end of stream"));
             }
         };
 
@@ -94,7 +94,7 @@ public class SingleReadWebSocketSamplerTest {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
+                return mocker.createDefaultWsClientMock(new SocketTimeoutException("Read timed out"));
             }
         };
         sampler.setOptional(true);
@@ -113,7 +113,7 @@ public class SingleReadWebSocketSamplerTest {
         SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createDefaultWsClientMock(new EndOfStreamException("end of stream"));
+                return mocker.createDefaultWsClientMock(new EndOfStreamException("end of stream"));
             }
         };
         sampler.setOptional(true);
@@ -172,23 +172,4 @@ public class SingleReadWebSocketSamplerTest {
         assertEquals(3, result.getSubResults().length);
     }
 
-    private WebSocketClient createDefaultWsClientMock(Exception exception) {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com"));
-            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<String>(){
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable {
-                    Thread.sleep(300);
-                    if (exception != null)
-                        throw exception;
-                    return "ws-response-data";
-                }
-            });
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

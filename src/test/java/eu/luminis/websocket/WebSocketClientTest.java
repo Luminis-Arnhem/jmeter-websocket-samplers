@@ -41,6 +41,8 @@ public class WebSocketClientTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    private MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
     @Test
     public void testCheckValidServerResponse() throws IOException {
         String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
@@ -278,7 +280,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("UserSuppliedHeader", "this header should be sent with the upgrade request!");
         try {
-            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
+            mocker.createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -296,7 +298,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("Upgrade", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
+            mocker.createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -314,7 +316,7 @@ public class WebSocketClientTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("SEC-WEBSOCKET-KEY", "this header should be ignored");
         try {
-            createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
+            mocker.createMockWebSocketClientWithOutputBuffer("nowhere.com", 80, outputBuffer).connect(headers);
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -331,7 +333,7 @@ public class WebSocketClientTest {
         ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream(1000);
 
         try {
-            createMockWebSocketClientWithOutputBuffer("nowhere.com", 8023, outputBuffer).connect(Collections.emptyMap());
+            mocker.createMockWebSocketClientWithOutputBuffer("nowhere.com", 8023, outputBuffer).connect(Collections.emptyMap());
         } catch (IOException e) {
             // Expected, because no response.
         }
@@ -348,7 +350,7 @@ public class WebSocketClientTest {
         WebSocketClient.HttpResult result = null;
         String serverResponse = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n";
         try {
-            result = new MockWebSocketClientCreator().createMockWebSocketClientWithResponse("nowhere.com", 80, outputBuffer, serverResponse.getBytes()).connect();
+            result = new MockWebSocketClientCreator().createMockWebSocketClientWithResponse(outputBuffer, serverResponse.getBytes()).connect();
         } catch (IOException e) {}
 
         assertEquals(outputBuffer.size(), result.requestSize);
@@ -388,14 +390,4 @@ public class WebSocketClientTest {
     }
 
 
-    private WebSocketClient createMockWebSocketClientWithOutputBuffer(String host, int port, ByteArrayOutputStream outputBuffer) throws MalformedURLException {
-        return new WebSocketClient(new URL("http", host, port, "/")) {
-            protected Socket createSocket(String host, int port, int connectTimeout, int readTimeout) throws IOException {
-                Socket socket = Mockito.mock(Socket.class);
-                when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-                when(socket.getOutputStream()).thenReturn(outputBuffer);
-                return socket;
-            }
-        };
-    }
 }

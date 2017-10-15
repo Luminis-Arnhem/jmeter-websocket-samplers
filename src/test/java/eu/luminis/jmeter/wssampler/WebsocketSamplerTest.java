@@ -19,7 +19,6 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.MockWebSocketClientCreator;
-import eu.luminis.websocket.TextFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
@@ -94,7 +93,7 @@ public class WebsocketSamplerTest {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
                 try {
-                    return mocker.createMockWebSocketClientWithResponse("nowhere.com", 80, outputBuffer, serverResponse);
+                    return mocker.createMockWebSocketClientWithResponse(outputBuffer, serverResponse);
                 } catch (MalformedURLException e) {
                     throw new RuntimeException();
                 }

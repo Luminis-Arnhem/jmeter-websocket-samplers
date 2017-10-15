@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.EndOfStreamException;
+import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
@@ -36,12 +37,14 @@ import static org.mockito.Mockito.when;
 
 public class SingleWriteWebSocketSamplerTest {
 
+    private MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();;
+
     @Test
     public void partialTextWriteShouldShowRequestDataInResult() {
         SingleWriteWebSocketSampler sampler = new SingleWriteWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createErrorOnWriteWsClientMock();
+                return mocker.createErrorOnWriteWsClientMock();
             }
         };
         sampler.setBinary(false);
@@ -58,7 +61,7 @@ public class SingleWriteWebSocketSamplerTest {
         SingleWriteWebSocketSampler sampler = new SingleWriteWebSocketSampler() {
             @Override
             protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-                return createErrorOnWriteWsClientMock();
+                return mocker.createErrorOnWriteWsClientMock();
             }
         };
         sampler.setBinary(true);
@@ -70,16 +73,5 @@ public class SingleWriteWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Request data:\n0xca 0xfe 0xba 0xbe"));
     }
 
-    WebSocketClient createErrorOnWriteWsClientMock() {
-        try {
-            WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
-            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
-            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
-            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendTextFrame(anyString());
-            Mockito.doThrow(new EndOfStreamException("connection close")).when(mockWsClient).sendBinaryFrame(any());
-            return mockWsClient;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 }
