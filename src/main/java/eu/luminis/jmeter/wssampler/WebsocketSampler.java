@@ -156,7 +156,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             result.sampleEnd(); // End timimg
             if (response != null) {
                 result.setHeadersSize(result.getHeadersSize() + response.getSize() - response.getPayloadSize());
-                result.setBodySize(response.getPayloadSize());
+                result.setBodySize(result.getBodySize() + response.getPayloadSize());
             }
 
             if (gotNewConnection) {

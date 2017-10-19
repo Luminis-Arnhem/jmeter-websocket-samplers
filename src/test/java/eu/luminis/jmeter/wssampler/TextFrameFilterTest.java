@@ -20,12 +20,14 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.util.JMeterUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 import static org.junit.Assert.*;
 
@@ -36,8 +38,10 @@ public class TextFrameFilterTest {
     private SampleResult result;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         result = new SampleResult();
+        JMeterUtils.loadJMeterProperties(Files.createTempFile("empty", ".props").toString());
+        FrameFilter.initStaticFilterOptions();
     }
 
     @Rule
@@ -330,5 +334,30 @@ public class TextFrameFilterTest {
         assertEquals(0, result.getBodySize());  // Filtered frame does not count for main result.
     }
 
+    @Test
+    public void whenPropertyIsSetResultSizeShouldIncludeFilteredFrame() throws IOException {
+        TextFrameFilter textFrameFilter = new TextFrameFilter();
 
+        JMeterUtils.setProperty("websocket.result.size_includes_filtered_frames", "true");
+        textFrameFilter.initStaticFilterOptions();
+
+        textFrameFilter.setComparisonType(ComparisonType.Contains);
+        textFrameFilter.setMatchValue("response 0");
+
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleTextReceivingClient();
+            }
+        };
+        sampler.addTestElement(textFrameFilter);
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.getSubResults().length == 1);
+        SampleResult filterResult = result.getSubResults()[0];
+        assertEquals(2, filterResult.getHeadersSize());
+        assertEquals(10, filterResult.getBodySize());
+        assertEquals(12, filterResult.getBytes());
+        assertEquals(24, result.getBytes());  // Filtered frame _does_ count for main result.
+    }
 }

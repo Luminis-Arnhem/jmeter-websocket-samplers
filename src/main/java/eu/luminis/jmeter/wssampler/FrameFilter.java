@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.*;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.util.JMeterUtils;
 import org.apache.log.Logger;
 
 import java.io.IOException;
@@ -34,6 +35,14 @@ import java.util.List;
  * from one thread.
  */
 public abstract class FrameFilter extends ConfigTestElement {
+
+    public final static String RESULT_SIZE_INCLUDES_FILTERED_FRAMES = "websocket.result.size_includes_filtered_frames";
+
+    private static boolean includeFilteredFramesInSize;
+
+    static {
+        initStaticFilterOptions();
+    }
 
     public FrameFilter() {
         super();
@@ -71,6 +80,10 @@ public abstract class FrameFilter extends ConfigTestElement {
                 subResult.setResponseMessage("Received " + receivedFrame);
                 subResult.setHeadersSize(receivedFrame.getSize() - receivedFrame.getPayloadSize());
                 subResult.setBodySize(receivedFrame.getPayloadSize());
+                if (includeFilteredFramesInSize) {
+                    result.setHeadersSize(result.getHeadersSize() + receivedFrame.getSize() - receivedFrame.getPayloadSize());
+                    result.setBodySize(result.getBodySize() + receivedFrame.getPayloadSize());
+                }
                 if (receivedFrame.isText())
                     subResult.setResponseData(((TextFrame) receivedFrame).getText(), null);
                 else if (receivedFrame.isBinary())
@@ -107,5 +120,9 @@ public abstract class FrameFilter extends ConfigTestElement {
     @Override
     public String toString() {
         return "Frame Filter '" + getName() + "'";
+    }
+
+    static void initStaticFilterOptions() {
+        includeFilteredFramesInSize = Boolean.parseBoolean(JMeterUtils.getPropDefault(RESULT_SIZE_INCLUDES_FILTERED_FRAMES, "false"));
     }
 }
