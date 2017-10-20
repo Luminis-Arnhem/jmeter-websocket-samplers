@@ -116,6 +116,8 @@ To avoid the sampler waiting forever in such cases, the read timeout is treated 
 This is a simple solution that probably works well in most cases, but you need to realize that in such cases, you should consider the read-timeout more as a "maximum time to wait for a message" 
 (which probably is how most people think about the read time out anyway). Future releases of this plugin might change this behaviour or provide a better solution; please check the documentation if it matters to you. 
 
+Filtered frames are visible in the result listeners as subresults, so you can always monitor what is exactly received over the websocket connection. 
+However, the filtered frames do not contribute to the received size of the "main" result. As a consequence, the figures for received bytes and throughput etc. do not exactly represent what is received over the line. If that is an issue, set the JMeter property `websocket.result.size_includes_filtered_frames` to true and the size of filtered frames will be added to their "parent" result and thus be included in the total figures for received bytes.
 
 ## Status
 
