@@ -64,6 +64,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected JTextField serverField;
     protected JTextField portField;
     protected JTextField pathField;
+    protected JTextField connectionIdField;
     protected JTextField connectionTimeoutField;
     protected JTextField readTimeoutField;
     protected JLabel portLabel;
@@ -154,10 +155,18 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                     newConnection.setSelected(true);
                     newConnection.addActionListener(disableConnectionSettingsAction);
                     innerConnectionButtonPanel.add(newConnection);
+                    newConnection.setAlignmentX(0);
 
                     ButtonGroup connectionButtons = new ButtonGroup();
                     connectionButtons.add(newConnection);
                     connectionButtons.add(reuseConnection);
+
+                    JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    connectionIdPanel.add(new JLabel("connection ID: "));
+                    connectionIdField = new JTextField(7);
+                    connectionIdPanel.add(connectionIdField);
+                    connectionIdPanel.setAlignmentX(0);
+                    innerConnectionButtonPanel.add(connectionIdPanel);
                 }
                 outerConnectionButtonPanel.add(innerConnectionButtonPanel);
             }

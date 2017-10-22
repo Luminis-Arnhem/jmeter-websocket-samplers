@@ -40,7 +40,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
         if (getCreateNewConnection()) {
-            dispose(threadLocalCachedConnection.get());
+            dispose(threadLocalCachedConnection.get().get(getConnectionId()));
             try {
                 URL url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
                 return new WebSocketClient(url);
@@ -50,7 +50,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
             }
         }
         else {
-            WebSocketClient wsClient = threadLocalCachedConnection.get();
+            WebSocketClient wsClient = threadLocalCachedConnection.get().get(getConnectionId());
             if (wsClient != null) {
                 return wsClient;
             }
@@ -166,6 +166,14 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     public void setConnectTimeout(String connectTimeout) {
         setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+    }
+
+    public String getConnectionId() {
+        return getPropertyAsString("connectionId");
+    }
+
+    public void setConnectionId(String id) {
+        setProperty("connectionId", id);
     }
 
     public String getReadTimeout() {

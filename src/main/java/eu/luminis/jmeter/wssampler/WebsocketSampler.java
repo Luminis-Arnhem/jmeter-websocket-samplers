@@ -66,7 +66,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     // Control reuse of cached SSL Context in subsequent connections on the same thread
     protected static final boolean USE_CACHED_SSL_CONTEXT = JMeterUtils.getPropDefault("https.use.cached.ssl.context", true);
 
-    protected static final ThreadLocal<WebSocketClient> threadLocalCachedConnection = new ThreadLocal<>();
+    protected static final ThreadLocal<Map<String, WebSocketClient>> threadLocalCachedConnection = new ThreadLocal<>();
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
@@ -150,7 +150,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 gotNewConnection = true;
             }
             else {
-                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection)\n");
+                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection with ID '" + getConnectionId() + "')\n");
             }
             Frame response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg
@@ -205,10 +205,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
 
         if (gotNewConnection)
-            threadLocalCachedConnection.set(wsClient);
+            threadLocalCachedConnection.get().put(getConnectionId(), wsClient);
         else {
             if (! wsClient.isConnected())
-                threadLocalCachedConnection.set(null);
+                threadLocalCachedConnection.get().put(getConnectionId(), null);
         }
 
         return result;
@@ -245,12 +245,19 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
     @Override
     public void threadStarted() {
+        if (threadLocalCachedConnection.get() == null) {
+            getLogger().debug("thread start: init thread local");
+            threadLocalCachedConnection.set(new HashMap<String, WebSocketClient>());
+        }
+        else {
+            getLogger().debug("thread start: thread local already set!??");
+        }
     }
 
     @Override
     public void threadFinished() {
         if (threadStopPolicy != ThreadStopPolicy.NONE) {
-            WebSocketClient webSocketClient = threadLocalCachedConnection.get();
+            WebSocketClient webSocketClient = threadLocalCachedConnection.get().get(getConnectionId());
             if (webSocketClient != null) {
                 if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
                     try {
@@ -393,6 +400,14 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
     protected boolean useTLS() {
         return getTLS();
+    }
+
+    public String getConnectionId() {
+        return getPropertyAsString("connectionId");
+    }
+
+    public void setConnectionId(String id) {
+        setProperty("connectionId", id);
     }
 
     public String getConnectTimeout() {

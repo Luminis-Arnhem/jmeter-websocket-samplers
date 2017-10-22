@@ -66,6 +66,13 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
             }
             boxPanel.add(connectionTimeoutPanel);
 
+            JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            connectionIdPanel.add(new JLabel("connection ID"));
+            connectionIdField = new JTextField(7);
+            connectionIdPanel.add(connectionIdField);
+
+            boxPanel.add(connectionIdPanel);
+
             JPanel readTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             readTimeoutPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
             {

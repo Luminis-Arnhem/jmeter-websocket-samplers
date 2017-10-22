@@ -71,6 +71,7 @@ public class OpenWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.serverField.setText(sampler.getServer());
             settingsPanel.portField.setText(sampler.getPort());
             settingsPanel.pathField.setText(sampler.getPath());
+            settingsPanel.connectionIdField.setText(sampler.getConnectionId());
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
             settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
         }
@@ -85,6 +86,7 @@ public class OpenWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setServer(settingsPanel.serverField.getText());
             sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());
+            sampler.setConnectionId(settingsPanel.connectionIdField.getText());
             sampler.setConnectTimeout(settingsPanel.connectionTimeoutField.getText());
             sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
         }
