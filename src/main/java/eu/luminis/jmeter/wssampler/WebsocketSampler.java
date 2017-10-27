@@ -257,22 +257,23 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     @Override
     public void threadFinished() {
         if (threadStopPolicy != ThreadStopPolicy.NONE) {
-            WebSocketClient webSocketClient = threadLocalCachedConnection.get().get(getConnectionId());
-            if (webSocketClient != null) {
-                if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
-                    try {
-                        getLogger().debug("Test thread finished: closing WebSocket connection with ID '" + getConnectionId() + "'");
-                        webSocketClient.sendClose(1000, "test thread finished");
-                    } catch (Exception e) {
-                        getLogger().error("Closing WebSocket connection failed", e);
+            for (Map.Entry<String, WebSocketClient> entry: threadLocalCachedConnection.get().entrySet()) {
+                WebSocketClient webSocketClient = entry.getValue();
+                if (webSocketClient != null) {
+                    if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
+                        try {
+                            getLogger().debug("Test thread finished: closing WebSocket connection with ID '" + entry.getKey() + "'");
+                            webSocketClient.sendClose(1000, "test thread finished");
+                        } catch (Exception e) {
+                            getLogger().error("Closing WebSocket connection failed", e);
+                        }
+                    } else {
+                        getLogger().debug("Test thread finished: closing connection with ID '" + entry.getKey() + "'");
                     }
+                    webSocketClient.dispose();
                 }
-                else {
-                    getLogger().debug("Test thread finsished: closing connection");
-                }
-                webSocketClient.dispose();
-                threadLocalCachedConnection.get().remove(getConnectionId());
             }
+            threadLocalCachedConnection.get().clear();
         }
     }
 
