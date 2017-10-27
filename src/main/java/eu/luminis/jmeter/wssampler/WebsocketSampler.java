@@ -261,7 +261,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             if (webSocketClient != null) {
                 if (threadStopPolicy.equals(ThreadStopPolicy.WSCLOSE)) {
                     try {
-                        getLogger().debug("Test thread finished: closing WebSocket connection");
+                        getLogger().debug("Test thread finished: closing WebSocket connection with ID '" + getConnectionId() + "'");
                         webSocketClient.sendClose(1000, "test thread finished");
                     } catch (Exception e) {
                         getLogger().error("Closing WebSocket connection failed", e);
@@ -271,7 +271,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                     getLogger().debug("Test thread finsished: closing connection");
                 }
                 webSocketClient.dispose();
-                threadLocalCachedConnection.remove();
+                threadLocalCachedConnection.get().remove(getConnectionId());
             }
         }
     }
