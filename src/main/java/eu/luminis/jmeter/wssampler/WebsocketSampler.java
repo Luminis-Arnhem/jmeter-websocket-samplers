@@ -38,11 +38,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,7 +62,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     // Control reuse of cached SSL Context in subsequent connections on the same thread
     protected static final boolean USE_CACHED_SSL_CONTEXT = JMeterUtils.getPropDefault("https.use.cached.ssl.context", true);
 
-    protected static final ThreadLocal<Map<String, WebSocketClient>> threadLocalCachedConnection = new ThreadLocal<>();
+    protected static final ThreadLocal<Map<String, WebSocketClient>> threadLocalCachedConnection = ThreadLocal.withInitial(() -> new HashMap<String, WebSocketClient>());
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
@@ -245,13 +241,6 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
     @Override
     public void threadStarted() {
-        if (threadLocalCachedConnection.get() == null) {
-            getLogger().debug("thread start: init thread local");
-            threadLocalCachedConnection.set(new HashMap<String, WebSocketClient>());
-        }
-        else {
-            getLogger().debug("thread start: thread local already set!??");
-        }
     }
 
     @Override
