@@ -82,6 +82,7 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendPongFrame()).thenReturn(new PongFrame(new byte[0], 2));
             OngoingStubbing<Frame> when = when(mockWsClient.receiveFrame(anyInt()));
             for (Frame f: frames) {
                 when = when.thenReturn(f);

@@ -73,16 +73,20 @@ public abstract class FrameFilter extends ConfigTestElement {
             if (matchesFilter) {
                 subResult.sampleEnd();
                 getLogger().debug("Filter discards " + receivedFrame);
-                performReplyAction(wsClient, receivedFrame);
+                Frame sentFrame = performReplyAction(wsClient, receivedFrame);
 
                 subResult.setSampleLabel("Discarded " + receivedFrame.getTypeAsString() + " frame (by filter '" + getName() + "')");
                 subResult.setSuccessful(true);
                 subResult.setResponseMessage("Received " + receivedFrame);
                 subResult.setHeadersSize(receivedFrame.getSize() - receivedFrame.getPayloadSize());
                 subResult.setBodySize(receivedFrame.getPayloadSize());
+                if (sentFrame != null)
+                    subResult.setSentBytes(sentFrame.getSize());
                 if (includeFilteredFramesInSize) {
                     result.setHeadersSize(result.getHeadersSize() + receivedFrame.getSize() - receivedFrame.getPayloadSize());
                     result.setBodySize(result.getBodySize() + receivedFrame.getPayloadSize());
+                    if (sentFrame != null)
+                        result.setSentBytes(result.getSentBytes() + sentFrame.getSize());
                 }
                 if (receivedFrame.isText())
                     subResult.setResponseData(((TextFrame) receivedFrame).getText(), null);
@@ -108,7 +112,9 @@ public abstract class FrameFilter extends ConfigTestElement {
 
     abstract protected boolean matchesFilter(Frame receivedFrame);
 
-    protected void performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {}
+    protected Frame performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {
+        return null;
+    }
 
     @Override
     public boolean expectsModification() {

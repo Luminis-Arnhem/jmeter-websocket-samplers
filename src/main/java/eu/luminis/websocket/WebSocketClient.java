@@ -345,12 +345,14 @@ public class WebSocketClient {
         return ping;
     }
 
-    public void sendPongFrame() throws IOException {
+    public Frame sendPongFrame() throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send pong frame when state is " + state);
         }
 
-        socketOutputStream.write(new PongFrame(new byte[0]).getFrameBytes());
+        PongFrame pongFrame = new PongFrame(new byte[0]);
+        socketOutputStream.write(pongFrame.getFrameBytes());
+        return pongFrame;
     }
 
     public Frame sendClose(int closeStatus, String reason) throws IOException {
