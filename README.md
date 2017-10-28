@@ -47,7 +47,7 @@ The request-response sampler, as well as the single-read and single-write sample
 For binary frames, enter the payload in hexadecimal format, e.g. `0xca 0xfe` or `ba be`; JMeter variables can be used, but should resolve to hex format at runtime. 
 Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
 
-![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/renderbinary/docs/binary-response.png)
+![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/binary-response.png)
 
 The maximum number of bytes displayed is limited to 1 MB, set the JMeter property `view.results.tree.max_binary_size` to increase this value. 
 To make the "Binary" render type appear higher in the dropdown, insert the class name `eu.luminis.jmeter.visualizers.RenderAsBinary` in the `view.results.tree.renderers_order` property.
@@ -101,7 +101,7 @@ There are three different kinds of filters:
 - Text frame filter: discards any text frame, or text frames that contain/match a given substring or regular expression.
 The text filter also provides a regular expression tester that can be used to quickly check whether the given regular expression matches or does not match, a number of test strings. 
 
-![Text frame filter](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/filter/docs/text-frame-filter-with-regex-test-dialog-sample.png)
+![Text frame filter](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/text-frame-filter-with-regex-test-dialog-sample.png)
 
 The filters can be found in the (`Edit->Add`) `Config Element` menu. 
 
