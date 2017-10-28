@@ -447,7 +447,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 int major = Integer.parseInt(m.group(1));
                 int minor = Integer.parseInt(m.group(2));
                 if (major < 3 || minor < 1) {
-                    String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 3.1 or better.";
+                    String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 3.1 or later.";
                     if (GuiPackage.getInstance() != null) {
                         SwingUtilities.invokeLater(() -> {
                             GuiPackage.showErrorMessage(errorMsg, "Incompatible versions");
