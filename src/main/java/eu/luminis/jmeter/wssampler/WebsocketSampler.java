@@ -28,6 +28,7 @@ import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
+import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
@@ -52,6 +53,8 @@ import java.util.stream.Collectors;
  * set in the constructor must be made thread safe.
  */
 abstract public class WebsocketSampler extends AbstractSampler implements ThreadListener {
+
+    private static final String VAR_WEBSOCKET_LAST_FRAME_FINAL = "websocket.last_frame_final";
 
     enum ThreadStopPolicy { NONE, TCPCLOSE, WSCLOSE };
 
@@ -284,7 +287,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    protected void processDefaultReadResponse(Frame response, boolean binary, SampleResult result) {
+    protected void processDefaultReadResponse(DataFrame response, boolean binary, SampleResult result) {
         if (binary) {
             byte[] responseData = ((BinaryFrame) response).getBinaryData();
             result.setResponseData(responseData);
@@ -295,6 +298,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             getLogger().debug("Sampler '" + getName() + "' received text: '" + ((TextFrame) response).getText() + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
+        JMeterContextService.getContext().getVariables().put(VAR_WEBSOCKET_LAST_FRAME_FINAL, String.valueOf(response.isFinalFragment()));
     }
 
     protected String validatePortNumber(String value) {

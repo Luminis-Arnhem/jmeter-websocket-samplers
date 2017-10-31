@@ -101,7 +101,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected void postProcessResponse(Frame response, SampleResult result) {
-        processDefaultReadResponse(response, getBinary(), result);
+        processDefaultReadResponse((DataFrame) response, getBinary(), result);
     }
 
     @Override
