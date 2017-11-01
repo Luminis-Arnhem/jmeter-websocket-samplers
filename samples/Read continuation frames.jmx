@@ -28,9 +28,9 @@
       <hashTree>
         <eu.luminis.jmeter.wssampler.OpenWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.OpenWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.OpenWebSocketSampler" testname="WebSocket Open Connection" enabled="true">
           <boolProp name="TLS">false</boolProp>
-          <stringProp name="server">localhost</stringProp>
-          <stringProp name="port">8888</stringProp>
-          <stringProp name="path">/ws/fragmentedtext</stringProp>
+          <stringProp name="server">nowhere.com</stringProp>
+          <stringProp name="port"></stringProp>
+          <stringProp name="path">/fragmented_message</stringProp>
         </eu.luminis.jmeter.wssampler.OpenWebSocketSampler>
         <hashTree/>
         <eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.SingleReadWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler" testname="read first frame" enabled="true">
@@ -77,9 +77,9 @@
       <hashTree>
         <eu.luminis.jmeter.wssampler.OpenWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.OpenWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.OpenWebSocketSampler" testname="WebSocket Open Connection" enabled="true">
           <boolProp name="TLS">false</boolProp>
-          <stringProp name="server">localhost</stringProp>
-          <stringProp name="port">8888</stringProp>
-          <stringProp name="path">/ws/fragmentedtext</stringProp>
+          <stringProp name="server">nowhere.com</stringProp>
+          <stringProp name="port"></stringProp>
+          <stringProp name="path">/fragmented_message</stringProp>
         </eu.luminis.jmeter.wssampler.OpenWebSocketSampler>
         <hashTree/>
         <eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.SingleReadWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler" testname="read first frame" enabled="true">
