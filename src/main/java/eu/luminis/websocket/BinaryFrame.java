@@ -69,7 +69,10 @@ public class BinaryFrame extends DataFrame {
 
     @Override
     public String getTypeAsString() {
-        return "binary";
+        if (isFinalFragment())
+            return "binary";
+        else
+            return "non-final binary";
     }
 
     @Override

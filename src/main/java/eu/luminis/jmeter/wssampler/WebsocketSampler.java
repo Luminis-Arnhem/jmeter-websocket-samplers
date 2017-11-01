@@ -291,11 +291,11 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         if (binary) {
             byte[] responseData = ((BinaryFrame) response).getBinaryData();
             result.setResponseData(responseData);
-            getLogger().debug("Sampler '" + getName() + "' received binary data: " + BinaryUtils.formatBinary(responseData));
+            getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with data: " + BinaryUtils.formatBinary(responseData));
         }
         else {
             result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
-            getLogger().debug("Sampler '" + getName() + "' received text: '" + ((TextFrame) response).getText() + "'");
+            getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with text: '" + ((TextFrame) response).getText() + "'");
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
         JMeterContextService.getContext().getVariables().put(VAR_WEBSOCKET_LAST_FRAME_FINAL, String.valueOf(response.isFinalFragment()));

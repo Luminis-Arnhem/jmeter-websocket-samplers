@@ -127,6 +127,15 @@ If the number of continuation frames is not known, you need to create a loop to 
 This enables you to write a simple loop with a standard JMeter While Controller; use the expression `${__javaScript(! ${websocket.last_frame_final},)}` as condition. With a JMeter If Controller, the condition can be simplified to `! ${websocket.last_frame_final}` because that controller automatically interprets the condition as JavaScript.
 See the sample [Read continuation frames.jmx](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/Read%20continuation%20frames.jmx) test plan for examples of using the While or the If controller to read continuation frames.
 
+If you are unsure whether continuation frames are sent by your server or how much, switch on debug logging: samplers reading a frame will log whether the received frame is a "normal" single frame, a non-final frame (i.e. 1st fragment), a continuation frame or a final continuation frame (last fragment).
+
+### Logging
+
+To enable debug logging, add the following lines to the `jmeter.properties` file:
+
+    log_level.eu.luminis.jmeter=DEBUG
+    log_level.eu.luminis.websocket=DEBUG
+    
 ## Status
 
 Even though the project hasn't released a 1.0 version yet, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
