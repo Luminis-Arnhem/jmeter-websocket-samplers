@@ -6,6 +6,10 @@ JMeter add-on that defines a number of samplers for load testing WebSocket appli
 
 Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads/) dir, copy it to <jmeter-home>/lib/ext and start JMeter. That's all.
 
+You can also install the plugin with the jmeter-plugins [Plugins Manager](https://jmeter-plugins.org/install/Install/). 
+If you use this installer, make sure you select "WebSocket Samplers by Peter Doornbosch".
+![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/install_with_plugins_mgr.png)
+
 Make sure you're running JMeter with Java 8. Loading the plugin will fail silently if running with Java 7 (or older).
 
 ## You can help! Spread the word!
