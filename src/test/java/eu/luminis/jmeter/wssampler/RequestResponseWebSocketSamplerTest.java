@@ -22,6 +22,10 @@ import eu.luminis.websocket.*;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -39,6 +43,11 @@ import static org.mockito.Mockito.when;
 public class RequestResponseWebSocketSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @BeforeClass
+    public static void initJMeterContext() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+    }
 
     @Test
     public void testNormalRequestResponseSamplerSample() throws Exception {

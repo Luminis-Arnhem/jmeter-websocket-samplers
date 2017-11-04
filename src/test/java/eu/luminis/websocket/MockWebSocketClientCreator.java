@@ -97,7 +97,7 @@ public class MockWebSocketClientCreator {
                 @Override
                 public Frame answer(InvocationOnMock invocation) throws Throwable {
                     String payload = "response " + callCount++;
-                    return new TextFrame(payload.getBytes(), 2 + payload.getBytes().length);  // This is the constructor Frame.parseFrame would call...
+                    return new TextFrame(true, payload.getBytes(), 2 + payload.getBytes().length);  // This is the constructor Frame.parseFrame would call...
                 }
             });
             return mockWsClient;

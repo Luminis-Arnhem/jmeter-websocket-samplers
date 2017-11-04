@@ -20,9 +20,15 @@ package eu.luminis.websocket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ProtocolException;
 import java.util.Random;
 
 public abstract class Frame {
+
+    /**
+     * Type of data frame, used for determining the type of a (further untyped) continuation frame.
+     */
+    enum DataFrameType { NONE, TEXT, BIN }
 
     public static final int OPCODE_CONT = 0x00;
     public static final int OPCODE_TEXT = 0x01;
@@ -38,7 +44,7 @@ public abstract class Frame {
     private int frameSize;
 
 
-    static Frame parseFrame(InputStream istream) throws IOException {
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
         int byte1 = istream.read();
         if (byte1 == -1)
             throw new EndOfStreamException("end of stream");
@@ -46,6 +52,7 @@ public abstract class Frame {
         if (byte2 == -1)
             throw new EndOfStreamException("end of stream");
 
+        boolean fin = (byte1 & 0x80) != 0;
         int opCode = byte1 & 0x0f;
         int firstLengthByte = byte2 & 0x7f;
         int length;
@@ -83,10 +90,17 @@ public abstract class Frame {
         if (bytesRead != length)
             throw new EndOfStreamException("WebSocket protocol error: expected payload of length " + length + ", but can only read " + bytesRead + " bytes");
         switch (opCode) {
+            case OPCODE_CONT:
+                if (previousDataFrameType == DataFrameType.TEXT)
+                    return new TextContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                else if (previousDataFrameType == DataFrameType.BIN)
+                    return new BinaryContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                else
+                    throw new ProtocolException("no continuation frame expected");
             case OPCODE_TEXT:
-                return new TextFrame(payload, 2 + nrOfLenghtBytes + length);
+                return new TextFrame(fin, payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_BINARY:
-                return new BinaryFrame(payload, 2 + nrOfLenghtBytes + length);
+                return new BinaryFrame(fin, payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_CLOSE:
                 return new CloseFrame(payload, 2 + nrOfLenghtBytes + length);
             case OPCODE_PING:
@@ -177,12 +191,20 @@ public abstract class Frame {
         return totalRead;
     }
 
+    public boolean isData() {
+        return isText() || isBinary();
+    }
+
     public boolean isText() {
         return false;
     }
 
     public boolean isBinary() {
         return false;
+    }
+
+    public boolean isControl() {
+        return !isText() && !isBinary();
     }
 
     public boolean isClose() {

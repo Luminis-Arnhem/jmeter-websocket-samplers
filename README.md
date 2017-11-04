@@ -124,6 +124,23 @@ This is a simple solution that probably works well in most cases, but you need t
 Filtered frames are visible in the result listeners as subresults, so you can always monitor what is exactly received over the websocket connection. 
 However, the filtered frames do not contribute to the received size of the "main" result. As a consequence, the figures for received bytes and throughput etc. do not exactly represent what is received over the line. If that is an issue, set the JMeter property `websocket.result.size_includes_filtered_frames` to true and the size of filtered frames will be added to their "parent" result and thus be included in the total figures for received bytes.
 
+### Fragmentation
+
+WebSocket messages may be fragmented into several frames. In such cases the first frame is an ordinary text or binary frame, but it will have the `final` bit cleared. The succeeding frames will be continuation frames (whether they are text or binary is inferred by the first frame) and the last continuation frame will have the `final` bit set.
+The plugin supports continuation frames, but as the plugin is frame-oriented, you'll have to read them yourself. In cases where the number of fragments is known beforehand, this is as easy as adding an extra WebSocketReadSampler for each continuation frame you expect.
+If the number of continuation frames is not known, you need to create a loop to read all the continuation frames. For this purpose, the plugin provides a new JMeter variable called `websocket.last_frame_final` that indicates whether the last frame read was final. 
+This enables you to write a simple loop with a standard JMeter While Controller; use the expression `${__javaScript(! ${websocket.last_frame_final},)}` as condition. With a JMeter If Controller, the condition can be simplified to `! ${websocket.last_frame_final}` because that controller automatically interprets the condition as JavaScript.
+See the sample [Read continuation frames.jmx](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/Read%20continuation%20frames.jmx) test plan for examples of using the While or the If controller to read continuation frames.
+
+If you are unsure whether continuation frames are sent by your server or how much, switch on debug logging: samplers reading a frame will log whether the received frame is a "normal" single frame, a non-final frame (i.e. 1st fragment), a continuation frame or a final continuation frame (last fragment).
+
+### Logging
+
+To enable debug logging, add the following lines to the `jmeter.properties` file:
+
+    log_level.eu.luminis.jmeter=DEBUG
+    log_level.eu.luminis.websocket=DEBUG
+    
 ## Status
 
 Even though the project hasn't released a 1.0 version yet, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
