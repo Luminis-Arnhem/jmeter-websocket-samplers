@@ -23,8 +23,8 @@ import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.*;
+
 
 public class PingPongSamplerTest {
 
@@ -44,8 +44,8 @@ public class PingPongSamplerTest {
         sampler.addTestElement(filter);
 
         SampleResult result = sampler.sample(null);
-        assertEquals("", result.getResponseDataAsString());
-        assertEquals(1, result.getSubResults().length);
+        assertThat(result.getResponseDataAsString()).isEmpty();
+        assertThat(result.getSubResults().length).isEqualTo(1);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class PingPongSamplerTest {
         sampler.addTestElement(filter2);
 
         SampleResult result = sampler.sample(null);
-        assertEquals(3, result.getSubResults().length);
+        assertThat(result.getSubResults().length).isEqualTo(3);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class PingPongSamplerTest {
         };
 
         SampleResult result = sampler.sample(null);
-        assertTrue(result.isSuccessful());
-        assertEquals(0 + 6 + 0, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
+        assertThat(result.isSuccessful()).isTrue();
+        assertThat(result.getSentBytes()).isEqualTo(0 + 6 + 0);  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
 }
