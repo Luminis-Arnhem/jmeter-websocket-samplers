@@ -13,6 +13,8 @@ If you use this installer, select "WebSocket Samplers by Peter Doornbosch".
 
 Make sure you're running JMeter with Java 8. Loading the plugin will fail silently if running with Java 7 (or older).
 
+From version 1.0 onwards, the plugin requires JMeter 3.1 or later. Older versions work with JMeter 3.0 too.
+
 ## You can help! Spread the word!
 
 If you like this plugin, if you find it useful, you can help others that might have similar problems or challenges as you had, by spreading the word. Talk, tweet, blog about it; answer questions about how to load-test WebSocket on forums, stackoverflow etc. and let people know this plugin exists. If you think the plugin needs improvement, let the author know (see "feedback" below).
@@ -141,9 +143,6 @@ To enable debug logging, add the following lines to the `jmeter.properties` file
     log_level.eu.luminis.jmeter=DEBUG
     log_level.eu.luminis.websocket=DEBUG
     
-## Status
-
-Even though the project hasn't released a 1.0 version yet, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
 
 ## Building
 
@@ -162,7 +161,7 @@ Gradle can also generate IntelliJ Idea project files for you:
 
 ## Feedback
 
-Questions, problems, or other feedback? Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>. Any feedback is welcome, issues are always taken seriously.
+If you encounter any issues or ambiguities, please report them. Also questions, problems, or other feedback (appreciation ;-)) is always welcome. Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
 
 
 ## Acknowledgements
