@@ -314,47 +314,56 @@ public class WebSocketClient {
         return receiveClose(readTimeout);
     }
 
-    public void sendTextFrame(String requestData) throws IOException {
+    public TextFrame sendTextFrame(String requestData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send data frame when state is " + state);
         }
 
-        socketOutputStream.write(new TextFrame(requestData).getFrameBytes());
+        TextFrame frame = new TextFrame(requestData);
+        socketOutputStream.write(frame.getFrameBytes());
+        return frame;
     }
 
-    public void sendBinaryFrame(byte[] requestData) throws IOException {
+    public BinaryFrame sendBinaryFrame(byte[] requestData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send data frame when state is " + state);
         }
 
-        socketOutputStream.write(new BinaryFrame(requestData).getFrameBytes());
+        BinaryFrame frame = new BinaryFrame(requestData);
+        socketOutputStream.write(frame.getFrameBytes());
+        return frame;
     }
 
-    public void sendPingFrame() throws IOException {
-        sendPingFrame(new byte[0]);
+    public Frame sendPingFrame() throws IOException {
+        return sendPingFrame(new byte[0]);
     }
 
-    public void sendPingFrame(byte[] requestData) throws IOException {
+    public Frame sendPingFrame(byte[] requestData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send ping frame when state is " + state);
         }
 
-        socketOutputStream.write(new PingFrame(requestData).getFrameBytes());
+        PingFrame ping = new PingFrame(requestData);
+        socketOutputStream.write(ping.getFrameBytes());
+        return ping;
     }
 
-    public void sendPongFrame() throws IOException {
+    public Frame sendPongFrame() throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send pong frame when state is " + state);
         }
 
-        socketOutputStream.write(new PongFrame(new byte[0]).getFrameBytes());
+        PongFrame pongFrame = new PongFrame(new byte[0]);
+        socketOutputStream.write(pongFrame.getFrameBytes());
+        return pongFrame;
     }
 
-    public void sendClose(int closeStatus, String reason) throws IOException {
+    public Frame sendClose(int closeStatus, String reason) throws IOException {
         if (state != WebSocketState.CONNECTED && state != WebSocketState.CLOSED_SERVER) {
             throw new IllegalStateException("Cannot close when state is " + state);
         }
-        socketOutputStream.write(new CloseFrame(closeStatus, reason).getFrameBytes());
+        CloseFrame closeFrame = new CloseFrame(closeStatus, reason);
+        socketOutputStream.write(closeFrame.getFrameBytes());
 
         if (state == WebSocketState.CONNECTED)
             state = WebSocketState.CLOSED_CLIENT;
@@ -362,6 +371,7 @@ public class WebSocketClient {
             state = WebSocketState.CLOSED;
             dispose();
         }
+        return closeFrame;
     }
 
     public CloseFrame receiveClose(int timeout) throws IOException, UnexpectedFrameException {

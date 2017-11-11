@@ -211,6 +211,21 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Request data:\n0xba 0xbe"));
     }
 
+    @Test
+    public void sendingFrameShouldSetResultSentSize() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createTextReceiverClient();
+            }
+        };
+        sampler.setRequestData("1234567");
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertEquals(0 + 6 + 7, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
+    }
+
     /**
      * Creates a JMeter HeaderManager that provides exactly one (dummy) header.
      */

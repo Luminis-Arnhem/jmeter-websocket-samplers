@@ -34,6 +34,9 @@ public class MockWebSocketClientCreator {
     public WebSocketClient createSingleFrameClient(Frame frame) {
         try {
             WebSocketClient mockWsClient = mock(WebSocketClient.class);
+            when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
+            when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendClose(anyInt(), anyString())).thenReturn(new CloseFrame(1000, "sampler requested close"));
             when(mockWsClient.receiveFrame(anyInt()))
                     .thenReturn(frame)
                     .thenThrow(new EndOfStreamException("end of stream"));
@@ -51,6 +54,13 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendTextFrame(anyString())).thenAnswer(new Answer<TextFrame>() {
+                @Override
+                public TextFrame answer(InvocationOnMock invocation) {
+                    return new TextFrame(invocation.getArgument(0));
+                }
+            });
+            when(mockWsClient.sendPingFrame()).thenReturn(new PingFrame(new byte[0]));
             when(mockWsClient.receiveText(anyInt())).thenAnswer(new Answer<TextFrame>(){
                 @Override
                 public TextFrame answer(InvocationOnMock invocation) throws Throwable {
@@ -72,6 +82,7 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendPongFrame()).thenReturn(new PongFrame(new byte[0], 2));
             OngoingStubbing<Frame> when = when(mockWsClient.receiveFrame(anyInt()));
             for (Frame f: frames) {
                 when = when.thenReturn(f);
@@ -91,6 +102,12 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendTextFrame(anyString())).thenAnswer(new Answer<TextFrame>() {
+                @Override
+                public TextFrame answer(InvocationOnMock invocation) {
+                    return new TextFrame(invocation.getArgument(0));
+                }
+            });
             when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
                 private int callCount = 0;
 
@@ -114,6 +131,7 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendClose(anyInt(), anyString())).thenReturn(new CloseFrame(1000, "sampler requested close"));
             when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
                 private int callCount = 0;
 
@@ -139,6 +157,7 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendPingFrame()).thenReturn(new PingFrame(new byte[0]));
             when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
                 private int callCount = 0;
 

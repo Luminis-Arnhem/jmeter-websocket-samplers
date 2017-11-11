@@ -20,6 +20,7 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
+import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -35,6 +36,7 @@ import org.apache.jmeter.util.SSLManager;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -44,6 +46,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -94,6 +98,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
 
     static {
+        checkJMeterVersion();
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
         initThreadStopPolicy();
@@ -150,6 +155,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 responseHeaders = httpResult.responseHeaders;
                 result.connectEnd();
                 result.setHeadersSize(httpResult.responseSize);
+                result.setSentBytes(httpResult.requestSize);
                 gotNewConnection = true;
             }
             else {
@@ -437,4 +443,27 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
+    private static void checkJMeterVersion() {
+        try {
+            String jmeterVersion = JMeterUtils.getJMeterVersion();
+            Matcher m = Pattern.compile("(\\d+)\\.(\\d+).*").matcher(jmeterVersion);
+            if (m.matches()) {
+                int major = Integer.parseInt(m.group(1));
+                int minor = Integer.parseInt(m.group(2));
+                if (major < 3 || minor < 1) {
+                    String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 3.1 or later.";
+                    if (GuiPackage.getInstance() != null) {
+                        SwingUtilities.invokeLater(() -> {
+                            GuiPackage.showErrorMessage(errorMsg, "Incompatible versions");
+                        });
+                    } else {
+                        LoggingManager.getLoggerForClass().error(errorMsg);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            // Let this method never throw an exception
+        }
+    }
 }

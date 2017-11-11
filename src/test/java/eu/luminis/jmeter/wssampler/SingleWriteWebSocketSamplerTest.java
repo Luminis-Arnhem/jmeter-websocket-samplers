@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.Collections;
 
 import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -73,5 +74,19 @@ public class SingleWriteWebSocketSamplerTest {
         assertTrue(result.getSamplerData().contains("Request data:\n0xca 0xfe 0xba 0xbe"));
     }
 
+    @Test
+    public void sendingFrameShouldSetResultSentSize() {
+        SingleWriteWebSocketSampler sampler = new SingleWriteWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createTextReceiverClient();
+            }
+        };
+        sampler.setRequestData("1234567");
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertEquals(0 + 6 + 7, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
+    }
 
 }

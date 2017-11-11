@@ -9,20 +9,20 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/ApacheJMeter_core
-    compile('org.apache.jmeter:ApacheJMeter_core:3.0') {
+    compile('org.apache.jmeter:ApacheJMeter_core:3.1') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_components:3.0') {
+    compile('org.apache.jmeter:ApacheJMeter_components:3.1') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_http:3.0') {
+    compile('org.apache.jmeter:ApacheJMeter_http:3.1') {
         transitive = false    // Just avoid downloading half the internet
     }
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/jorphan
-    compile('org.apache.jmeter:jorphan:3.0') {
+    compile('org.apache.jmeter:jorphan:3.1') {
         transitive = false
     }
 
@@ -34,6 +34,9 @@ dependencies {
     compile('org.mockito:mockito-core:2.2.15')
 
     testCompile('avalon-framework:avalon-framework:4.1.4')
+
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    testCompile('commons-io:commons-io:2.5')
 }
 
 version = 'dev'

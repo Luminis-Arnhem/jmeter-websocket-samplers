@@ -20,11 +20,17 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.util.JMeterUtils;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -32,10 +38,21 @@ import static org.mockito.Mockito.when;
 
 public class PingFrameFilterTest {
 
+    @BeforeClass
+    public static void initJMeterContext() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+    }
+
+    @Before
+    public void setUp() throws IOException {
+        JMeterUtils.loadJMeterProperties(Files.createTempFile("empty", ".props").toString());
+        FrameFilter.initStaticFilterOptions();
+    }
+
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
-    private MockWebSocketClientCreator mocker;
+    private MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
 
     @Test
     public void filterShouldDropPingFrame() throws IOException {
@@ -73,5 +90,27 @@ public class PingFrameFilterTest {
         assertTrue(filter.receiveFrame(mockWsClient, 1000, result).isText());
 
         assertEquals(2, result.getSubResults().length);
+    }
+
+    @Test
+    public void filterShouldCountSentBytes() {
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createMultipleFrameClient(new Frame[] { new PingFrame(new byte[0]), new TextFrame("whatever") });
+            }
+        };
+        PingFrameFilter filter = new PingFrameFilter();
+        filter.setReplyToPing(true);
+        JMeterUtils.setProperty("websocket.result.size_includes_filtered_frames", "true");
+        filter.initStaticFilterOptions();
+        sampler.addTestElement(filter);
+
+        SampleResult result = sampler.sample(null);
+
+        assertTrue(result.isSuccessful());
+        assertEquals(1, result.getSubResults().length);
+        assertEquals(2, result.getSubResults()[0].getSentBytes());
+        assertEquals(2, result.getSentBytes());
     }
 }

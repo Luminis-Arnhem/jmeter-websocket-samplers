@@ -159,6 +159,9 @@ public abstract class Frame {
         System.arraycopy(lengthBytes, 1, frame, 2, lengthBytes.length - 1);
         System.arraycopy(mask, 0, frame, 1 + lengthBytes.length, 4);
         System.arraycopy(masked, 0, frame, 1 + lengthBytes.length + 4, payload.length);
+        // Store frame size for later use
+        frameSize = frame.length;
+
         return frame;
     }
 
@@ -226,6 +229,8 @@ public abstract class Frame {
     public abstract String getTypeAsString();
 
     public int getSize() {
+        if (frameSize == 0)
+            frameSize = getFrameBytes().length;
         return frameSize;
     }
 
