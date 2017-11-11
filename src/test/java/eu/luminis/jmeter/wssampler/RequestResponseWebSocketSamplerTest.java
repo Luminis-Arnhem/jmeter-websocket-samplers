@@ -22,6 +22,10 @@ import eu.luminis.websocket.*;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -39,6 +43,11 @@ import static org.mockito.Mockito.when;
 public class RequestResponseWebSocketSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @BeforeClass
+    public static void initJMeterContext() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+    }
 
     @Test
     public void testNormalRequestResponseSamplerSample() throws Exception {
@@ -200,6 +209,21 @@ public class RequestResponseWebSocketSamplerTest {
         SampleResult result = sampler.sample(null);
         assertFalse(result.isSuccessful());
         assertTrue(result.getSamplerData().contains("Request data:\n0xba 0xbe"));
+    }
+
+    @Test
+    public void sendingFrameShouldSetResultSentSize() {
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createTextReceiverClient();
+            }
+        };
+        sampler.setRequestData("1234567");
+
+        SampleResult result = sampler.sample(null);
+        assertTrue(result.isSuccessful());
+        assertEquals(0 + 6 + 7, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
 
     /**

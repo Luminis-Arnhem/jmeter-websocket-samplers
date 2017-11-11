@@ -93,7 +93,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
             result.setResponseMessage("Read timeout, no response received.");
         }
         else
-            processDefaultReadResponse(response, getBinary(), result);
+            processDefaultReadResponse((DataFrame) response, getBinary(), result);
     }
 
 

@@ -52,16 +52,20 @@ public class CloseWebSocketSampler extends WebsocketSampler {
         String reason = "sampler requested close";
         result.setSamplerData("Requested connection close with status " + closeStatus + " and reason '" + reason + "'.");
 
-        wsClient.sendClose(closeStatus, reason);
+        Frame frameSent = wsClient.sendClose(closeStatus, reason);
+        result.setSentBytes(frameSent.getSize());
 
+        Frame receivedFrame = null;
         if (!frameFilters.isEmpty()) {
-            Frame receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-            if (receivedFrame.isClose())
-                return receivedFrame;
-            else
-                throw new UnexpectedFrameException(receivedFrame);
-        } else
-            return wsClient.receiveClose(readTimeout);
+            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+        }
+        else
+            receivedFrame = wsClient.receiveFrame(readTimeout);
+
+        if (receivedFrame.isClose())
+            return receivedFrame;
+        else
+            throw new UnexpectedFrameException(receivedFrame);
     }
 
     @Override

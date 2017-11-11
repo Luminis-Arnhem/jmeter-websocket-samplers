@@ -22,6 +22,9 @@ import eu.luminis.websocket.EndOfStreamException;
 import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -39,6 +42,11 @@ import static org.mockito.Mockito.when;
 public class SingleReadWebSocketSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @BeforeClass
+    public static void initJMeterContext() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+    }
 
     @Test
     public void testSingleReadSamplerSample() throws Exception {

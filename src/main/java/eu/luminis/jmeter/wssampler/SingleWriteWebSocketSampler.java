@@ -18,9 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.Frame;
-import eu.luminis.websocket.UnexpectedFrameException;
-import eu.luminis.websocket.WebSocketClient;
+import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -66,6 +64,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
+        Frame sentFrame;
         if (getBinary()) {
             byte[] requestData;
             try {
@@ -80,13 +79,13 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
             }
             // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
             result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            wsClient.sendBinaryFrame(requestData);
+            sentFrame = wsClient.sendBinaryFrame(requestData);
         }
         else {
             result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            wsClient.sendTextFrame(getRequestData());
+            sentFrame = wsClient.sendTextFrame(getRequestData());
         }
-
+        result.setSentBytes(sentFrame.getSize());
         return null;
     }
 

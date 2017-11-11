@@ -26,9 +26,12 @@ import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ProtocolException;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class FrameTest {
 
@@ -37,22 +40,23 @@ public class FrameTest {
 
     @Test
     public void parseEmptyTextFrame() throws IOException {
-        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ));
         assertTrue(frame.isText());
         assertEquals(2, frame.getSize());
     }
 
     @Test
     public void parseTextFrame() throws IOException {
-        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
+        assertTrue(((TextFrame) frame).isFinalFragment());
     }
 
     @Test
     public void parsePongFrame() throws IOException {
-        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ));
         assertTrue(frame.isPong());
         assertEquals(0, ((PongFrame) frame).getData().length);
         assertEquals(2, frame.getSize());
@@ -60,7 +64,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrameNoCloseReason() throws IOException {
-        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ));
         assertTrue(frame.isClose());
         assertEquals(null, ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -69,7 +73,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrame() throws IOException {
-        Frame frame = Frame.parseFrame(new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ));
         assertTrue(frame.isClose());
         assertEquals("going away", ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -91,7 +95,7 @@ public class FrameTest {
             bytes[8] = (byte) 0xff;
             bytes[9] = (byte) 0xff;
 
-            Frame.parseFrame(new ByteArrayInputStream(bytes));
+            Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
             Assert.fail("expected exception");
         }
         catch (EndOfStreamException e) {
@@ -118,7 +122,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
     }
 
     @Test
@@ -137,7 +141,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
     }
 
     @Test
@@ -160,7 +164,7 @@ public class FrameTest {
 
         byte[] outputBuffer = new byte[256];
         assertEquals(inputBuffer.length, Frame.readFromStream(input, outputBuffer));
-        Assert.assertArrayEquals(inputBuffer, outputBuffer);
+        assertArrayEquals(inputBuffer, outputBuffer);
     }
 
     @Test
@@ -216,4 +220,50 @@ public class FrameTest {
         assertEquals(-1, input.read());
     }
 
+    @Test
+    public void testParseFinalTextContinuationFrame() throws IOException {
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        assertTrue(frame.isText());
+        assertEquals("Hello", ((TextFrame) frame).getText());
+        assertEquals(7, frame.getSize());
+        assertTrue(((TextFrame) frame).isFinalFragment());
+        assertTrue(((TextFrame) frame).isContinuationFrame());
+    }
+
+    @Test
+    public void testParseNonFinalTextContinuationFrame() throws IOException {
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        assertTrue(frame.isText());
+        assertEquals("Hello", ((TextFrame) frame).getText());
+        assertEquals(7, frame.getSize());
+        assertFalse(((TextFrame) frame).isFinalFragment());
+        assertTrue(((TextFrame) frame).isContinuationFrame());
+    }
+
+    @Test
+    public void testParseFinalBinaryContinuationFrame() throws IOException {
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        assertTrue(frame.isBinary());
+        assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
+        assertEquals(7, frame.getSize());
+        assertTrue(((DataFrame) frame).isFinalFragment());
+        assertTrue(((DataFrame) frame).isContinuationFrame());
+    }
+
+    @Test
+    public void testParseNonFinalBinaryContinuationFrame() throws IOException {
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        assertTrue(frame.isBinary());
+        assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
+        assertEquals(7, frame.getSize());
+        assertFalse(((DataFrame) frame).isFinalFragment());
+        assertTrue(((DataFrame) frame).isContinuationFrame());
+    }
+
+    @Test
+    public void testUnexpectContinuationFrame() throws IOException {
+        thrown.expect(ProtocolException.class);
+        thrown.expectMessage("no continuation frame expected");
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+    }
 }

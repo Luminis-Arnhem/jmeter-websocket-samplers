@@ -6,7 +6,14 @@ JMeter add-on that defines a number of samplers for load testing WebSocket appli
 
 Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads/) dir, copy it to <jmeter-home>/lib/ext and start JMeter. That's all.
 
+You can also install the plugin with the jmeter-plugins [Plugins Manager](https://jmeter-plugins.org/install/Install/). 
+If you use this installer, select "WebSocket Samplers by Peter Doornbosch".
+
+![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/install_with_plugins_mgr.png)
+
 Make sure you're running JMeter with Java 8. Loading the plugin will fail silently if running with Java 7 (or older).
+
+From version 1.0 onwards, the plugin requires JMeter 3.1 or later. Older versions work with JMeter 3.0 too.
 
 ## You can help! Spread the word!
 
@@ -47,7 +54,7 @@ The request-response sampler, as well as the single-read and single-write sample
 For binary frames, enter the payload in hexadecimal format, e.g. `0xca 0xfe` or `ba be`; JMeter variables can be used, but should resolve to hex format at runtime. 
 Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
 
-![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/renderbinary/docs/binary-response.png)
+![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/binary-response.png)
 
 The maximum number of bytes displayed is limited to 1 MB, set the JMeter property `view.results.tree.max_binary_size` to increase this value. 
 To make the "Binary" render type appear higher in the dropdown, insert the class name `eu.luminis.jmeter.visualizers.RenderAsBinary` in the `view.results.tree.renderers_order` property.
@@ -101,7 +108,7 @@ There are three different kinds of filters:
 - Text frame filter: discards any text frame, or text frames that contain/match a given substring or regular expression.
 The text filter also provides a regular expression tester that can be used to quickly check whether the given regular expression matches or does not match, a number of test strings. 
 
-![Text frame filter](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/filter/docs/text-frame-filter-with-regex-test-dialog-sample.png)
+![Text frame filter](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/text-frame-filter-with-regex-test-dialog-sample.png)
 
 The filters can be found in the (`Edit->Add`) `Config Element` menu. 
 
@@ -119,9 +126,23 @@ This is a simple solution that probably works well in most cases, but you need t
 Filtered frames are visible in the result listeners as subresults, so you can always monitor what is exactly received over the websocket connection. 
 However, the filtered frames do not contribute to the received size of the "main" result. As a consequence, the figures for received bytes and throughput etc. do not exactly represent what is received over the line. If that is an issue, set the JMeter property `websocket.result.size_includes_filtered_frames` to true and the size of filtered frames will be added to their "parent" result and thus be included in the total figures for received bytes.
 
-## Status
+### Fragmentation
 
-Even though the project hasn't released a 1.0 version yet, the add-on is fully functional. If you encounter any issues or ambiguities, please report them, see below for contact details.
+WebSocket messages may be fragmented into several frames. In such cases the first frame is an ordinary text or binary frame, but it will have the `final` bit cleared. The succeeding frames will be continuation frames (whether they are text or binary is inferred by the first frame) and the last continuation frame will have the `final` bit set.
+The plugin supports continuation frames, but as the plugin is frame-oriented, you'll have to read them yourself. In cases where the number of fragments is known beforehand, this is as easy as adding an extra WebSocketReadSampler for each continuation frame you expect.
+If the number of continuation frames is not known, you need to create a loop to read all the continuation frames. For this purpose, the plugin provides a new JMeter variable called `websocket.last_frame_final` that indicates whether the last frame read was final. 
+This enables you to write a simple loop with a standard JMeter While Controller; use the expression `${__javaScript(! ${websocket.last_frame_final},)}` as condition. With a JMeter If Controller, the condition can be simplified to `! ${websocket.last_frame_final}` because that controller automatically interprets the condition as JavaScript.
+See the sample [Read continuation frames.jmx](https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/samples/Read%20continuation%20frames.jmx) test plan for examples of using the While or the If controller to read continuation frames.
+
+If you are unsure whether continuation frames are sent by your server or how much, switch on debug logging: samplers reading a frame will log whether the received frame is a "normal" single frame, a non-final frame (i.e. 1st fragment), a continuation frame or a final continuation frame (last fragment).
+
+### Logging
+
+To enable debug logging, add the following lines to the `jmeter.properties` file:
+
+    log_level.eu.luminis.jmeter=DEBUG
+    log_level.eu.luminis.websocket=DEBUG
+    
 
 ## Building
 
@@ -140,7 +161,7 @@ Gradle can also generate IntelliJ Idea project files for you:
 
 ## Feedback
 
-Questions, problems, or other feedback? Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>. Any feedback is welcome, issues are always taken seriously.
+If you encounter any issues or ambiguities, please report them. Also questions, problems, or other feedback (appreciation ;-)) is always welcome. Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
 
 
 ## Acknowledgements
