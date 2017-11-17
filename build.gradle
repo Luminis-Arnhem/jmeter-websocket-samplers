@@ -39,6 +39,14 @@ dependencies {
     testCompile('commons-io:commons-io:2.5')
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir "${buildDir}/generated"
+        }
+    }
+}
+
 version = 'dev'
 
 task determineVersion {
@@ -46,7 +54,7 @@ task determineVersion {
         def proc = "git describe --exact-match HEAD".execute()
         proc.waitFor()
         if (proc.exitValue()) {
-            logger.info("Building development version.")
+            logger.quiet("Building development version.")
         } else {
             def versionTag = proc.in.readLines()[0]
             // Check that tag matches format like v0.1.2.beta or 1.0 (OSGi version syntax)
@@ -54,11 +62,10 @@ task determineVersion {
                 if (versionTag.startsWith("v")) {
                     versionTag = versionTag[1..-1]
                 }
-                logger.info("Building version ${versionTag}.")
+                logger.quiet("Building version ${versionTag}.")
                 project.version = versionTag
 
-                ext.classesDir = new File("${buildDir}/classes/main")
-                ext.versionDir = new File(classesDir, "eu/luminis/jmeter/wssampler")
+                ext.versionDir = new File("${buildDir}", "generated/eu/luminis/jmeter/wssampler")
                 versionDir.mkdirs()
 
                 new File(versionDir, "version.properties").text = versionTag
