@@ -138,7 +138,12 @@ If you are unsure whether continuation frames are sent by your server or how muc
 
 ### Logging
 
-To enable debug logging, add the following lines to the `jmeter.properties` file:
+To enable debug logging with JMeter 3.2 or later, add the following line to `log4j2.xml`:
+
+    <Logger name="eu.luminis" level="debug" />
+
+
+To enable debug logging with JMeter 3.1 or 3.0, add the following lines to the `jmeter.properties` file:
 
     log_level.eu.luminis.jmeter=DEBUG
     log_level.eu.luminis.websocket=DEBUG
