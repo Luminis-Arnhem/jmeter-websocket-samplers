@@ -20,14 +20,14 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.BinaryFrame;
 import eu.luminis.websocket.Frame;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static eu.luminis.jmeter.wssampler.ComparisonType.*;
 
 public class BinaryFrameFilter extends FrameFilter {
 
-    private static Logger log = LoggingManager.getLoggerForClass();
+    private static Logger log = LoggerFactory.getLogger(BinaryFrameFilter.class);
 
     ComparisonType filterType;
     Integer matchPosition;
