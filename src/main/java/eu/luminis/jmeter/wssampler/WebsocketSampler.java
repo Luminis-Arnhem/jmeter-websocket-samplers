@@ -149,7 +149,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 if (useProxy(wsClient.getConnectUrl().getHost()))
                     wsClient.useProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
 
-                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n");  // Ensure connect URL is reported in case of a connect error.
+                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl())  // Ensure connect URL is reported in case of a connect error.
+                        + "\n(creating connection with ID '" + getConnectionId() + "')\n");
 
                 WebSocketClient.HttpResult httpResult = wsClient.connect(connectTimeout, readTimeout);
                 responseHeaders = httpResult.responseHeaders;
