@@ -255,6 +255,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             else {
                 getLogger().debug("Ignoring additional filter " + element + "; already present in chain.");
             }
+        } else if (element instanceof ConfigTestElement) {
+            if (element.getProperty("enableMultipleConnectionsPerThread") != null) {
+                multipleConnectionsEnabled = element.getPropertyAsBoolean("enableMultipleConnectionsPerThread", false);
+            }
         } else {
             super.addTestElement(element);
         }

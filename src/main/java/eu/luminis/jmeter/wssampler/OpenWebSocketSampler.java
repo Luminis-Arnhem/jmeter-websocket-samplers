@@ -41,6 +41,12 @@ public class OpenWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+        if (WebsocketSampler.multipleConnectionsEnabled) {
+            log.debug("OpenWebSocketSampler: advanced options are enabled");
+        }
+        else
+            log.debug("OpenWebSocketSampler: advanced options are DISabled!");
+        
         String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
         dispose(threadLocalCachedConnection.get().get(connectionId));
         try {
