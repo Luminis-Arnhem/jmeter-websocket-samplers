@@ -66,13 +66,6 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
             }
             boxPanel.add(connectionTimeoutPanel);
 
-            JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            connectionIdPanel.add(new JLabel("connection ID"));
-            connectionIdField = new JTextField(7);
-            connectionIdPanel.add(connectionIdField);
-
-            boxPanel.add(connectionIdPanel);
-
             JPanel readTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             readTimeoutPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
             {
@@ -87,12 +80,23 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
                 readTimeoutPanel.add(readTimeoutErrorLabel);
             }
             boxPanel.add(readTimeoutPanel);
+
+            JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            connectionIdPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
+            {
+                connectionIdLabel = new JLabel("Connection ID:");
+                connectionIdPanel.add(connectionIdLabel);
+                connectionIdField = new JTextField(10);
+                connectionIdPanel.add(connectionIdField);
+            }
+            boxPanel.add(connectionIdPanel);
         }
 
         this.setLayout(new BorderLayout());
         add(boxPanel, BorderLayout.NORTH);
 
         add(createAboutPanel(this));
+        enableConnectionIdOption(false);
     }
 
     void clearGui() {

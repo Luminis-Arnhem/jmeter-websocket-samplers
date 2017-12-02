@@ -60,10 +60,12 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     public static final int MIN_READ_TIMEOUT = WebsocketSampler.MIN_READ_TIMEOUT;
     public static final int MAX_READ_TIMEOUT = WebsocketSampler.MAX_READ_TIMEOUT;
 
+    public static final String DISABLED_MULTIPLE_CONNECTIONS_TIP = "Enable this by setting JMeter property '" + WebsocketSampler.WS_MULTIPLE_CONNECTIONS_PROPERTY + "'";
     protected JComboBox<String> protocolSelector;
     protected JTextField serverField;
     protected JTextField portField;
     protected JTextField pathField;
+    protected JLabel connectionIdLabel;
     protected JTextField connectionIdField;
     protected JTextField connectionTimeoutField;
     protected JTextField readTimeoutField;
@@ -162,7 +164,8 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                     connectionButtons.add(reuseConnection);
 
                     JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                    connectionIdPanel.add(new JLabel("connection ID: "));
+                    connectionIdLabel = new JLabel("Connection ID: ");
+                    connectionIdPanel.add(connectionIdLabel);
                     connectionIdField = new JTextField(7);
                     connectionIdPanel.add(connectionIdField);
                     connectionIdPanel.setAlignmentX(0);
@@ -196,6 +199,8 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
             }
             connectionPanel.add(connectionTimeoutPanel);
         }
+
+        enableConnectionIdOption(false);
         return connectionPanel;
     }
 
@@ -265,6 +270,19 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
     protected String stripJMeterVariables(String data) {
         return DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
+    }
+
+    void enableConnectionIdOption(boolean on) {
+        connectionIdField.setEnabled(on);
+        connectionIdLabel.setEnabled(on);
+        if (on) {
+            connectionIdLabel.setToolTipText(null);
+            connectionIdField.setToolTipText(null);
+        }
+        else {
+            connectionIdLabel.setToolTipText(DISABLED_MULTIPLE_CONNECTIONS_TIP);
+            connectionIdField.setToolTipText(DISABLED_MULTIPLE_CONNECTIONS_TIP);
+        }
     }
 
     boolean getTLS() {

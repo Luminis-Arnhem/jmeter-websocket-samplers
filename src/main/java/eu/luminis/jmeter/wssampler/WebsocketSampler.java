@@ -21,6 +21,7 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -63,6 +64,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     enum ThreadStopPolicy { NONE, TCPCLOSE, WSCLOSE };
 
     public static final String WS_THREAD_STOP_POLICY_PROPERTY = "websocket.thread.stop.policy";
+    public static final String WS_MULTIPLE_CONNECTIONS_PROPERTY = "websocket.enable.multiple_connections";
 
     public static final int MIN_CONNECTION_TIMEOUT = 1;
     public static final int MAX_CONNECTION_TIMEOUT = 999999;
@@ -74,6 +76,9 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     protected static final boolean USE_CACHED_SSL_CONTEXT = JMeterUtils.getPropDefault("https.use.cached.ssl.context", true);
 
     protected static final ThreadLocal<Map<String, WebSocketClient>> threadLocalCachedConnection = ThreadLocal.withInitial(() -> new HashMap<String, WebSocketClient>());
+
+    // intentionally package protected
+    static boolean multipleConnectionsEnabled = false;
 
     protected HeaderManager headerManager;
     protected CookieManager cookieManager;
@@ -102,6 +107,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
         initThreadStopPolicy();
+        initMultipleConnectionsOption();
     }
 
     public void clearTestElementChildren() {
@@ -398,6 +404,16 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         String propertyValue = JMeterUtils.getPropDefault(WS_THREAD_STOP_POLICY_PROPERTY, "none");
         try {
             threadStopPolicy = ThreadStopPolicy.valueOf(propertyValue.trim().toUpperCase());
+        }
+        catch (IllegalArgumentException e) {
+        }
+    }
+
+    static void initMultipleConnectionsOption() {
+        String propertyValue = JMeterUtils.getPropDefault(WS_MULTIPLE_CONNECTIONS_PROPERTY, "false");
+        try {
+            multipleConnectionsEnabled = Boolean.parseBoolean(propertyValue);
+            System.out.println("Multiple connections enabled: " + multipleConnectionsEnabled);
         }
         catch (IllegalArgumentException e) {
         }
