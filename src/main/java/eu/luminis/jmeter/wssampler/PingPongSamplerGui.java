@@ -30,34 +30,21 @@ import java.awt.FlowLayout;
 
 public class PingPongSamplerGui extends AbstractSamplerGui {
 
-    private JTextField readTimeoutField;
+    private PingPongSamplerGuiPanel settingsPanel;
 
     public PingPongSamplerGui() {
-        init();
-    }
-
-    private void init() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
 
-        JPanel layoutPanel = new JPanel();
-        {
-            layoutPanel.setLayout(new BorderLayout());
+        settingsPanel = new PingPongSamplerGuiPanel();
+        add(settingsPanel, BorderLayout.CENTER);
+    }
 
-            JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            {
-                requestSettingsPanel.setBorder(BorderFactory.createTitledBorder("Data (pong frame)"));
-                requestSettingsPanel.add(new JLabel("Pong (read) timeout (ms): "));
-                readTimeoutField = new JTextField();
-                readTimeoutField.setColumns(5);
-                requestSettingsPanel.add(readTimeoutField);
-            }
-            layoutPanel.add(requestSettingsPanel, BorderLayout.NORTH);
-            layoutPanel.add(WebSocketSamplerGuiPanel.createAboutPanel(this));
-        }
-
-        add(layoutPanel, BorderLayout.CENTER);
+    @Override
+    public void clearGui() {
+        super.clearGui();
+        settingsPanel.clearGui();
     }
 
     @Override
@@ -82,15 +69,11 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) element;
-            readTimeoutField.setText(sampler.getReadTimeout());
+            settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
+            settingsPanel.enableConnectionIdOption((WebsocketSampler.multipleConnectionsEnabled));
+            settingsPanel.connectionIdField.setText(sampler.getConnectionId());
         }
         super.configure(element);
-    }
-
-    @Override
-    public void clearGui() {
-        super.clearGui();
-        readTimeoutField.setText("");
     }
 
     @Override
@@ -98,7 +81,8 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) testElement;
-            sampler.setReadTimeout(readTimeoutField.getText());
+            sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
+            sampler.setConnectionId(settingsPanel.connectionIdField.getText());
         }
     }
 
