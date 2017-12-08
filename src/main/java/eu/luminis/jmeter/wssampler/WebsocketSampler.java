@@ -22,6 +22,7 @@ import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.gui.TestPlanListener;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -103,11 +104,17 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
 
     static {
-        checkJMeterVersion();
+        // checkJMeterVersion();
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
         initThreadStopPolicy();
-        initMultipleConnectionsOption();
+        GuiPackage.getInstance().addTestPlanListener(new TestPlanListener() {
+            @Override
+            public void testPlanCleared() {
+                System.out.println("New test plan, resetting MC enabled");
+                multipleConnectionsEnabled = false;
+            }
+        });
     }
 
     public void clearTestElementChildren() {
@@ -409,16 +416,6 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         String propertyValue = JMeterUtils.getPropDefault(WS_THREAD_STOP_POLICY_PROPERTY, "none");
         try {
             threadStopPolicy = ThreadStopPolicy.valueOf(propertyValue.trim().toUpperCase());
-        }
-        catch (IllegalArgumentException e) {
-        }
-    }
-
-    static void initMultipleConnectionsOption() {
-        String propertyValue = JMeterUtils.getPropDefault(WS_MULTIPLE_CONNECTIONS_PROPERTY, "false");
-        try {
-            multipleConnectionsEnabled = Boolean.parseBoolean(propertyValue);
-            System.out.println("Multiple connections enabled: " + multipleConnectionsEnabled);
         }
         catch (IllegalArgumentException e) {
         }
