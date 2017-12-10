@@ -41,8 +41,9 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+        String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
         if (getCreateNewConnection()) {
-            dispose(threadLocalCachedConnection.get().get(getConnectionId()));
+            dispose(threadLocalCachedConnection.get().get(connectionId));
             try {
                 URL url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
                 return new WebSocketClient(url);
@@ -52,7 +53,7 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
             }
         }
         else {
-            WebSocketClient wsClient = threadLocalCachedConnection.get().get(getConnectionId());
+            WebSocketClient wsClient = threadLocalCachedConnection.get().get(connectionId);
             if (wsClient != null) {
                 return wsClient;
             }

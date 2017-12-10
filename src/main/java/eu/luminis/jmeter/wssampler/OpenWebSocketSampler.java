@@ -41,7 +41,8 @@ public class OpenWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-        dispose(threadLocalCachedConnection.get().get(getConnectionId()));
+        String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
+        dispose(threadLocalCachedConnection.get().get(connectionId));
         try {
             URL url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
             return new WebSocketClient(url);
@@ -108,14 +109,6 @@ public class OpenWebSocketSampler extends WebsocketSampler {
 
     public void setPath(String path) {
         setProperty("path", path);
-    }
-
-    public String getConnectionId() {
-        return getPropertyAsString("connectionId");
-    }
-
-    public void setConnectionId(String id) {
-        setProperty("connectionId", id);
     }
 
     @Override

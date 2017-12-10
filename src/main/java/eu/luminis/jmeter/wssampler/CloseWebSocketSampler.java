@@ -35,7 +35,8 @@ public class CloseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-        WebSocketClient wsClient = threadLocalCachedConnection.get().get(getConnectionId());
+        String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
+        WebSocketClient wsClient = threadLocalCachedConnection.get().get(connectionId);
         if (wsClient == null) {
             log.warn("Sampler '"+ getName() + "': there is no connection; nothing to close.");
             result.setSamplerData("No request sent.");

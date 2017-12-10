@@ -33,7 +33,8 @@ public class PingPongSampler extends WebsocketSampler {
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
-        WebSocketClient wsClient = threadLocalCachedConnection.get().get(getConnectionId());
+        String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
+        WebSocketClient wsClient = threadLocalCachedConnection.get().get(connectionId);
         if (wsClient == null) {
             log.error("Sampler '"+ getName() + "': there is no connection to re-use");
             result.setResponseCode("Sampler error");
