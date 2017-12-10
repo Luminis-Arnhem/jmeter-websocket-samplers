@@ -31,51 +31,14 @@ import static javax.swing.BoxLayout.*;
 
 public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
 
-    private JTextField closeStatusField;
-    private JTextField readTimeoutField;
+    private CloseWebSocketSamplerGuiPanel settingsPanel;
 
     public CloseWebSocketSamplerGui() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
-
-        WebSocketSamplerGuiPanel layoutPanel = new WebSocketSamplerGuiPanel(){};
-        {
-            layoutPanel.setLayout(new BorderLayout());
-
-            JPanel settingsPanel = new JPanel();
-            {
-                settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
-                settingsPanel.setBorder(BorderFactory.createTitledBorder("Data (close frame)"));
-                JPanel closeStatusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                {
-                    closeStatusPanel.add(new JLabel("Close status: "));
-                    closeStatusField = new JTextField();
-                    closeStatusField.setColumns(10);
-                    closeStatusPanel.add(closeStatusField);
-                    JErrorMessageLabel closeStatusErrorField = new JErrorMessageLabel();
-                    closeStatusPanel.add(closeStatusErrorField);
-                    // According to WebSocket specifcation (RFC 6455), status codes in the range 1000-4999 can be used.
-                    layoutPanel.addIntegerRangeCheck(closeStatusField, 1000, 4999, closeStatusErrorField);
-                }
-                settingsPanel.add(closeStatusPanel);
-
-                JPanel readTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                {
-                    readTimeoutPanel.add(new JLabel("Response (read) timeout (ms): "));
-                    readTimeoutField = new JTextField();
-                    readTimeoutField.setColumns(10);
-                    readTimeoutPanel.add(readTimeoutField);
-                    JErrorMessageLabel readTimeoutErrorField = new JErrorMessageLabel();
-                    readTimeoutPanel.add(readTimeoutErrorField);
-                    layoutPanel.addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
-                }
-                settingsPanel.add(readTimeoutPanel);
-            }
-            layoutPanel.add(settingsPanel, BorderLayout.NORTH);
-            layoutPanel.add(WebSocketSamplerGuiPanel.createAboutPanel(this));
-        }
-        add(layoutPanel, BorderLayout.CENTER);
+        settingsPanel = new CloseWebSocketSamplerGuiPanel();
+        add(settingsPanel, BorderLayout.CENTER);
     }
 
     @Override
@@ -91,8 +54,7 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
     @Override
     public void clearGui() {
         super.clearGui();
-        closeStatusField.setText("");
-        readTimeoutField.setText("");
+        settingsPanel.clearGui();
     }
 
     @Override
@@ -107,8 +69,10 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) element;
-            closeStatusField.setText(sampler.getStatusCode());
-            readTimeoutField.setText(sampler.getReadTimeout());
+            settingsPanel.closeStatusField.setText(sampler.getStatusCode());
+            settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
+            settingsPanel.enableConnectionIdOption((WebsocketSampler.multipleConnectionsEnabled));
+            settingsPanel.connectionIdField.setText(sampler.getConnectionId());
         }
         super.configure(element);
     }
@@ -118,8 +82,9 @@ public class CloseWebSocketSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof CloseWebSocketSampler) {
             CloseWebSocketSampler sampler = (CloseWebSocketSampler) testElement;
-            sampler.setStatusCode(closeStatusField.getText());
-            sampler.setReadTimeout(readTimeoutField.getText());
+            sampler.setStatusCode(settingsPanel.closeStatusField.getText());
+            sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
+            sampler.setConnectionId(settingsPanel.connectionIdField.getText());
         }
     }
 }
