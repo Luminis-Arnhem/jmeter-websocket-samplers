@@ -1,5 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 repositories {
     mavenCentral()
@@ -87,3 +89,69 @@ test {
     }
   }
 }
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+group = 'net.luminis.jmeter'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            beforeDeployment { deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+	    
+            pom.project {
+	        name 'JMeter WebSocket Samplers'
+		packaging 'jar'
+		artifactId 'jmeter-websocket-samplers'
+		description 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
+		url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
+
+                licenses {
+                    license {
+                        name 'GNU Lesser General Public License v3'
+                        url 'https://www.gnu.org/licenses/lgpl-3.0-standalone.html'
+                        distribution 'repo'
+                    }
+                }
+                developers {
+                    developer {
+		        id 'peterd'
+                        name 'Peter Doornbosch'
+                        email 'peter.doornbosch@luminis.eu'
+                    }
+                }
+                scm {
+                    connection 'scm:git:git://bitbucket.org/pjtr/jmeter-websocket-samplers.git'
+                    developerConnection 'scm:git:ssh://bitbucket.org:pjtr/jmeter-websocket-samplers.git'
+                    url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers/src'
+                }
+            }
+        }
+    }
+}
+
