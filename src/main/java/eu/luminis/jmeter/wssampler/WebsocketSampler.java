@@ -110,9 +110,18 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         initThreadStopPolicy();
         GuiPackage.getInstance().addTestPlanListener(new TestPlanListener() {
             @Override
-            public void testPlanCleared() {
-                System.out.println("New test plan, resetting MC enabled");
+            public void beforeTestPlanCleared() {
+            }
+
+            @Override
+            public void afterTestPlanCleared() {
+                System.out.println("Test plan cleared, resetting MC enabled");
                 multipleConnectionsEnabled = false;
+            }
+
+            @Override
+            public void testPlanLoaded() {
+                System.out.println("New test plan loaded, MC should have been set by now. Current value is: " + multipleConnectionsEnabled);
             }
         });
     }
