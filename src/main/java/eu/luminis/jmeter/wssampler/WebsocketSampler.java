@@ -117,6 +117,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             public void afterTestPlanCleared() {
                 System.out.println("Test plan cleared, resetting MC enabled");
                 multipleConnectionsEnabled = false;
+                AdvancedOptionsGUI.resetElementCount();
             }
 
             @Override
