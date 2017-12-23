@@ -95,6 +95,10 @@ task javadocJar(type: Jar) {
     from javadoc
 }
 
+tasks.withType(Javadoc) {
+    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
+}
+
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource

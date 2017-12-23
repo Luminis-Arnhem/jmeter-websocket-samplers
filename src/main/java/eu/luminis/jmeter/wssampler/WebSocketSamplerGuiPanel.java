@@ -81,6 +81,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
     /**
      * Creates a standard URL panel for configuring all URL components: protocol type (ws/wss), server, port, path.
+     * @return the URL panel
      */
     protected JPanel createUrlPanel() {
         JPanel urlPanel = new JPanel() {
@@ -123,6 +124,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
     /**
      * Creates a standard connection (settings) panel, including the choice to setup a new connection or reusing an existing one.
+     * @return the connection panel
      */
     protected JPanel createConnectionPanel() {
 

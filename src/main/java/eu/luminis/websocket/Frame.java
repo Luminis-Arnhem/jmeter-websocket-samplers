@@ -168,6 +168,10 @@ public abstract class Frame {
     /**
      *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
      *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     * @param stream the stream to read from
+     * @param buffer the buffer to write to
+     * @return the number of bytes read
+     * @throws IOException if the underlying stream throws an IOException
      */
     protected static int readFromStream(InputStream stream, byte[] buffer) throws IOException {
         return readFromStream(stream, buffer, 0, buffer.length);
@@ -176,6 +180,12 @@ public abstract class Frame {
     /**
      *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
      *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     * @param stream the stream to read from
+     * @param buffer the buffer to write to
+     * @param offset the offset in the buffer
+     * @param expected the expected number of bytes to read
+     * @return the number of bytes read
+     * @throws IOException if the underlying stream throws an IOException
      */
     protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected) throws IOException {
         int toRead = expected;
