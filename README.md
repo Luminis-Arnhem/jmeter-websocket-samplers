@@ -11,6 +11,8 @@ If you use this installer, select "WebSocket Samplers by Peter Doornbosch".
 
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/install_with_plugins_mgr.png)
 
+If you are running JMeter as part of your build pipeline, getting the plugin from a [maven repository](https://search.maven.org/#search%7Cga%7C1%7Cjmeter-websocket-samplers) might be useful.
+
 Make sure you're running JMeter with Java 8. Loading the plugin will fail silently if running with Java 7 (or older).
 
 From version 1.0 onwards, the plugin requires JMeter 3.1 or later. Older versions work with JMeter 3.0 too.
