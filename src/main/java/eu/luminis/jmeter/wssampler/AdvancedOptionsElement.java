@@ -24,6 +24,10 @@ public class AdvancedOptionsElement extends ConfigTestElement {
         deleted = true;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
     public boolean getMultipleConnectionsEnabled() {
         return getPropertyAsBoolean("enableMultipleConnectionsPerThread", false);
     }

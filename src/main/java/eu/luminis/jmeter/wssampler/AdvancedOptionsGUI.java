@@ -74,10 +74,10 @@ public class AdvancedOptionsGUI extends AbstractConfigGui {
     @Override
     public void modifyTestElement(TestElement element) {
         configureTestElement(element);
-        gotUiElement.set(true);
 
         if (element instanceof AdvancedOptionsElement) {
             ((AdvancedOptionsElement) element).setMultipleConnectionsEnabled(enabled_multiple_connections_per_thread.isSelected());
+            gotUiElement.set(! ((AdvancedOptionsElement) element).isDeleted());
         }
     }
 }
