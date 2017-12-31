@@ -18,17 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -180,7 +170,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                 connectionTimeoutField.setColumns(10);
                 connectionTimeoutPanel.add(connectionTimeoutField);
                 JLabel connectionTimeoutErrorLabel = new JErrorMessageLabel();
-                connectionTimeoutErrorLabel.setForeground(Color.RED);
+                connectionTimeoutErrorLabel.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                 addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
                 connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
                 connectionRelatedSettings.add(connectionTimeoutLabel);
@@ -244,12 +234,12 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
         }
         if (field != null)
             if (ok) {
-                field.setForeground(Color.BLACK);
+                field.setForeground(GuiUtils.getLookAndFeelColor("TextField.foreground"));
                 if (errorMsgField != null)
                     errorMsgField.setText("");
             }
             else {
-                field.setForeground(Color.RED);
+                field.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                 if (isNumber && errorMsgField != null)
                     errorMsgField.setText("Value must >= " + min + " and <= " + max);
             }

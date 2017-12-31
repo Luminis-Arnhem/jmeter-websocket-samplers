@@ -207,10 +207,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
     private void checkContentIsBinary() {
         try {
             BinaryUtils.parseBinaryString(stripJMeterVariables(binaryContent.getText()));
-            binaryContent.setForeground(Color.BLACK);
+            binaryContent.setForeground(GuiUtils.getLookAndFeelColor("TextArea.foreground"));
         }
         catch (NumberFormatException notNumber) {
-            binaryContent.setForeground(Color.RED);
+            binaryContent.setForeground(GuiUtils.getLookAndFeelColor("TextArea.errorForeground"));
         }
     }
 

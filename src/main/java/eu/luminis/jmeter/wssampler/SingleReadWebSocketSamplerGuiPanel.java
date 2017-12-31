@@ -67,7 +67,7 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
                 readTimeoutField = new JTextField();
                 readTimeoutField.setColumns(10);
                 JLabel readTimeoutErrorField = new JLabel();
-                readTimeoutErrorField.setForeground(Color.RED);
+                readTimeoutErrorField.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                 addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
                 requestSettingsPanel.add(readTimeoutField);
                 requestSettingsPanel.add(readTimeoutErrorField);
