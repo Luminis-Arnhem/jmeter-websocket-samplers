@@ -108,23 +108,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         initProxyConfiguration();
         checkForOtherWebsocketPlugins();
         initThreadStopPolicy();
-        GuiPackage.getInstance().addTestPlanListener(new TestPlanListener() {
-            @Override
-            public void beforeTestPlanCleared() {
-            }
-
-            @Override
-            public void afterTestPlanCleared() {
-                System.out.println("Test plan cleared, resetting MC enabled");
-                multipleConnectionsEnabled = false;
-                AdvancedOptionsGUI.resetElementCount();
-            }
-
-            @Override
-            public void testPlanLoaded() {
-                System.out.println("New test plan loaded, MC should have been set by now. Current value is: " + multipleConnectionsEnabled);
-            }
-        });
+        configureGui();
     }
 
     public void clearTestElementChildren() {
@@ -272,9 +256,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             else {
                 getLogger().debug("Ignoring additional filter " + element + "; already present in chain.");
             }
-        } else if (element instanceof ConfigTestElement) {
+        } else if (element instanceof AdvancedOptionsElement) {
             if (element.getProperty("enableMultipleConnectionsPerThread") != null) {
-                multipleConnectionsEnabled = element.getPropertyAsBoolean("enableMultipleConnectionsPerThread", false);
+                multipleConnectionsEnabled = ((AdvancedOptionsElement) element).getMultipleConnectionsEnabled();
+                getLogger().debug("Multiple connections option is " + (multipleConnectionsEnabled? "enabled": "disabled") + ".");
             }
         } else {
             super.addTestElement(element);
@@ -504,4 +489,27 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             // Let this method never throw an exception
         }
     }
+
+    private static void configureGui() {
+        if (GuiPackage.getInstance() != null) {
+            GuiPackage.getInstance().addTestPlanListener(new TestPlanListener() {
+                @Override
+                public void beforeTestPlanCleared() {
+                }
+
+                @Override
+                public void afterTestPlanCleared() {
+                    System.out.println("Test plan cleared, resetting MC enabled");
+                    multipleConnectionsEnabled = false;
+                    AdvancedOptionsGUI.resetElementCount();
+                }
+
+                @Override
+                public void testPlanLoaded() {
+                    System.out.println("New test plan loaded, MC should have been set by now. Current value is: " + multipleConnectionsEnabled);
+                }
+            });
+        }
+    }
+
 }
