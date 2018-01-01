@@ -20,15 +20,60 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.*;
+import java.net.SocketTimeoutException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 public class PingPongSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @Test
+    public void samplerShouldSendPingAndReceivePong() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setReadTimeout("500");
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isTrue();
+        verify(webSocketClient).sendPingFrame();
+        verify(webSocketClient).receivePong(500);
+    }
+
+    @Test
+    public void samplerShouldFailWhenNoPongReceived() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setReadTimeout("500");
+        when(webSocketClient.receivePong(anyInt())).thenThrow(new SocketTimeoutException());
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isFalse();
+        verify(webSocketClient).sendPingFrame();
+        verify(webSocketClient).receivePong(500);
+    }
 
     @Test
     public void testFrameFilter() {
