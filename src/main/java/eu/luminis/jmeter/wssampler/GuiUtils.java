@@ -40,8 +40,12 @@ public class GuiUtils {
 
     public static Color getLookAndFeelColor(String colorKey) {
         Color color;
-        if (colorKey.equals("TextField.errorForeground"))
+        if (colorKey.equals("TextField.errorForeground")) {
             color = DEFAULT_ERROR_COLOR;
+            LookAndFeel lookAndFeel = UIManager.getLookAndFeel();
+            if (lookAndFeel != null && lookAndFeel.getName().contains("Darcula"))
+                color = color.darker();
+        }
         else if (colorKey.equals("Icon.okForeground"))
             color = DEFAULT_OK_ICON_COLOR;
         else if (colorKey.equals("Icon.errorForeground"))
@@ -64,4 +68,5 @@ public class GuiUtils {
         }
         return color;
     }
+
 }
