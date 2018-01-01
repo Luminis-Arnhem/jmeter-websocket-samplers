@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.MockWebSocketClientCreator;
+import eu.luminis.websocket.PongFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -28,6 +29,7 @@ import java.net.SocketTimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -133,4 +135,26 @@ public class PingPongSamplerTest {
         assertThat(result.isSuccessful()).isTrue();
         assertThat(result.getSentBytes()).isEqualTo(0 + 6 + 0);  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
+
+    @Test
+    public void samplerOfTypePongShouldJustSendPongFrame() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+        when(webSocketClient.sendPongFrame()).thenReturn(new PongFrame(new byte[0]));
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setType(PingPongSampler.Type.Pong);
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isTrue();
+        verify(webSocketClient).sendPongFrame();
+        verify(webSocketClient, never()).sendPingFrame();
+        verify(webSocketClient, never()).receivePong(anyInt());
+    }
+
 }

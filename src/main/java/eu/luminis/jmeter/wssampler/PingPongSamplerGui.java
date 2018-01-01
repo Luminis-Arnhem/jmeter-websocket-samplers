@@ -67,6 +67,7 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) element;
+            settingsPanel.setType(sampler.getType());
             settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
         }
         super.configure(element);
@@ -83,6 +84,7 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) testElement;
+            sampler.setType(settingsPanel.getType());
             sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
         }
     }

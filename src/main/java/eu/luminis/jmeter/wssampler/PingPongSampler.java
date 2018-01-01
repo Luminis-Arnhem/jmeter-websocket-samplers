@@ -27,7 +27,13 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 
+
 public class PingPongSampler extends WebsocketSampler {
+
+    enum Type {
+        PingPong,
+        Pong
+    }
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -46,19 +52,25 @@ public class PingPongSampler extends WebsocketSampler {
 
     @Override
     public Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
-        Frame sentFrame = wsClient.sendPingFrame();
-        result.setSentBytes(sentFrame.getSize());
+        if (getType().equals(Type.PingPong)) {
+            Frame sentFrame = wsClient.sendPingFrame();
+            result.setSentBytes(sentFrame.getSize());
 
-        Frame receivedFrame;
-        if (! frameFilters.isEmpty()) {
-            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-            if (receivedFrame.isPong())
-                return receivedFrame;
-            else
-                throw new UnexpectedFrameException(receivedFrame);
+            Frame receivedFrame;
+            if (!frameFilters.isEmpty()) {
+                receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+                if (receivedFrame.isPong())
+                    return receivedFrame;
+                else
+                    throw new UnexpectedFrameException(receivedFrame);
+            } else
+                return wsClient.receivePong(readTimeout);
         }
-        else
-            return wsClient.receivePong(readTimeout);
+        else {
+            Frame sentFrame = wsClient.sendPongFrame();
+            result.setSentBytes(sentFrame.getSize());
+            return null;
+        }
     }
 
     @Override
@@ -70,6 +82,14 @@ public class PingPongSampler extends WebsocketSampler {
     protected String validateArguments() {
         String errorMsg = validateReadTimeout(getReadTimeout());
         return errorMsg;
+    }
+
+    public Type getType() {
+        return Type.valueOf(getPropertyAsString("type", Type.PingPong.name()));
+    }
+
+    public void setType(Type type) {
+        setProperty("type", type.name());
     }
 
 }
