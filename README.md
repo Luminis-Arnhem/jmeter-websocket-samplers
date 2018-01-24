@@ -42,7 +42,7 @@ The WebSocket Samplers plugin provides the following features:
 Currently, there are six samplers:
 
 * request-response sampler, for performing a basic request-response exchange,
-* ping-pong sampler, for sending a ping and receiving a pong
+* ping-pong sampler, for sending a ping and receiving a pong (or just sending an unsolicited pong)
 * close connection sampler, for properly closing a websocket connection
 * single-read sampler, for receiving one (text or binary) WebSocket frame
 * single-write sampler, for sending one (text or binary) WebSocket frame

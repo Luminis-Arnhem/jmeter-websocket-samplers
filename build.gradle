@@ -40,6 +40,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testCompile('commons-io:commons-io:2.5')
+
+    testCompile 'org.assertj:assertj-core:3.8.0'
 }
 
 sourceSets {
