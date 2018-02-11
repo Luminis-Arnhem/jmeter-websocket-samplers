@@ -20,8 +20,8 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.*;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -29,7 +29,7 @@ import java.net.URL;
 
 public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(SingleWriteWebSocketSampler.class);
 
 
     public SingleWriteWebSocketSampler() {

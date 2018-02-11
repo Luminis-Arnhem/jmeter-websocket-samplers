@@ -9,34 +9,38 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/ApacheJMeter_core
-    compile('org.apache.jmeter:ApacheJMeter_core:3.3') {
+    compile('org.apache.jmeter:ApacheJMeter_core:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_components:3.3') {
+    compile('org.apache.jmeter:ApacheJMeter_components:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_http:3.3') {
+    compile('org.apache.jmeter:ApacheJMeter_http:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/jorphan
-    compile('org.apache.jmeter:jorphan:3.3') {
+    compile('org.apache.jmeter:jorphan:4.0') {
         transitive = false
     }
 
-    // https://mvnrepository.com/artifact/logkit/logkit
-    compile('logkit:logkit:2.0') {
-        transitive = false
-    }
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    compile ('org.slf4j:slf4j-api:1.7.25')
 
     compile('org.mockito:mockito-core:2.2.15')
 
-    testCompile('avalon-framework:avalon-framework:4.1.4')
-
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testCompile('commons-io:commons-io:2.5')
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir "${buildDir}/generated"
+        }
+    }
 }
 
 version = 'dev'
@@ -46,7 +50,7 @@ task determineVersion {
         def proc = "git describe --exact-match HEAD".execute()
         proc.waitFor()
         if (proc.exitValue()) {
-            logger.info("Building development version.")
+            logger.quiet("Building development version.")
         } else {
             def versionTag = proc.in.readLines()[0]
             // Check that tag matches format like v0.1.2.beta or 1.0 (OSGi version syntax)
@@ -54,11 +58,10 @@ task determineVersion {
                 if (versionTag.startsWith("v")) {
                     versionTag = versionTag[1..-1]
                 }
-                logger.info("Building version ${versionTag}.")
+                logger.quiet("Building version ${versionTag}.")
                 project.version = versionTag
 
-                ext.classesDir = new File("${buildDir}/classes/main")
-                ext.versionDir = new File(classesDir, "eu/luminis/jmeter/wssampler")
+                ext.versionDir = new File("${buildDir}", "generated/eu/luminis/jmeter/wssampler")
                 versionDir.mkdirs()
 
                 new File(versionDir, "version.properties").text = versionTag

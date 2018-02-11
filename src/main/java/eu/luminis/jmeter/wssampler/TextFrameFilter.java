@@ -20,8 +20,8 @@ package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.TextFrame;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.regex.Pattern;
 
@@ -29,7 +29,7 @@ import static eu.luminis.jmeter.wssampler.ComparisonType.IsPlain;
 
 public class TextFrameFilter extends FrameFilter {
 
-    private static Logger log = LoggingManager.getLoggerForClass();
+    private static Logger log = LoggerFactory.getLogger(TextFrameFilter.class);
 
     private Pattern regex = null;
 

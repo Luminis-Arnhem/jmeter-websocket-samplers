@@ -22,7 +22,7 @@ import eu.luminis.websocket.*;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

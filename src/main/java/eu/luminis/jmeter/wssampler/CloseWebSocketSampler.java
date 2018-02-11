@@ -23,15 +23,15 @@ import eu.luminis.websocket.Frame;
 import eu.luminis.websocket.UnexpectedFrameException;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class CloseWebSocketSampler extends WebsocketSampler {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(CloseWebSocketSampler.class);
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {

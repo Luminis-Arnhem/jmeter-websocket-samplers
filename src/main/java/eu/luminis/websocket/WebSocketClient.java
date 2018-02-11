@@ -21,8 +21,8 @@ package eu.luminis.websocket;
 import eu.luminis.websocket.Frame.DataFrameType;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 
 public class WebSocketClient {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(WebSocketClient.class);
 
     public static int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
     public static int DEFAULT_READ_TIMEOUT = 6 * 1000;
