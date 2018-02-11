@@ -149,6 +149,7 @@ public class WebSocketClient {
                 path = "/" + path;
             outStream = new CountingOutputStream(socketOutputStream);
             PrintWriter httpWriter = new PrintWriter(outStream);
+            // Fragment identifiers are never sent in HTTP requests and RFC 6455 explicitly states that fragment identifiers must not be used.
             httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
             log.debug(    ">> GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1");
             httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + "\r\n");
@@ -522,9 +523,12 @@ public class WebSocketClient {
             return wsURL;
         else
             try {
-                String path = wsURL.getPath();
+                String path = wsURL.getFile();  // getPath only returns the path, getFile includes the query string!
                 if (!path.trim().startsWith("/"))
                     path = "/" + path.trim();
+                if (wsURL.getRef() != null) {
+                    path = path + "#" + wsURL.getRef();
+                }
                 return new URL(wsURL.getProtocol(), wsURL.getHost(), wsURL.getPort(), path);
             } catch (MalformedURLException e) {
                 // Impossible
