@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -20,27 +20,57 @@ package eu.luminis.jmeter.wssampler;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+
 
 public class PingPongSamplerGuiPanel extends JPanel {
 
     private final JLabel connectionIdLabel;
     JTextField readTimeoutField;
     JTextField connectionIdField;
+    private final JRadioButton pingPongOption;
+    private JLabel timeoutLabel;
+    private final JRadioButton pongOption;
 
     public PingPongSamplerGuiPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel requestSettingsPanel = new JPanel();
         {
-            requestSettingsPanel.setBorder(BorderFactory.createTitledBorder("Data (pong frame)"));
-            requestSettingsPanel.add(new JLabel("Pong (read) timeout (ms): "));
-            readTimeoutField = new JTextField();
-            readTimeoutField.setColumns(5);
-            requestSettingsPanel.add(readTimeoutField);
-            requestSettingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            requestSettingsPanel.setLayout(new BoxLayout(requestSettingsPanel, BoxLayout.Y_AXIS));
+            requestSettingsPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createTitledBorder("Behaviour"),
+                    BorderFactory.createEmptyBorder(5, 5, 0, 0)));
+            pingPongOption = new JRadioButton("ping/pong (send ping, expect pong)");
+            requestSettingsPanel.add(pingPongOption);
+            pingPongOption.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            pongOption = new JRadioButton("pong (just send pong)");
+            requestSettingsPanel.add(pongOption);
+            pongOption.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            ButtonGroup buttonGroup = new ButtonGroup();
+            buttonGroup.add(pingPongOption);
+            buttonGroup.add(pongOption);
+
+            JPanel readTimeoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            {
+                timeoutLabel = new JLabel("Pong (read) timeout (ms): ");
+                readTimeoutPanel.add(timeoutLabel);
+                readTimeoutField = new JTextField();
+                readTimeoutField.setColumns(5);
+                readTimeoutPanel.add(readTimeoutField);
+                readTimeoutPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            }
+            requestSettingsPanel.add(readTimeoutPanel);
             avoidVerticalResize(requestSettingsPanel);
+
+            pingPongOption.addItemListener(e -> {
+                updateEnabledState(e.getStateChange() == ItemEvent.SELECTED);
+            });
+
+            pingPongOption.setSelected(true);
+            updateEnabledState(true);
         }
-        add(requestSettingsPanel);
+        add(requestSettingsPanel, BorderLayout.NORTH);
 
         JPanel connectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         {
@@ -71,19 +101,36 @@ public class PingPongSamplerGuiPanel extends JPanel {
         panel.setMaximumSize(new Dimension(panel.getMaximumSize().width, panel.getMinimumSize().height));
     }
 
-
     public void enableConnectionIdOption(boolean multipleConnectionsEnabled) {
         connectionIdLabel.setEnabled(multipleConnectionsEnabled);
         connectionIdField.setEnabled(multipleConnectionsEnabled);
+    }
+
+    private void updateEnabledState(boolean isPingPong) {
+        readTimeoutField.setEnabled(isPingPong);
+        timeoutLabel.setEnabled(isPingPong);
+    }
+
+    public PingPongSampler.Type getType() {
+        if (pingPongOption.isSelected())
+            return PingPongSampler.Type.PingPong;
+        else
+            return PingPongSampler.Type.Pong;
+    }
+
+    public void setType(PingPongSampler.Type type) {
+        boolean isPingPong = type.equals(PingPongSampler.Type.PingPong);
+        pingPongOption.setSelected(isPingPong);
+        pongOption.setSelected(!isPingPong);
+        updateEnabledState(isPingPong);
     }
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
+        frame.setLocation(new Point(400, 400));
         frame.getContentPane().add(new PingPongSamplerGuiPanel());
         frame.setVisible(true);
     }
-
-
 }

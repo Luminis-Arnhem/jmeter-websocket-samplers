@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -60,7 +60,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
                 connectionTimeoutField.setColumns(10);
                 connectionTimeoutPanel.add(connectionTimeoutField);
                 connectionTimeoutErrorLabel = new JLabel();
-                connectionTimeoutErrorLabel.setForeground(Color.RED);
+                connectionTimeoutErrorLabel.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                 addIntegerRangeCheck(connectionTimeoutField, MIN_CONNECTION_TIMEOUT, MAX_CONNECTION_TIMEOUT, connectionTimeoutErrorLabel);
                 connectionTimeoutPanel.add(connectionTimeoutErrorLabel);
             }
@@ -75,7 +75,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
                 readTimeoutField.setColumns(10);
                 readTimeoutPanel.add(readTimeoutField);
                 readTimeoutErrorLabel = new JLabel();
-                readTimeoutErrorLabel.setForeground(Color.RED);
+                readTimeoutErrorLabel.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                 addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorLabel);
                 readTimeoutPanel.add(readTimeoutErrorLabel);
             }

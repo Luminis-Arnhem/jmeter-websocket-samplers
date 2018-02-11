@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -473,7 +473,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             if (m.matches()) {
                 int major = Integer.parseInt(m.group(1));
                 int minor = Integer.parseInt(m.group(2));
-                if (major < 3 || minor < 1) {
+                if (major < 3 || (major == 3 && minor < 1))  {
                     String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 3.1 or later.";
                     if (GuiPackage.getInstance() != null) {
                         SwingUtilities.invokeLater(() -> {

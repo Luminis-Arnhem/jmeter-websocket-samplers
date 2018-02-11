@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -84,11 +84,11 @@ class TestRegexDialog extends JDialog {
                     gridPanel.add(sample);
                     samples.add(sample);
                     JLabel yes = new JLabel("\u2713");
-                    yes.setForeground(Color.GREEN.darker());
+                    yes.setForeground(GuiUtils.getLookAndFeelColor("Icon.okForeground"));
                     gridPanel.add(yes);
                     yesLabels.add(yes);
                     JLabel no = new JLabel("\u2715");
-                    no.setForeground(Color.RED);
+                    no.setForeground(GuiUtils.getLookAndFeelColor("Icon.errorForeground"));
                     gridPanel.add(no);
                     noLabels.add(no);
                 }
@@ -161,12 +161,12 @@ class TestRegexDialog extends JDialog {
     void compileRegex() {
         try {
             regexPattern = Pattern.compile(regex.getText());
-            regex.setForeground(Color.BLACK);
+            regex.setForeground(GuiUtils.getLookAndFeelColor("TextField.foreground"));
             evaluate();
         }
         catch (PatternSyntaxException exception) {
             setIndeterminate();
-            regex.setForeground(Color.RED);
+            regex.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
         }
     }
 

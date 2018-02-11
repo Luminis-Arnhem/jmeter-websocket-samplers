@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -69,6 +69,7 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         super.configure(element);
         if (element instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) element;
+            settingsPanel.setType(sampler.getType());
             settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
             settingsPanel.enableConnectionIdOption((WebsocketSampler.multipleConnectionsEnabled));
             settingsPanel.connectionIdField.setText(sampler.getConnectionId());
@@ -81,6 +82,7 @@ public class PingPongSamplerGui extends AbstractSamplerGui {
         configureTestElement(testElement);
         if (testElement instanceof PingPongSampler) {
             PingPongSampler sampler = (PingPongSampler) testElement;
+            sampler.setType(settingsPanel.getType());
             sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
             sampler.setConnectionId(settingsPanel.connectionIdField.getText());
         }

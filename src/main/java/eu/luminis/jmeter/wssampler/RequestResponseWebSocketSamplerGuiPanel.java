@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -81,8 +81,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
                     topBar.add(typeSelector);
                     topBar.add(Box.createHorizontalStrut(10));
                     messageField = new JLabel();
-                    messageField.setBackground(Color.YELLOW);
-                    messageField.setForeground(Color.RED);
+                    messageField.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                     topBar.add(messageField);
                     topBar.add(Box.createHorizontalGlue());
                 }
@@ -129,7 +128,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
                     readTimeoutField = new JTextField();
                     readTimeoutField.setColumns(10);
                     JLabel readTimeoutErrorField = new JLabel();
-                    readTimeoutErrorField.setForeground(Color.RED);
+                    readTimeoutErrorField.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
                     addIntegerRangeCheck(readTimeoutField, MIN_READ_TIMEOUT, MAX_READ_TIMEOUT, readTimeoutErrorField);
                     requestSettingsPanel.add(readTimeoutField);
                     requestSettingsPanel.add(readTimeoutErrorField);

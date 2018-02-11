@@ -1,12 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/ApacheJMeter_core
     compile('org.apache.jmeter:ApacheJMeter_core:4.0') {
@@ -29,10 +30,11 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     compile ('org.slf4j:slf4j-api:1.7.25')
 
-    compile('org.mockito:mockito-core:2.2.15')
+    testCompile 'junit:junit:4.12'
 
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    testCompile('commons-io:commons-io:2.5')
+    testCompile('org.mockito:mockito-core:2.2.15')
+
+    testCompile 'org.assertj:assertj-core:3.8.0'
 }
 
 sourceSets {
@@ -83,3 +85,74 @@ test {
     }
   }
 }
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    required { gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+group = 'net.luminis.jmeter'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            beforeDeployment { deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: project.properties.ossrhUsername, password: project.properties.ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: project.properties.ossrhUsername, password: project.properties.ossrhPassword)
+            }
+	    
+            pom.project {
+	        name 'JMeter WebSocket Samplers'
+		packaging 'jar'
+		artifactId 'jmeter-websocket-samplers'
+		description 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
+		url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
+
+                licenses {
+                    license {
+                        name 'GNU Lesser General Public License v3'
+                        url 'https://www.gnu.org/licenses/lgpl-3.0-standalone.html'
+                        distribution 'repo'
+                    }
+                }
+                developers {
+                    developer {
+		        id 'peterd'
+                        name 'Peter Doornbosch'
+                        email 'peter.doornbosch@luminis.eu'
+                    }
+                }
+                scm {
+                    connection 'scm:git:git://bitbucket.org/pjtr/jmeter-websocket-samplers.git'
+                    developerConnection 'scm:git:ssh://bitbucket.org:pjtr/jmeter-websocket-samplers.git'
+                    url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers/src'
+                }
+            }
+        }
+    }
+}
+

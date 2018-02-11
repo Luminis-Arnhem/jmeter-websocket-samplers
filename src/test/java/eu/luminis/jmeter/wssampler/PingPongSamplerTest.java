@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -19,16 +19,63 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.MockWebSocketClientCreator;
+import eu.luminis.websocket.PongFrame;
 import eu.luminis.websocket.WebSocketClient;
+import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
+import java.net.SocketTimeoutException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 public class PingPongSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @Test
+    public void samplerShouldSendPingAndReceivePong() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setReadTimeout("500");
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isTrue();
+        verify(webSocketClient).sendPingFrame();
+        verify(webSocketClient).receivePong(500);
+    }
+
+    @Test
+    public void samplerShouldFailWhenNoPongReceived() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setReadTimeout("500");
+        when(webSocketClient.receivePong(anyInt())).thenThrow(new SocketTimeoutException());
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isFalse();
+        verify(webSocketClient).sendPingFrame();
+        verify(webSocketClient).receivePong(500);
+    }
 
     @Test
     public void testFrameFilter() {
@@ -44,8 +91,8 @@ public class PingPongSamplerTest {
         sampler.addTestElement(filter);
 
         SampleResult result = sampler.sample(null);
-        assertEquals("", result.getResponseDataAsString());
-        assertEquals(1, result.getSubResults().length);
+        assertThat(result.getResponseDataAsString()).isEmpty();
+        assertThat(result.getSubResults().length).isEqualTo(1);
     }
 
     @Test
@@ -72,7 +119,7 @@ public class PingPongSamplerTest {
         sampler.addTestElement(filter2);
 
         SampleResult result = sampler.sample(null);
-        assertEquals(3, result.getSubResults().length);
+        assertThat(result.getSubResults().length).isEqualTo(3);
     }
 
     @Test
@@ -85,7 +132,29 @@ public class PingPongSamplerTest {
         };
 
         SampleResult result = sampler.sample(null);
-        assertTrue(result.isSuccessful());
-        assertEquals(0 + 6 + 0, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
+        assertThat(result.isSuccessful()).isTrue();
+        assertThat(result.getSentBytes()).isEqualTo(0 + 6 + 0);  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
+
+    @Test
+    public void samplerOfTypePongShouldJustSendPongFrame() throws Exception {
+        WebSocketClient webSocketClient = mocker.createTextReceiverClient();
+        when(webSocketClient.sendPongFrame()).thenReturn(new PongFrame(new byte[0]));
+
+        PingPongSampler sampler = new PingPongSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return webSocketClient;
+            }
+        };
+        sampler.setType(PingPongSampler.Type.Pong);
+
+        SampleResult result = sampler.sample(new Entry());
+
+        assertThat(result.isSuccessful()).isTrue();
+        verify(webSocketClient).sendPongFrame();
+        verify(webSocketClient, never()).sendPingFrame();
+        verify(webSocketClient, never()).receivePong(anyInt());
+    }
+
 }

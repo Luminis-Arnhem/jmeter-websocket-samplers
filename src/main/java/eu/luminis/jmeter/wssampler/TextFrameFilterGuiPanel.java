@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -197,15 +197,15 @@ public class TextFrameFilterGuiPanel extends JPanel {
     void compileRegex() {
         try {
             Pattern.compile(matchValue.getText());
-            matchValue.setForeground(Color.BLACK);
+            matchValue.setForeground(GuiUtils.getLookAndFeelColor("TextArea.foreground"));
         }
         catch (PatternSyntaxException exception) {
-            matchValue.setForeground(Color.RED);
+            matchValue.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
         }
     }
 
     void resetRegexValidation() {
-        matchValue.setForeground(Color.BLACK);
+        matchValue.setForeground(GuiUtils.getLookAndFeelColor("TextArea.foreground"));
     }
 
     ComparisonType getComparisonType() {

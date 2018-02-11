@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -70,7 +70,7 @@ public class FrameFilterTest {
         long duration = System.currentTimeMillis() - start;
         // Should have three filtered frames: two after 100 ms and the last after +- 50 ms.
         Assert.assertEquals(3, result.getSubResults().length);
-        Assert.assertTrue(duration > readTimeout);
+        Assert.assertTrue(duration >= readTimeout);
         Assert.assertTrue(duration - readTimeout < 50);  // Risky, but reasonable.
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -207,10 +207,10 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
     private void checkContentIsBinary() {
         try {
             BinaryUtils.parseBinaryString(stripJMeterVariables(binaryContent.getText()));
-            binaryContent.setForeground(Color.BLACK);
+            binaryContent.setForeground(GuiUtils.getLookAndFeelColor("TextArea.foreground"));
         }
         catch (NumberFormatException notNumber) {
-            binaryContent.setForeground(Color.RED);
+            binaryContent.setForeground(GuiUtils.getLookAndFeelColor("TextArea.errorForeground"));
         }
     }
 

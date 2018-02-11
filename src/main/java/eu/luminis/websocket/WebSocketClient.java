@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -305,6 +305,12 @@ public class WebSocketClient {
 
     /**
      * Close the websocket connection properly, i.e. send a close frame and wait for a close confirm.
+     * @param status the status to send in the close frame
+     * @param requestData the close reason to send as part of the close frame
+     * @param readTimeout read timeout used when reading close response
+     * @return the close frame received as response from the server
+     * @throws IOException when an IO exception occurs on the underlying connection
+     * @throws UnexpectedFrameException when a frame is received that is not a close frame
      */
     public CloseFrame close(int status, String requestData, int readTimeout) throws IOException, UnexpectedFrameException {
         if (state != WebSocketState.CONNECTED) {

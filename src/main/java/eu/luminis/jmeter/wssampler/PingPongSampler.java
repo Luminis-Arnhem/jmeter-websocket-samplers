@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, 2017 Peter Doornbosch
+ * Copyright © 2016, 2017, 2018 Peter Doornbosch
  *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
@@ -27,9 +27,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+
 public class PingPongSampler extends WebsocketSampler {
 
     private static final Logger log = LoggerFactory.getLogger(PingPongSampler.class);
+
+    enum Type {
+        PingPong,
+        Pong
+    }
 
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
@@ -47,19 +53,25 @@ public class PingPongSampler extends WebsocketSampler {
 
     @Override
     public Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
-        Frame sentFrame = wsClient.sendPingFrame();
-        result.setSentBytes(sentFrame.getSize());
+        if (getType().equals(Type.PingPong)) {
+            Frame sentFrame = wsClient.sendPingFrame();
+            result.setSentBytes(sentFrame.getSize());
 
-        Frame receivedFrame;
-        if (! frameFilters.isEmpty()) {
-            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-            if (receivedFrame.isPong())
-                return receivedFrame;
-            else
-                throw new UnexpectedFrameException(receivedFrame);
+            Frame receivedFrame;
+            if (!frameFilters.isEmpty()) {
+                receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+                if (receivedFrame.isPong())
+                    return receivedFrame;
+                else
+                    throw new UnexpectedFrameException(receivedFrame);
+            } else
+                return wsClient.receivePong(readTimeout);
         }
-        else
-            return wsClient.receivePong(readTimeout);
+        else {
+            Frame sentFrame = wsClient.sendPongFrame();
+            result.setSentBytes(sentFrame.getSize());
+            return null;
+        }
     }
 
     @Override
@@ -71,6 +83,14 @@ public class PingPongSampler extends WebsocketSampler {
     protected String validateArguments() {
         String errorMsg = validateReadTimeout(getReadTimeout());
         return errorMsg;
+    }
+
+    public Type getType() {
+        return Type.valueOf(getPropertyAsString("type", Type.PingPong.name()));
+    }
+
+    public void setType(Type type) {
+        setProperty("type", type.name());
     }
 
 }
