@@ -65,17 +65,16 @@ public class CloseWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
             }
             layoutPanel.add(settingsPanel);
 
-            JPanel connectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             {
-                connectionPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Connection"),
+                connectionIdPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Connection"),
                         BorderFactory.createEmptyBorder(5, 5, 0, 5)));
                 connectionIdLabel = new JLabel("Connection ID:");
-                connectionPanel.add(connectionIdLabel);
+                connectionIdPanel.add(connectionIdLabel);
                 connectionIdField = new JTextField(10);
-                connectionPanel.add(connectionIdField);
+                connectionIdPanel.add(connectionIdField);
             }
-            connectionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            layoutPanel.add(connectionPanel);
+            connectionIdPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            layoutPanel.add(connectionIdPanel);
 
             JPanel aboutPanel = WebSocketSamplerGuiPanel.createAboutPanel(this);
             aboutPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);

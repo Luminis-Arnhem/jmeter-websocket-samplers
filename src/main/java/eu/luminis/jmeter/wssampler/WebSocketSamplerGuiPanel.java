@@ -55,6 +55,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected JTextField serverField;
     protected JTextField portField;
     protected JTextField pathField;
+    protected JPanel connectionIdPanel;
     protected JLabel connectionIdLabel;
     protected JTextField connectionIdField;
     protected JTextField connectionTimeoutField;
@@ -64,6 +65,10 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     protected JLabel serverLabel;
     protected JRadioButton reuseConnection;
     protected JRadioButton newConnection;
+
+    public WebSocketSamplerGuiPanel() {
+        connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    }
 
     void clearGui() {
         protocolSelector.setSelectedItem("ws");
@@ -155,7 +160,6 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                     connectionButtons.add(newConnection);
                     connectionButtons.add(reuseConnection);
 
-                    JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
                     connectionIdLabel = new JLabel("Connection ID: ");
                     connectionIdPanel.add(connectionIdLabel);
                     connectionIdField = new JTextField(7);
@@ -265,16 +269,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
     }
 
     void enableConnectionIdOption(boolean on) {
-        connectionIdField.setEnabled(on);
-        connectionIdLabel.setEnabled(on);
-        if (on) {
-            connectionIdLabel.setToolTipText(null);
-            connectionIdField.setToolTipText(null);
-        }
-        else {
-            connectionIdLabel.setToolTipText(DISABLED_MULTIPLE_CONNECTIONS_TIP);
-            connectionIdField.setToolTipText(DISABLED_MULTIPLE_CONNECTIONS_TIP);
-        }
+        connectionIdPanel.setVisible(on);
     }
 
     boolean getTLS() {

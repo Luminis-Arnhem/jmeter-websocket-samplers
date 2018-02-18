@@ -35,9 +35,11 @@ public class AdvancedOptionsGuiPanel extends JPanel {
             };
             {
                 JLabel explanationLabel = new JLabel("<html>" +
-                        "This option enables multiple websocket connections per JMeter thread. " +
-                        "When set, each websocket sampler gets a connection id field, that indicates the id / name of the connection that is used (or created) by the sampler. " +
+                        "When set, each websocket sampler gets a \"connection id\" field, that can be used to identify (or name) " +
+                        "the connection that is used (or created) by that sampler. The scope of the connection id's is the current (JMeter) thread; " +
+                        "websocket connections cannot be shared amongst JMeter threads. " +
                         "The connection id can have any value and can include JMeter properties. " +
+                        "When not set, the default connection for the JMeter thread is used." +
                         "</html>");
                 explanationPanel.add(explanationLabel, BorderLayout.CENTER);
             }

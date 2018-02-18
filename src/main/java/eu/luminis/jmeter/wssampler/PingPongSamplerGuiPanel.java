@@ -23,7 +23,7 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 
 
-public class PingPongSamplerGuiPanel extends JPanel {
+public class PingPongSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
     private final JLabel connectionIdLabel;
     JTextField readTimeoutField;
@@ -72,18 +72,17 @@ public class PingPongSamplerGuiPanel extends JPanel {
         }
         add(requestSettingsPanel, BorderLayout.NORTH);
 
-        JPanel connectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         {
-            connectionPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Connection"),
+            connectionIdPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Connection"),
                     BorderFactory.createEmptyBorder(5, 5, 0, 5)));
             connectionIdLabel = new JLabel("Connection ID:");
-            connectionPanel.add(connectionIdLabel);
+            connectionIdPanel.add(connectionIdLabel);
             connectionIdField = new JTextField(10);
-            connectionPanel.add(connectionIdField);
-            connectionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
-            avoidVerticalResize(connectionPanel);
+            connectionIdPanel.add(connectionIdField);
+            connectionIdPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            avoidVerticalResize(connectionIdPanel);
         }
-        add(connectionPanel);
+        add(connectionIdPanel);
 
         JPanel aboutPanel = WebSocketSamplerGuiPanel.createAboutPanel(this);
         add(aboutPanel);
@@ -99,11 +98,6 @@ public class PingPongSamplerGuiPanel extends JPanel {
 
     void avoidVerticalResize(JPanel panel) {
         panel.setMaximumSize(new Dimension(panel.getMaximumSize().width, panel.getMinimumSize().height));
-    }
-
-    public void enableConnectionIdOption(boolean multipleConnectionsEnabled) {
-        connectionIdLabel.setEnabled(multipleConnectionsEnabled);
-        connectionIdField.setEnabled(multipleConnectionsEnabled);
     }
 
     private void updateEnabledState(boolean isPingPong) {

@@ -18,13 +18,7 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -35,6 +29,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
     private JLabel connectionTimeoutErrorLabel;
     private JLabel readTimeoutErrorLabel;
+    private JPanel connectionIdPanel;
 
     public OpenWebSocketSamplerGuiPanel() {
         init();
@@ -81,7 +76,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
             }
             boxPanel.add(readTimeoutPanel);
 
-            JPanel connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            connectionIdPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             connectionIdPanel.setBorder(BorderFactory.createEmptyBorder(1, 4, 1, 0));
             {
                 connectionIdLabel = new JLabel("Connection ID:");
@@ -90,6 +85,7 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
                 connectionIdPanel.add(connectionIdField);
             }
             boxPanel.add(connectionIdPanel);
+            connectionIdPanel.setVisible(false);
         }
 
         this.setLayout(new BorderLayout());
@@ -97,6 +93,10 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
         add(createAboutPanel(this));
         enableConnectionIdOption(false);
+    }
+
+    void enableConnectionIdOption(boolean on) {
+        connectionIdPanel.setVisible(on);
     }
 
     void clearGui() {
@@ -109,7 +109,8 @@ public class OpenWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
-        frame.getContentPane().add(new OpenWebSocketSamplerGuiPanel());
+        OpenWebSocketSamplerGuiPanel samplerGuiPanel = new OpenWebSocketSamplerGuiPanel();
+        frame.getContentPane().add(samplerGuiPanel);
         frame.setVisible(true);
     }
 }
