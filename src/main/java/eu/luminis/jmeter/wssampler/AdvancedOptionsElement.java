@@ -37,7 +37,6 @@ public class AdvancedOptionsElement extends ConfigTestElement {
 
     @Override
     public void removed() {
-        System.out.println("AdvancedOptions is removed (hope it will be the only one ;-), advanced options will be disabled");
         WebsocketSampler.multipleConnectionsEnabled = false;
         deleted = true;
     }
@@ -54,9 +53,6 @@ public class AdvancedOptionsElement extends ConfigTestElement {
         if (! deleted && enabled) {
             setProperty(new BooleanProperty("enableMultipleConnectionsPerThread", multipleConnectionsEnabled));
             WebsocketSampler.multipleConnectionsEnabled = multipleConnectionsEnabled;
-        }
-        else {
-            System.out.println("Cowardly refusing to set property on deleted or disabled element");
         }
     }
 }

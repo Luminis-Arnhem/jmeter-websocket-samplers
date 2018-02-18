@@ -28,11 +28,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static javax.swing.BoxLayout.Y_AXIS;
+
 // There is not much difference between AbstractConfigGui and AbstractControllerGui....
 public class AdvancedOptionsGUI extends AbstractConfigGui {
 
-    private final JCheckBox enabled_multiple_connections_per_thread;
     private static AtomicBoolean gotUiElement = new AtomicBoolean(false);
+
+    private AdvancedOptionsGuiPanel contentPanel;
 
     static void resetElementCount() {
         gotUiElement.set(false);
@@ -42,8 +45,9 @@ public class AdvancedOptionsGUI extends AbstractConfigGui {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
-        enabled_multiple_connections_per_thread = new JCheckBox("enabled multiple connections per thread");
-        add(enabled_multiple_connections_per_thread);
+
+        contentPanel = new AdvancedOptionsGuiPanel();
+        add(contentPanel, BorderLayout.CENTER);
     }
 
     @Override
@@ -85,7 +89,7 @@ public class AdvancedOptionsGUI extends AbstractConfigGui {
         if (element instanceof AdvancedOptionsElement) {
             gotUiElement.set(true);
             WebsocketSampler.multipleConnectionsEnabled = ((AdvancedOptionsElement) element).getMultipleConnectionsEnabled();
-            enabled_multiple_connections_per_thread.setSelected(((AdvancedOptionsElement) element).getMultipleConnectionsEnabled());
+            contentPanel.enabled_multiple_connections_per_thread.setSelected(((AdvancedOptionsElement) element).getMultipleConnectionsEnabled());
         }
     }
 
@@ -94,7 +98,7 @@ public class AdvancedOptionsGUI extends AbstractConfigGui {
         configureTestElement(element);
 
         if (element instanceof AdvancedOptionsElement) {
-            ((AdvancedOptionsElement) element).setMultipleConnectionsEnabled(enabled_multiple_connections_per_thread.isSelected());
+            ((AdvancedOptionsElement) element).setMultipleConnectionsEnabled(contentPanel.enabled_multiple_connections_per_thread.isSelected());
             gotUiElement.set(! ((AdvancedOptionsElement) element).isDeleted());
         }
     }
