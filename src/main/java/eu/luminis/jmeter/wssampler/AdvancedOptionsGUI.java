@@ -37,6 +37,12 @@ public class AdvancedOptionsGUI extends AbstractConfigGui {
 
     private AdvancedOptionsGuiPanel contentPanel;
 
+    @Override
+    public void clearGui() {
+        super.clearGui();
+        contentPanel.clearGui();
+    }
+
     static void resetElementCount() {
         gotUiElement.set(false);
     }

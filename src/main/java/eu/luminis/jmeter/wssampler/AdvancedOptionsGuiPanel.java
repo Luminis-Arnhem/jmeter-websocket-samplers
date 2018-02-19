@@ -52,6 +52,10 @@ public class AdvancedOptionsGuiPanel extends JPanel {
         add(aboutPanel);
     }
 
+    public void clearGui() {
+        enabled_multiple_connections_per_thread.setSelected(false);
+    }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
@@ -61,4 +65,5 @@ public class AdvancedOptionsGuiPanel extends JPanel {
         frame.getContentPane().add(new AdvancedOptionsGuiPanel());
         frame.setVisible(true);
     }
+
 }
