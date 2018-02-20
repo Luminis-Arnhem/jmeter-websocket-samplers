@@ -158,7 +158,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                     wsClient.useProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
 
                 result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl())  // Ensure connect URL is reported in case of a connect error.
-                        + "\n(creating connection with ID '" + connectionId + "')\n");
+                        + (WebsocketSampler.multipleConnectionsEnabled? "\n(creating connection with ID '" + connectionId + "')\n": "\n"));
 
                 WebSocketClient.HttpResult httpResult = wsClient.connect(connectTimeout, readTimeout);
                 responseHeaders = httpResult.responseHeaders;
@@ -168,7 +168,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 gotNewConnection = true;
             }
             else {
-                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection with ID '" + connectionId + "')\n");
+                result.setSamplerData("Connect URL:\n" + getConnectUrl(wsClient.getConnectUrl()) + "\n(using existing connection"
+                        + (WebsocketSampler.multipleConnectionsEnabled? " with ID '" + connectionId + "')\n": ")\n"));
             }
             Frame response = doSample(wsClient, result);
             result.sampleEnd(); // End timimg

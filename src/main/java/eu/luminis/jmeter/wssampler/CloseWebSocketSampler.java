@@ -51,12 +51,16 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         int closeStatus = Integer.parseInt(getStatusCode());
         String reason = "sampler requested close";
-        result.setSamplerData("Requested connection close with status " + closeStatus + " and reason '" + reason + "'.");
+
+        String connectionId = WebsocketSampler.multipleConnectionsEnabled? getConnectionId().trim(): "";
+            result.setSamplerData("Connection URL:\n" + getConnectUrl(wsClient.getConnectUrl())
+                    + (WebsocketSampler.multipleConnectionsEnabled? "\n(using connection with ID '" + connectionId + "')\n": "\n")
+                    + "\nRequested connection close with status " + closeStatus + " and reason '" + reason + "'.");
 
         Frame frameSent = wsClient.sendClose(closeStatus, reason);
         result.setSentBytes(frameSent.getSize());
 
-        Frame receivedFrame = null;
+        Frame receivedFrame;
         if (!frameFilters.isEmpty()) {
             receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
         }
