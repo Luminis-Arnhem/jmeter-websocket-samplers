@@ -2,6 +2,21 @@
 
 JMeter add-on that defines a number of samplers for load testing WebSocket applications.
 
+
+## Work in progress: multiple connections
+
+This branch features a new option: the possibility to have multiple concurrent websocket connections on one JMeter thread.
+This option must be explicitly enabled by adding a "WebSocket Advanced Options" element to your test plan (menu: Add -> Non-test Elements)
+and checking the checkbox. A connection-id field will appear in the user interface of each WebSocket sampler.
+The connection id should be used both when creating a connection and when (re-)using a connection.
+The connection id can have any value and can include JMeter properties.
+Note that connections are never shared between JMeter threads.
+
+See the sample test plan "Multiple connections.jmx" in the samples directory.
+
+As this feature is not yet released, you'll have to build the plugin yourself from source (see below for directions). Also, note that the feature is still subject to change and any testplans created with the non-released version might not be compatible with the final release.
+
+
 ## Usage
 
 Download the jar from the [downloads](https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads/) dir, copy it to <jmeter-home>/lib/ext and start JMeter. That's all.
