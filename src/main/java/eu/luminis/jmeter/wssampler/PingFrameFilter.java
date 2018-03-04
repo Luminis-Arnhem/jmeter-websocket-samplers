@@ -27,11 +27,24 @@ import java.io.IOException;
 
 public class PingFrameFilter extends FrameFilter {
 
+    public enum PingFilterType {
+        FilterAll,
+        FilterPingOnly
+    }
+
     private static Logger log = LoggingManager.getLoggerForClass();
 
     @Override
     protected boolean matchesFilter(Frame receivedFrame) {
-        return receivedFrame.isPing() || receivedFrame.isPong();
+        switch (getFilterType()) {
+            case FilterAll:
+                return receivedFrame.isPing() || receivedFrame.isPong();
+            case FilterPingOnly:
+                return receivedFrame.isPing();
+            default:
+                throw new RuntimeException("Unknown filter type");
+        }
+
     }
 
     @Override
@@ -62,4 +75,11 @@ public class PingFrameFilter extends FrameFilter {
         setProperty("replyToPing", value);
     }
 
+    public PingFilterType getFilterType() {
+        return PingFilterType.valueOf(getPropertyAsString("filterType", "FilterAll"));
+    }
+
+    public void setFilterType(PingFilterType type) {
+        setProperty("filterType", type.toString());
+    }
 }

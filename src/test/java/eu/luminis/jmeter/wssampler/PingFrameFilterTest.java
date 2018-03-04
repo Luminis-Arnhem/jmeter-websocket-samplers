@@ -25,16 +25,15 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class PingFrameFilterTest {
 
@@ -43,23 +42,30 @@ public class PingFrameFilterTest {
         JMeterContextService.getContext().setVariables(new JMeterVariables());
     }
 
+    private MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
     @Before
     public void setUp() throws IOException {
         JMeterUtils.loadJMeterProperties(Files.createTempFile("empty", ".props").toString());
         FrameFilter.initStaticFilterOptions();
     }
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    private MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
-
     @Test
     public void filterShouldDropPingFrame() throws IOException {
         mocker = new MockWebSocketClientCreator();
         WebSocketClient mockWsClient = mocker.createSingleFrameClient(new PingFrame(new byte[0]));
-        exception.expect(EndOfStreamException.class);
-        new PingFrameFilter().receiveFrame(mockWsClient, 1000, new SampleResult());
+        assertThatExceptionOfType(EndOfStreamException.class).isThrownBy(() -> {
+            new PingFrameFilter().receiveFrame(mockWsClient, 1000, new SampleResult());
+        });
+    }
+
+    @Test
+    public void filterShouldDropPongFrame() throws IOException {
+        mocker = new MockWebSocketClientCreator();
+        WebSocketClient mockWsClient = mocker.createSingleFrameClient(new PongFrame(new byte[0]));
+        assertThatExceptionOfType(EndOfStreamException.class).isThrownBy(() -> {
+            new PingFrameFilter().receiveFrame(mockWsClient, 1000, new SampleResult());
+        });
     }
 
     @Test
@@ -113,4 +119,38 @@ public class PingFrameFilterTest {
         assertEquals(2, result.getSubResults()[0].getSentBytes());
         assertEquals(2, result.getSentBytes());
     }
+
+    @Test
+    public void filterPingOnlyShouldDropPingFrame() throws IOException {
+        WebSocketClient mockWsClient = new MockWebSocketClientCreator().createMultipleFrameClient(new Frame[] {
+                new TextFrame("whatever"),
+                new PingFrame(new byte[0]),
+                new TextFrame("last frame")
+        });
+        PingFrameFilter filter = new PingFrameFilter();
+        filter.setFilterType(PingFrameFilter.PingFilterType.FilterPingOnly);
+
+        SampleResult result = new SampleResult();
+
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText()).isTrue();
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText()).isTrue();
+    }
+
+    @Test
+    public void filterPingOnlyShouldKeepPongFrame() throws IOException {
+        WebSocketClient mockWsClient = new MockWebSocketClientCreator().createMultipleFrameClient(new Frame[] {
+                new TextFrame("whatever"),
+                new PongFrame(new byte[0]),
+                new TextFrame("last frame")
+        });
+        PingFrameFilter filter = new PingFrameFilter();
+        filter.setFilterType(PingFrameFilter.PingFilterType.FilterPingOnly);
+
+        SampleResult result = new SampleResult();
+
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText()).isTrue();
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isPong()).isTrue();
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText()).isTrue();
+    }
+
 }

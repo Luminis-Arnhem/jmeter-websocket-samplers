@@ -26,6 +26,8 @@ import static javax.swing.BoxLayout.Y_AXIS;
 
 public class PingFrameFilterGuiPanel extends JPanel {
 
+    private final JRadioButton optionBoth;
+    private final JRadioButton onlyPing;
     JCheckBox replyToPing;
 
     public PingFrameFilterGuiPanel() {
@@ -34,24 +36,61 @@ public class PingFrameFilterGuiPanel extends JPanel {
         JPanel contentPanel = new JPanel();
         {
             contentPanel.setLayout(new BoxLayout(contentPanel, Y_AXIS));
-            contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter conditions"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+            contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Frame filter behaviour"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
             JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             {
-                labelPanel.add(new JLabel("Filters (discards) both ping and pong frames"));
+                labelPanel.add(new JLabel("Filter (discard):"));
                 labelPanel.setMaximumSize(new Dimension(labelPanel.getMaximumSize().width, labelPanel.getMinimumSize().height));
             }
             contentPanel.add(labelPanel);
             labelPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 
+            JPanel optionPanel = new JPanel();
+            {
+                optionPanel.setLayout(new BoxLayout(optionPanel, Y_AXIS));
+                optionBoth = new JRadioButton("both ping and pong frames");
+                optionPanel.add(optionBoth);
+                optionBoth.setSelected(true);
+                onlyPing = new JRadioButton("ping frames only");
+                optionPanel.add(onlyPing);
+                ButtonGroup optionGroup = new ButtonGroup();
+                optionGroup.add(optionBoth);
+                optionGroup.add(onlyPing);
+            }
+            contentPanel.add(optionPanel);
+            optionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
+            contentPanel.add(Box.createVerticalStrut(20));
             replyToPing = new JCheckBox("Automatically respond to ping with a pong");
             contentPanel.add(replyToPing);
             replyToPing.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+
             add(contentPanel);
         }
         JPanel aboutPanel = WebSocketSamplerGuiPanel.createAboutPanel(this);
         add(aboutPanel);
         aboutPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+    }
+
+    public PingFrameFilter.PingFilterType getFilterType() {
+        if (onlyPing.isSelected())
+            return PingFrameFilter.PingFilterType.FilterPingOnly;
+        else if (optionBoth.isSelected())
+            return PingFrameFilter.PingFilterType.FilterAll;
+        else
+            throw new RuntimeException("Invalid ping filter state");
+    }
+
+    public void setFilterType(PingFrameFilter.PingFilterType filterType) {
+        if (filterType.equals(PingFrameFilter.PingFilterType.FilterAll)) {
+            optionBoth.setSelected(true);
+            onlyPing.setSelected(false);
+        }
+        else {
+            optionBoth.setSelected(false);
+            onlyPing.setSelected(true);
+        }
     }
 
     public static void main(String[] args) {
