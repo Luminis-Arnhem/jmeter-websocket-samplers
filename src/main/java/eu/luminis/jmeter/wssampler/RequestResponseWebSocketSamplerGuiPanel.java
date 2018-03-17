@@ -46,7 +46,6 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         {
             dataPanel = new DataPanel();
-
             JPanel requestSettingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             {
                 requestSettingsPanel.add(new JLabel("Response (read) timeout (ms): "));
@@ -58,6 +57,7 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
                 requestSettingsPanel.add(readTimeoutField);
                 requestSettingsPanel.add(readTimeoutErrorField);
             }
+            requestSettingsPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
             dataPanel.add(requestSettingsPanel);
 
             splitter.setTopComponent(dataPanel);

@@ -18,10 +18,13 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import static javax.swing.BoxLayout.X_AXIS;
 
@@ -33,6 +36,11 @@ public class DataPanel extends JPanel {
     private JTextArea requestDataField;
     private JComboBox typeSelector;
     private JLabel messageField;
+    private final JLabel requestDataLabel;
+    private final JLabel fileLabel;
+    private final JTextField filePathField;
+    private final JButton browseButton;
+    private final JCheckBox enableFile;
 
     public DataPanel() {
 
@@ -55,17 +63,19 @@ public class DataPanel extends JPanel {
             topBar.add(messageField);
             topBar.add(Box.createHorizontalGlue());
         }
+        topBar.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         add(topBar);
 
+        add(Box.createVerticalStrut(10));
         JPanel dataZone = new JPanel();
         {
             dataZone.setLayout(new BoxLayout(dataZone, X_AXIS));
             dataZone.add(Box.createHorizontalStrut(5));
-            JLabel label = new JLabel("Request data: ");
-            label.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
-            label.setMaximumSize(new Dimension(label.getMaximumSize().width, Integer.MAX_VALUE));
-            label.setVerticalAlignment(JLabel.TOP);
-            dataZone.add(label);
+            requestDataLabel = new JLabel("Request data: ");
+            requestDataLabel.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
+            requestDataLabel.setMaximumSize(new Dimension(requestDataLabel.getMaximumSize().width, Integer.MAX_VALUE));
+            requestDataLabel.setVerticalAlignment(JLabel.TOP);
+            dataZone.add(requestDataLabel);
             requestDataField = new JTextArea();
             requestDataField.setColumns(40);
             requestDataField.setLineWrap(true);
@@ -89,13 +99,60 @@ public class DataPanel extends JPanel {
             scrollPane.setBorder(new JTextField().getBorder());
             scrollPane.setAlignmentY(0.5f);
             dataZone.add(scrollPane);
+
         }
+        dataZone.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         add(dataZone);
+
+        add(Box.createVerticalStrut(10));
+        JPanel filePathPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        {
+            enableFile = new JCheckBox();
+            enableFile.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    enableSelectFileOption(enableFile.isSelected());
+                }
+            });
+            filePathPanel.add(enableFile);
+
+            fileLabel = new JLabel("Read request data from file: ");
+            filePathPanel.add(fileLabel);
+            filePathField = new JTextField();
+            filePathField.setColumns(30);
+            filePathPanel.add(filePathField);
+            browseButton = new JButton("Browse...");
+            filePathPanel.add(browseButton);
+            browseButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser filePicker = new JFileChooser();
+                    int result = filePicker.showDialog(filePathField, "Open");
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        filePathField.setText(filePicker.getSelectedFile().getAbsolutePath());
+                    }
+                }
+            });
+
+            enableSelectFileOption(false);
+        }
+        filePathPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+        add(filePathPanel);
+    }
+
+    void enableSelectFileOption(boolean enable) {
+        requestDataLabel.setEnabled(!enable);
+        requestDataField.setEnabled(!enable);
+        fileLabel.setEnabled(enable);
+        filePathField.setEnabled(enable);
+        browseButton.setEnabled(enable);
+
     }
 
     void clearGui() {
         requestDataField.setText("");
         messageField.setText("");
+        enableFile.setSelected(false);
     }
 
     public String getRequestData() {
