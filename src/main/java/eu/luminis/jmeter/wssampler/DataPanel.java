@@ -185,6 +185,23 @@ public class DataPanel extends JPanel {
         }
     }
 
+    public boolean getReadDataFromFile() {
+        return enableFile.isSelected();
+    }
+
+    public void setReadDataFromFile(boolean enable) {
+        enableFile.setSelected(enable);
+        enableSelectFileOption(enable);
+    }
+
+    public String getDataFile() {
+        return filePathField.getText();
+    }
+
+    public void setDataFile(String file) {
+        filePathField.setText(file);
+    }
+
     private void checkBinary() {
         if (typeSelector.getSelectedItem() == BINARY) {
             try {

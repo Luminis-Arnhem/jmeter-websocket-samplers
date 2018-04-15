@@ -72,6 +72,8 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
             settingsPanel.setType(sampler.getBinary()? DataPayloadType.Binary: DataPayloadType.Text);
             settingsPanel.setRequestData(sampler.getRequestData());
+            settingsPanel.setReadDataFromFile(sampler.getLoadDataFromFile());
+            settingsPanel.setDataFile(sampler.getDataFile());
         }
     }
 
@@ -88,6 +90,8 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setBinary(settingsPanel.getType().equals(DataPayloadType.Binary));
             sampler.setRequestData(settingsPanel.getRequestData());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
+            sampler.setLoadDataFromFile(settingsPanel.getReadDataFromFile());
+            sampler.setDataFile(settingsPanel.getDataFile());
         }
     }
 

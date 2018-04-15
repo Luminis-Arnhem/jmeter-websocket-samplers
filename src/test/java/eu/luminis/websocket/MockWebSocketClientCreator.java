@@ -37,9 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -286,5 +284,21 @@ public class MockWebSocketClientCreator {
         }
     }
 
+    /**
+     * Creates a mock WebSocketClient that mocks the connection setup process. Only the send and receive methods
+     * need to be mocked by the caller.
+     * @return
+     */
+    public WebSocketClient createSimpleMock() {
+        WebSocketClient mock = Mockito.mock(WebSocketClient.class);
+        try {
+            when(mock.connect(anyMap(), anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mock.isConnected()).thenReturn(true);
+            when(mock.getConnectUrl()).thenReturn(new URL("http://nowwhere.com"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return mock;
+    }
 
 }

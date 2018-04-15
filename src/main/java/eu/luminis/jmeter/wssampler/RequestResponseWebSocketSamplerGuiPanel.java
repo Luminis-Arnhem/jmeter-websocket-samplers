@@ -94,6 +94,22 @@ public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGui
         dataPanel.setType(type);
     }
 
+    public boolean getReadDataFromFile() {
+        return dataPanel.getReadDataFromFile();
+    }
+
+    public void setReadDataFromFile(boolean enable) {
+        dataPanel.setReadDataFromFile(enable);
+    }
+
+    public String getDataFile() {
+        return dataPanel.getDataFile();
+    }
+
+    public void setDataFile(String file) {
+        dataPanel.setDataFile(file);
+    }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
