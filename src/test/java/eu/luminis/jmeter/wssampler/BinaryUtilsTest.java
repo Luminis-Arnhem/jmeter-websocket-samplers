@@ -81,6 +81,17 @@ public class BinaryUtilsTest {
         assertEquals("", test.formatBinary(new byte[0]));
     }
 
+    @Test
+    public void testFormatLargeBinaryIsLimitedToMaxBytes() {
+        String formatted = test.formatBinary(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, 10, "");
+        assertEquals(10, formatted.split(" ").length);
+    }
+
+    @Test
+    public void testFormatLargeBinaryEndsWithSuffix() {
+        String formatted = test.formatBinary(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, 10, "...");
+        assertTrue(formatted.endsWith("..."));
+    }
 
     @Test
     public void testFormatNegativeValue() {

@@ -52,7 +52,7 @@ public class BinaryFrame extends DataFrame {
     @Override
     public String toString() {
         if (data.length > 0)
-            return "Binary frame, payload (length " + data.length + "): " + BinaryUtils.formatBinary(data, nrBytesPrintedInToString) + (data.length > nrBytesPrintedInToString? " ...": "");
+            return "Binary frame, payload (length " + data.length + "): " + BinaryUtils.formatBinary(data, nrBytesPrintedInToString, " ...");
         else
             return "Binary frame, empty payload";
     }
