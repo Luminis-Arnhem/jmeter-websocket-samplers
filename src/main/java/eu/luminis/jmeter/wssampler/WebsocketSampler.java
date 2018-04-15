@@ -234,6 +234,43 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
+    protected void sendFrame(WebSocketClient wsClient, SampleResult result, boolean binary, String requestData) throws SamplingAbortedException, IOException {
+        Frame sentFrame;
+        if (binary) {
+            byte[] binRequestData;
+            try {
+                binRequestData = BinaryUtils.parseBinaryString(requestData);
+            } catch (NumberFormatException noNumber) {
+                // Thrown by BinaryUtils.parseBinaryString
+                result.sampleEnd(); // End timimg
+                getLogger().error("Sampler '" + getName() + "': request data is not binary: " + requestData);
+                result.setResponseCode("Sampler Error");
+                result.setResponseMessage("Request data is not binary: " + requestData);
+                throw new SamplingAbortedException();
+            }
+            // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
+            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + requestData + "\n");
+            sentFrame = wsClient.sendBinaryFrame(binRequestData);
+        }
+        else {
+            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + requestData + "\n");
+            sentFrame = wsClient.sendTextFrame(requestData);
+        }
+        result.setSentBytes(sentFrame.getSize());
+    }
+
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result, boolean binary) throws IOException, UnexpectedFrameException {
+        Frame receivedFrame;
+        if (! frameFilters.isEmpty()) {
+            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+            if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
+                return receivedFrame;
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        } else
+            return binary ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+    }
+
     public void addTestElement(TestElement element) {
         if (element instanceof HeaderManager) {
             headerManager = (HeaderManager) element;
