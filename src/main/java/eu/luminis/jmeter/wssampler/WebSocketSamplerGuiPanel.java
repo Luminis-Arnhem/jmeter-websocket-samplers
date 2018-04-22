@@ -43,7 +43,7 @@ import static javax.swing.BoxLayout.Y_AXIS;
 
 abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
-    public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{\\w+\\}");
+    public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{[^}]+\\}");
 
     public static final int MIN_CONNECTION_TIMEOUT = WebsocketSampler.MIN_CONNECTION_TIMEOUT;
     public static final int MAX_CONNECTION_TIMEOUT = WebsocketSampler.MAX_CONNECTION_TIMEOUT;
