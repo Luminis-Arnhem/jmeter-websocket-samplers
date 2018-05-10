@@ -19,6 +19,8 @@
 package eu.luminis.jmeter.wssampler;
 
 
+import org.apache.jmeter.gui.util.FileDialoger;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -126,10 +128,9 @@ public class DataPanel extends JPanel {
             browseButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    JFileChooser filePicker = new JFileChooser();
-                    int result = filePicker.showDialog(filePathField, "Open");
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        filePathField.setText(filePicker.getSelectedFile().getAbsolutePath());
+                    JFileChooser fileChooser = FileDialoger.promptToOpenFile();
+                    if (fileChooser != null && fileChooser.getSelectedFile() != null) {
+                        filePathField.setText(fileChooser.getSelectedFile().getAbsolutePath());
                     }
                 }
             });
