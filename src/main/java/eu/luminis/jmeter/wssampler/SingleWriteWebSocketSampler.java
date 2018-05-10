@@ -156,5 +156,8 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
         setProperty("createNewConnection", value);
     }
 
-
+    @Override
+    public void setReadTimeout(String readTimeout) {
+        throw new UnsupportedOperationException();
+    }
 }

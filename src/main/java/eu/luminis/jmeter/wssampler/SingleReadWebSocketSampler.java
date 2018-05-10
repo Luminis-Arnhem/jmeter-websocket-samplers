@@ -160,22 +160,6 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
         setProperty("createNewConnection", value);
     }
 
-    public String getConnectTimeout() {
-        return getPropertyAsString("connectTimeout", "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT).trim();
-    }
-
-    public void setConnectTimeout(String connectTimeout) {
-        setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
-    }
-
-    public String getReadTimeout() {
-        return getPropertyAsString("readTimeout", "" +WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
-    }
-
-    public void setReadTimeout(String readTimeout) {
-        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
-    }
-
     public boolean getOptional() {
         return getPropertyAsBoolean("optional");
     }

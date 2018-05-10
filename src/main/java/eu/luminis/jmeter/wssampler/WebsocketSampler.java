@@ -410,15 +410,15 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     }
 
     public void setConnectTimeout(String connectTimeout) {
-        setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+        setProperty("connectTimeout", connectTimeout);
     }
 
     public String getReadTimeout() {
-        return getPropertyAsString("readTimeout", "" +WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
+        return getPropertyAsString("readTimeout", "" + WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
     }
 
     public void setReadTimeout(String readTimeout) {
-        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
+        setProperty("readTimeout", readTimeout);
     }
 
     public boolean getTLS() {
