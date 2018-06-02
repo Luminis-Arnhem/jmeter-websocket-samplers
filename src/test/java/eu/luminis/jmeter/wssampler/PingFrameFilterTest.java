@@ -26,6 +26,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.AdditionalMatchers;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -200,7 +202,7 @@ public class PingFrameFilterTest {
 
         SampleResult result = new SampleResult();
         assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText());
-        verify(mockWsClient).sendPongFrame();
+        verify(mockWsClient).sendPongFrame(AdditionalMatchers.aryEq(new byte[0]));
     }
 
     @Test
@@ -217,4 +219,20 @@ public class PingFrameFilterTest {
         assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText());
         verify(mockWsClient, never()).sendPongFrame();
     }
+
+    @Test
+    public void pongShouldContainSameApplicationDataAsPing() throws IOException {
+        WebSocketClient mockWsClient = new MockWebSocketClientCreator().createMultipleFrameClient(new Frame[] {
+                new PingFrame("pling".getBytes()),
+                new TextFrame("last frame")
+        });
+
+        PingFrameFilter filter = new PingFrameFilter();
+        filter.setReplyToPing(true);
+
+        SampleResult result = new SampleResult();
+        assertThat(filter.receiveFrame(mockWsClient, 1000, result).isText());
+        verify(mockWsClient).sendPongFrame(AdditionalMatchers.aryEq("pling".getBytes()));
+    }
+
 }

@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.Frame;
+import eu.luminis.websocket.PingFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -59,7 +60,7 @@ public class PingFrameFilter extends FrameFilter {
     protected Frame performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {
         if (receivedFrame.isPing() && getReplyToPing()) {
             log.debug("Automatically replying to ping with a pong.");
-            return wsClient.sendPongFrame();
+            return wsClient.sendPongFrame(((PingFrame) receivedFrame).getData());
         }
         else
             return null;
