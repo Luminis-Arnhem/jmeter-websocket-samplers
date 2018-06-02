@@ -6,7 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class JMeterUtilsTest {
 
-    private WebSocketSamplerGuiPanel objectUnderTest = new WebSocketSamplerGuiPanel() {};
+    private JMeterUtils objectUnderTest = new JMeterUtils() {};
 
     @Test
     public void simpleJMeterVariableShouldBeDetected() {

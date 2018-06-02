@@ -110,8 +110,4 @@ public class CloseWebSocketSampler extends WebsocketSampler {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void setReadTimeout(String readTimeout) {
-        throw new UnsupportedOperationException();
-    }
 }

@@ -29,15 +29,20 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.nio.file.Files;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.offset;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class RequestResponseWebSocketSamplerTest {
@@ -225,6 +230,86 @@ public class RequestResponseWebSocketSamplerTest {
         assertTrue(result.isSuccessful());
         assertEquals(0 + 6 + 7, result.getSentBytes());  // 0: no http header (because of mock); 6: frame overhead (client mask = 4 byte); 7: payload
     }
+
+    @Test
+    public void fileOptionShouldReadPayloadFromFile() throws Exception {
+        WebSocketClient mock = mocker.createSimpleMock();
+        when(mock.sendTextFrame(anyString())).thenReturn(new TextFrame("whatever"));
+        when(mock.receiveText(anyInt())).thenReturn(new TextFrame("whatever"));
+
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mock;
+            }
+        };
+
+        File dataFile = File.createTempFile("data", "txt");
+        dataFile.deleteOnExit();
+        DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(dataFile));
+        dataOut.writeBytes("this is a file with text content");
+        dataOut.close();
+        sampler.setDataFile(dataFile.getAbsolutePath());
+        sampler.setRequestData("0x11 0x22");
+        sampler.setLoadDataFromFile(true);
+
+        SampleResult result = sampler.sample(null);
+        verify(mock).sendTextFrame("this is a file with text content");
+    }
+
+    @Test
+    public void whenFileOptionNotSetDoNotReadPayloadFromFile() throws Exception {
+        WebSocketClient mock = mocker.createSimpleMock();
+        when(mock.sendTextFrame(anyString())).thenReturn(new TextFrame("whatever"));
+        when(mock.receiveText(anyInt())).thenReturn(new TextFrame("whatever"));
+
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mock;
+            }
+        };
+
+        File dataFile = File.createTempFile("data", "txt");
+        dataFile.deleteOnExit();
+        DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(dataFile));
+        dataOut.writeBytes("this is a file with text content");
+        dataOut.close();
+        sampler.setDataFile(dataFile.getAbsolutePath());
+        sampler.setRequestData("sampler data");
+        sampler.setLoadDataFromFile(false);  // Intentionally set to false
+
+        SampleResult result = sampler.sample(null);
+        verify(mock).sendTextFrame("sampler data");
+    }
+
+    @Test
+    public void fileOptionShouldReadBinaryPayloadFromFile() throws Exception {
+        WebSocketClient mock = mocker.createSimpleMock();
+        when(mock.sendBinaryFrame(any(byte[].class))).thenReturn(new BinaryFrame(new byte[0]));
+        when(mock.receiveBinaryData(anyInt())).thenReturn(new BinaryFrame(new byte[0]));
+
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mock;
+            }
+        };
+        sampler.setBinary(true);
+
+        File dataFile = File.createTempFile("data", ".bin");
+        dataFile.deleteOnExit();
+        DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(dataFile));
+        dataOut.writeBytes("this is a file with binary content (really!)");
+        dataOut.close();
+        sampler.setDataFile(dataFile.getAbsolutePath());
+        sampler.setRequestData("0x11 0x22");
+        sampler.setLoadDataFromFile(true);
+
+        SampleResult result = sampler.sample(null);
+        verify(mock).sendBinaryFrame("this is a file with binary content (really!)".getBytes());
+    }
+
 
     /**
      * Creates a JMeter HeaderManager that provides exactly one (dummy) header.

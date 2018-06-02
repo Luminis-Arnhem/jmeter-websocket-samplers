@@ -23,8 +23,6 @@ import org.apache.jmeter.testelement.TestElement;
 
 import java.awt.BorderLayout;
 
-import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.BINARY;
-import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.TEXT;
 
 public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
 
@@ -72,8 +70,10 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.portField.setText(sampler.getPort());
             settingsPanel.pathField.setText(sampler.getPath());
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
-            settingsPanel.typeSelector.setSelectedItem(sampler.getBinary()? BINARY: TEXT);
-            settingsPanel.requestDataField.setText(sampler.getRequestData());
+            settingsPanel.setType(sampler.getBinary()? DataPayloadType.Binary: DataPayloadType.Text);
+            settingsPanel.setRequestData(sampler.getRequestData());
+            settingsPanel.setReadDataFromFile(sampler.getLoadDataFromFile());
+            settingsPanel.setDataFile(sampler.getDataFile());
         }
     }
 
@@ -87,9 +87,11 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());
             sampler.setConnectTimeout(settingsPanel.connectionTimeoutField.getText());
-            sampler.setBinary(settingsPanel.typeSelector.getSelectedItem() == BINARY);
-            sampler.setRequestData(settingsPanel.requestDataField.getText());
+            sampler.setBinary(settingsPanel.getType().equals(DataPayloadType.Binary));
+            sampler.setRequestData(settingsPanel.getRequestData());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
+            sampler.setLoadDataFromFile(settingsPanel.getReadDataFromFile());
+            sampler.setDataFile(settingsPanel.getDataFile());
         }
     }
 

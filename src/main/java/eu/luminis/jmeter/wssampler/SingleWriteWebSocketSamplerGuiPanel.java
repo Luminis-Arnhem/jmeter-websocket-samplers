@@ -18,34 +18,14 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.Color;
-import java.awt.Dimension;
+import javax.swing.*;
 
-import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class SingleWriteWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
-    public static final String BINARY = "Binary";
-    public static final String TEXT = "Text";
+    private DataPanel dataPanel;
 
-    JTextArea requestDataField;
-    JComboBox typeSelector;
-    private JLabel messageField;
 
     public SingleWriteWebSocketSamplerGuiPanel() {
         init();
@@ -61,64 +41,8 @@ public class SingleWriteWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPane
 
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         {
-            JPanel dataPanel = new JPanel();
-            {
-                dataPanel.setBorder(BorderFactory.createTitledBorder("Data"));
-                dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.Y_AXIS));
+            dataPanel = new DataPanel();
 
-                JPanel topBar = new JPanel();
-                {
-                    topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
-                    String[] typeOptions = {TEXT, BINARY};
-                    typeSelector = new JComboBox(typeOptions);
-                    typeSelector.setMaximumSize(typeSelector.getMinimumSize());
-                    typeSelector.addActionListener(e -> {
-                        checkBinary();
-                    });
-                    topBar.add(typeSelector);
-                    topBar.add(Box.createHorizontalStrut(10));
-                    messageField = new JLabel();
-                    messageField.setForeground(GuiUtils.getLookAndFeelColor("TextField.errorForeground"));
-                    topBar.add(messageField);
-                    topBar.add(Box.createHorizontalGlue());
-                }
-                dataPanel.add(topBar);
-
-                JPanel dataZone = new JPanel();
-                {
-                    dataZone.setLayout(new BoxLayout(dataZone, X_AXIS));
-                    dataZone.add(Box.createHorizontalStrut(5));
-                    JLabel label = new JLabel("Request data: ");
-                    label.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
-                    label.setMaximumSize(new Dimension(label.getMaximumSize().width, Integer.MAX_VALUE));
-                    label.setVerticalAlignment(JLabel.TOP);
-                    dataZone.add(label);
-                    requestDataField = new JTextArea();
-                    requestDataField.setColumns(40);
-                    requestDataField.setLineWrap(true);
-                    requestDataField.setBorder(BorderFactory.createEmptyBorder());
-                    // Add a simple (huhuh!) on-change handler....
-                    requestDataField.getDocument().addDocumentListener(new DocumentListener() {
-                        public void changedUpdate(DocumentEvent e) {
-                            checkBinary();
-                        }
-
-                        public void removeUpdate(DocumentEvent e) {
-                            checkBinary();
-                        }
-
-                        public void insertUpdate(DocumentEvent e) {
-                            checkBinary();
-                        }
-                    });
-                    JScrollPane scrollPane = new JScrollPane(requestDataField);
-                    scrollPane.setMaximumSize(new Dimension(scrollPane.getMaximumSize().width, Integer.MAX_VALUE));
-                    scrollPane.setBorder(new JTextField().getBorder());
-                    scrollPane.setAlignmentY(0.5f);
-                    dataZone.add(scrollPane);
-                }
-                dataPanel.add(dataZone);
-            }
             splitter.setTopComponent(dataPanel);
             splitter.setBottomComponent(createAboutPanel(this));
             splitter.setBorder(null);
@@ -133,22 +57,40 @@ public class SingleWriteWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPane
 
     void clearGui() {
         super.clearGui();
-        requestDataField.setText("");
-        messageField.setText("");
+        dataPanel.clearGui();
         setCreateNewConnection(true);
     }
 
-    private void checkBinary() {
-        if (typeSelector.getSelectedItem() == BINARY) {
-            try {
-                BinaryUtils.parseBinaryString(stripJMeterVariables(requestDataField.getText()));
-                messageField.setText("");
-            } catch (NumberFormatException notNumber) {
-                messageField.setText("Error: request data is not in binary format; use format like '0xca 0xfe' or 'ba be' (JMeter variables like ${var} are allowed).");
-            }
-        } else {
-            messageField.setText("");
-        }
+    public String getRequestData() {
+        return dataPanel.getRequestData();
+    }
+
+    public void setRequestData(String requestData) {
+        dataPanel.setRequestData(requestData);
+    }
+
+    public DataPayloadType getType() {
+        return dataPanel.getType();
+    }
+
+    public void setType(DataPayloadType type) {
+        dataPanel.setType(type);
+    }
+
+    public boolean getReadDataFromFile() {
+        return dataPanel.getReadDataFromFile();
+    }
+
+    public void setReadDataFromFile(boolean enable) {
+        dataPanel.setReadDataFromFile(enable);
+    }
+
+    public String getDataFile() {
+        return dataPanel.getDataFile();
+    }
+
+    public void setDataFile(String file) {
+        dataPanel.setDataFile(file);
     }
 
 
