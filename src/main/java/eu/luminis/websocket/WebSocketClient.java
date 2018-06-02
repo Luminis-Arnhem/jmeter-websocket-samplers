@@ -345,22 +345,26 @@ public class WebSocketClient {
         return sendPingFrame(new byte[0]);
     }
 
-    public Frame sendPingFrame(byte[] requestData) throws IOException {
+    public Frame sendPingFrame(byte[] applicationData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send ping frame when state is " + state);
         }
 
-        PingFrame ping = new PingFrame(requestData);
+        PingFrame ping = new PingFrame(applicationData);
         socketOutputStream.write(ping.getFrameBytes());
         return ping;
     }
 
     public Frame sendPongFrame() throws IOException {
+        return sendPongFrame(new byte[0]);
+    }
+
+    public Frame sendPongFrame(byte[] applicationData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send pong frame when state is " + state);
         }
 
-        PongFrame pongFrame = new PongFrame(new byte[0]);
+        PongFrame pongFrame = new PongFrame(applicationData);
         socketOutputStream.write(pongFrame.getFrameBytes());
         return pongFrame;
     }

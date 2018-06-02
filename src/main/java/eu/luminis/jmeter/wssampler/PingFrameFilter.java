@@ -19,6 +19,7 @@
 package eu.luminis.jmeter.wssampler;
 
 import eu.luminis.websocket.Frame;
+import eu.luminis.websocket.PingFrame;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -27,11 +28,27 @@ import java.io.IOException;
 
 public class PingFrameFilter extends FrameFilter {
 
+    public enum PingFilterType {
+        FilterAll,
+        FilterPingOnly,
+        FilterPongOnly
+    }
+
     private static Logger log = LoggingManager.getLoggerForClass();
 
     @Override
     protected boolean matchesFilter(Frame receivedFrame) {
-        return receivedFrame.isPing() || receivedFrame.isPong();
+        switch (getFilterType()) {
+            case FilterAll:
+                return receivedFrame.isPing() || receivedFrame.isPong();
+            case FilterPingOnly:
+                return receivedFrame.isPing();
+            case FilterPongOnly:
+                return receivedFrame.isPong();
+            default:
+                throw new RuntimeException("Unknown filter type");
+        }
+
     }
 
     @Override
@@ -41,9 +58,9 @@ public class PingFrameFilter extends FrameFilter {
 
     @Override
     protected Frame performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {
-        if (getReplyToPing()) {
+        if (receivedFrame.isPing() && getReplyToPing()) {
             log.debug("Automatically replying to ping with a pong.");
-            return wsClient.sendPongFrame();
+            return wsClient.sendPongFrame(((PingFrame) receivedFrame).getData());
         }
         else
             return null;
@@ -62,4 +79,11 @@ public class PingFrameFilter extends FrameFilter {
         setProperty("replyToPing", value);
     }
 
+    public PingFilterType getFilterType() {
+        return PingFilterType.valueOf(getPropertyAsString("filterType", "FilterAll"));
+    }
+
+    public void setFilterType(PingFilterType type) {
+        setProperty("filterType", type.toString());
+    }
 }
