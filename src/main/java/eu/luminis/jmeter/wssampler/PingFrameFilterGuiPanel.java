@@ -28,6 +28,7 @@ public class PingFrameFilterGuiPanel extends JPanel {
 
     private final JRadioButton optionBoth;
     private final JRadioButton onlyPing;
+    private final JRadioButton onlyPong;
     JCheckBox replyToPing;
 
     public PingFrameFilterGuiPanel() {
@@ -54,9 +55,12 @@ public class PingFrameFilterGuiPanel extends JPanel {
                 optionBoth.setSelected(true);
                 onlyPing = new JRadioButton("ping frames only");
                 optionPanel.add(onlyPing);
+                onlyPong = new JRadioButton("pong frames only");
+                optionPanel.add(onlyPong);
                 ButtonGroup optionGroup = new ButtonGroup();
                 optionGroup.add(optionBoth);
                 optionGroup.add(onlyPing);
+                optionGroup.add(onlyPong);
             }
             contentPanel.add(optionPanel);
             optionPanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
@@ -76,6 +80,8 @@ public class PingFrameFilterGuiPanel extends JPanel {
     public PingFrameFilter.PingFilterType getFilterType() {
         if (onlyPing.isSelected())
             return PingFrameFilter.PingFilterType.FilterPingOnly;
+        else if (onlyPong.isSelected())
+            return PingFrameFilter.PingFilterType.FilterPongOnly;
         else if (optionBoth.isSelected())
             return PingFrameFilter.PingFilterType.FilterAll;
         else
@@ -85,11 +91,15 @@ public class PingFrameFilterGuiPanel extends JPanel {
     public void setFilterType(PingFrameFilter.PingFilterType filterType) {
         if (filterType.equals(PingFrameFilter.PingFilterType.FilterAll)) {
             optionBoth.setSelected(true);
-            onlyPing.setSelected(false);
+        }
+        else if (filterType.equals(PingFrameFilter.PingFilterType.FilterPingOnly)) {
+            onlyPing.setSelected(true);
+        }
+        else if (filterType.equals(PingFrameFilter.PingFilterType.FilterPongOnly)) {
+            onlyPong.setSelected(true);
         }
         else {
-            optionBoth.setSelected(false);
-            onlyPing.setSelected(true);
+            throw new RuntimeException("Invalid ping filter state");
         }
     }
 

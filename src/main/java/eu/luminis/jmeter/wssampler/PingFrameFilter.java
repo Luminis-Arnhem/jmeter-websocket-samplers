@@ -29,7 +29,8 @@ public class PingFrameFilter extends FrameFilter {
 
     public enum PingFilterType {
         FilterAll,
-        FilterPingOnly
+        FilterPingOnly,
+        FilterPongOnly
     }
 
     private static Logger log = LoggingManager.getLoggerForClass();
@@ -41,6 +42,8 @@ public class PingFrameFilter extends FrameFilter {
                 return receivedFrame.isPing() || receivedFrame.isPong();
             case FilterPingOnly:
                 return receivedFrame.isPing();
+            case FilterPongOnly:
+                return receivedFrame.isPong();
             default:
                 throw new RuntimeException("Unknown filter type");
         }
