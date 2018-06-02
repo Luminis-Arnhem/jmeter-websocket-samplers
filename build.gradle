@@ -133,11 +133,11 @@ uploadArchives {
             }
 	    
             pom.project {
-	        name 'JMeter WebSocket Samplers'
-		packaging 'jar'
-		artifactId 'jmeter-websocket-samplers'
-		description 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
-		url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
+                name 'JMeter WebSocket Samplers'
+                packaging 'jar'
+                artifactId 'jmeter-websocket-samplers'
+                description 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
+                url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
 
                 licenses {
                     license {
@@ -148,9 +148,11 @@ uploadArchives {
                 }
                 developers {
                     developer {
-		        id 'peterd'
+                        id 'peterd'
                         name 'Peter Doornbosch'
                         email 'peter.doornbosch@luminis.eu'
+                        organization 'Luminis'
+                        organizationUrl 'http://www.luminis.eu'
                     }
                 }
                 scm {
