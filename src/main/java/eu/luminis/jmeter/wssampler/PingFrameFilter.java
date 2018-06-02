@@ -57,7 +57,7 @@ public class PingFrameFilter extends FrameFilter {
 
     @Override
     protected Frame performReplyAction(WebSocketClient wsClient, Frame receivedFrame) throws IOException {
-        if (getReplyToPing()) {
+        if (receivedFrame.isPing() && getReplyToPing()) {
             log.debug("Automatically replying to ping with a pong.");
             return wsClient.sendPongFrame();
         }
