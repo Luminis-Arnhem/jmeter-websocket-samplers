@@ -25,10 +25,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -184,7 +181,7 @@ public class WebSocketClient {
             log.debug(">>");
             httpWriter.flush();
             
-            socketInputStream = wsSocket.getInputStream();
+            socketInputStream = new BufferedInputStream(wsSocket.getInputStream());
             inStream = new CountingInputStream(socketInputStream);
             responseHeaders = checkServerResponse(inStream, encodeNonce);
             connected = true;
