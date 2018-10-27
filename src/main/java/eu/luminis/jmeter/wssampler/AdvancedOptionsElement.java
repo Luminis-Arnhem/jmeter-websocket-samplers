@@ -26,6 +26,15 @@ public class AdvancedOptionsElement extends ConfigTestElement {
     private boolean deleted = false;
     private boolean enabled = true;
 
+    static {
+        WebsocketSampler.checkJMeterVersion();
+    }
+
+    public AdvancedOptionsElement() {
+        if (! WebsocketSampler.supported)
+            throw new RuntimeException(WebsocketSampler.JMETER_VERSION_DEPENDENCY);
+    }
+
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);

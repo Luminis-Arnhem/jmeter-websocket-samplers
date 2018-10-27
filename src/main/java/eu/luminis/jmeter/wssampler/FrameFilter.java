@@ -41,11 +41,14 @@ public abstract class FrameFilter extends ConfigTestElement {
     private static boolean includeFilteredFramesInSize;
 
     static {
+        WebsocketSampler.checkJMeterVersion();
         initStaticFilterOptions();
     }
 
     public FrameFilter() {
         super();
+        if (! WebsocketSampler.supported)
+            throw new RuntimeException(WebsocketSampler.JMETER_VERSION_DEPENDENCY);
     }
 
     public Frame receiveFrame(WebSocketClient wsClient, int readTimeout, SampleResult result) throws IOException {

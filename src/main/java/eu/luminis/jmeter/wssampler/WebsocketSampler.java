@@ -22,7 +22,6 @@ import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.config.ConfigTestElement;
-import org.apache.jmeter.gui.TestPlanListener;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -40,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
  */
 abstract public class WebsocketSampler extends AbstractSampler implements ThreadListener {
 
+    public static final String JMETER_VERSION_DEPENDENCY = "This version of the WebSocketSamplers plugin requires JMeter 4 or later.";
+
     private static final String VAR_WEBSOCKET_LAST_FRAME_FINAL = "websocket.last_frame_final";
 
     enum ThreadStopPolicy { NONE, TCPCLOSE, WSCLOSE };
@@ -79,6 +81,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     protected static final ThreadLocal<Map<String, WebSocketClient>> threadLocalCachedConnection = ThreadLocal.withInitial(() -> new HashMap<String, WebSocketClient>());
 
     // intentionally package protected
+    static boolean supported;
     static boolean multipleConnectionsEnabled = false;
 
     protected HeaderManager headerManager;
@@ -104,15 +107,22 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
 
     static {
-        // checkJMeterVersion();
-        initProxyConfiguration();
-        checkForOtherWebsocketPlugins();
-        initThreadStopPolicy();
-        configureGui();
+        supported = checkJMeterVersion();
+        if (supported) {
+            initProxyConfiguration();
+            checkForOtherWebsocketPlugins();
+            initThreadStopPolicy();
+            configureGui();
+        }
     }
 
     public void clearTestElementChildren() {
         frameFilters.clear();
+    }
+
+    public WebsocketSampler() {
+        if (!supported)
+            throw new RuntimeException(JMETER_VERSION_DEPENDENCY);
     }
 
     @Override
@@ -467,15 +477,16 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    private static void checkJMeterVersion() {
+    static boolean checkJMeterVersion() {
+        boolean supported = false;
         try {
             String jmeterVersion = JMeterUtils.getJMeterVersion();
             Matcher m = Pattern.compile("(\\d+)\\.(\\d+).*").matcher(jmeterVersion);
             if (m.matches()) {
                 int major = Integer.parseInt(m.group(1));
                 int minor = Integer.parseInt(m.group(2));
-                if (major < 3 || (major == 3 && minor < 1))  {
-                    String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 3.1 or later.";
+                if (major < 4)  {
+                    String errorMsg = "This version of the WebSocketSamplers plugin requires JMeter 4 or later.";
                     if (GuiPackage.getInstance() != null) {
                         SwingUtilities.invokeLater(() -> {
                             GuiPackage.showErrorMessage(errorMsg, "Incompatible versions");
@@ -484,31 +495,51 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                         LoggerFactory.getLogger(WebsocketSampler.class).error(errorMsg);
                     }
                 }
+                else {
+                    supported = true;
+                }
             }
         }
         catch (Exception e) {
             // Let this method never throw an exception
+            System.out.println("ERROR! " + e);
+            e.printStackTrace();
         }
+        return supported;
     }
 
     private static void configureGui() {
         if (GuiPackage.getInstance() != null) {
-            GuiPackage.getInstance().addTestPlanListener(new TestPlanListener() {
-                @Override
-                public void beforeTestPlanCleared() {
+            // Instantiate test plan by reflection to avoid classloading errors when this class is loaded in older JMeter versions.
+            boolean listenerSet = false;
+            try {
+                Class testPlanListenerClass = Class.forName("eu.luminis.jmeter.wssampler.PluginTestPlanListener");
+                GuiPackage instance = GuiPackage.getInstance();
+                Method[] methods = instance.getClass().getMethods();
+                for (int i = 0; i < methods.length; i++) {
+                    if (methods[i].getName().equals("addTestPlanListener")) {
+                        methods[i].invoke(instance, testPlanListenerClass.newInstance());
+                        listenerSet = true;
+                        break;
+                    }
                 }
-
-                @Override
-                public void afterTestPlanCleared() {
-                    multipleConnectionsEnabled = false;
-                    AdvancedOptionsGUI.resetElementCount();
-                }
-
-                @Override
-                public void testPlanLoaded() {
-                }
-            });
+            } catch (Exception e) {
+                LoggerFactory.getLogger(WebsocketSampler.class).error("Could not instantiate test plan listener.", e);
+                // This is a serious error, as it will fuck-up the Advanced Options GUI behaviour.
+                throw new RuntimeException("Loading WebSocketPlugin failed");
+            }
+            if (! listenerSet) {
+                LoggerFactory.getLogger(WebsocketSampler.class).error("Could not set test plan listener.");
+                // This is a serious error, as it will fuck-up the Advanced Options GUI behaviour.
+                throw new RuntimeException("Loading WebSocketPlugin failed");
+            }
         }
     }
+
+    static void resetMultipleConnectionSettings() {
+        multipleConnectionsEnabled = false;
+        AdvancedOptionsGUI.resetElementCount();
+    }
+
 
 }
