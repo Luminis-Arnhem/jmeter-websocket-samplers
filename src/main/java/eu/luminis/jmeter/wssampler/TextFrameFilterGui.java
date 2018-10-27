@@ -21,7 +21,6 @@ package eu.luminis.jmeter.wssampler;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.testelement.TestElement;
 
-import javax.xml.soap.Text;
 import java.awt.*;
 
 public class TextFrameFilterGui extends AbstractConfigGui {
