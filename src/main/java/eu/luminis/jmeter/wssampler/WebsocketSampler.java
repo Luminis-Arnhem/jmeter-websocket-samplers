@@ -235,7 +235,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
         result.sampleEnd(); // End timimg
         getLogger().error("Unexpected frame type received in sampler '" + getName() + "': " + e.getReceivedFrame());
-        result.setResponseCode("Sampler error: unexpected frame type.");
+        result.setResponseCode("Sampler error: unexpected frame type (" + e.getReceivedFrame().getTypeAsString() + ").");
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
