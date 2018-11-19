@@ -23,12 +23,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -41,9 +36,9 @@ import java.util.regex.Pattern;
 import static javax.swing.BoxLayout.X_AXIS;
 import static javax.swing.BoxLayout.Y_AXIS;
 
+
 abstract public class WebSocketSamplerGuiPanel extends JPanel {
 
-    public static final Pattern DETECT_JMETER_VAR_REGEX = Pattern.compile("\\$\\{\\w+\\}");
 
     public static final int MIN_CONNECTION_TIMEOUT = WebsocketSampler.MIN_CONNECTION_TIMEOUT;
     public static final int MAX_CONNECTION_TIMEOUT = WebsocketSampler.MAX_CONNECTION_TIMEOUT;
@@ -235,7 +230,7 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
         boolean isNumber = false;
 
         try {
-            String literalContent = stripJMeterVariables(doc.getText(0, doc.getLength()));
+            String literalContent = JMeterUtils.stripJMeterVariables(doc.getText(0, doc.getLength()));
             if (literalContent.trim().length() > 0) {
                 int value = Integer.parseInt(literalContent);
                 ok = value >= min && value <= max;
@@ -262,10 +257,6 @@ abstract public class WebSocketSamplerGuiPanel extends JPanel {
                     errorMsgField.setText("Value must >= " + min + " and <= " + max);
             }
         return ok;
-    }
-
-    protected String stripJMeterVariables(String data) {
-        return DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
     }
 
     void enableConnectionIdOption(boolean on) {

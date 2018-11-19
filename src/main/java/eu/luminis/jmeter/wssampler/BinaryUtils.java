@@ -104,11 +104,15 @@ public class BinaryUtils {
         return builder.toString();
     }
 
-    public static String formatBinary(byte[] data, int maxBytes) {
+    public static String formatBinary(byte[] data, int maxBytes, String truncationSuffix) {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < Math.min(data.length, maxBytes); i++)
+        int byteCount = Math.min(data.length, maxBytes);
+        for (int i = 0; i < byteCount; i++)
             builder.append(String.format("%#04x ", data[i]));  // # defines the leading 0x, which takes 2 chars, hence width is 2 + 2 = 4
-        return builder.toString().trim();
+        if (byteCount < data.length)
+            return builder.toString().trim() + truncationSuffix;
+        else
+            return builder.toString().trim();
     }
 
     public static boolean contains(byte[] source, byte[] value) {

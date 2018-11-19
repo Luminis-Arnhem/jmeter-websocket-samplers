@@ -21,6 +21,9 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -34,6 +37,11 @@ import static org.junit.Assert.assertTrue;
 public class WebsocketSamplerTest {
 
     MockWebSocketClientCreator mocker = new MockWebSocketClientCreator();
+
+    @BeforeClass
+    public static void initJMeterContext() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+    }
 
     @Test
     public void defaultDoesNotUseProxy() {

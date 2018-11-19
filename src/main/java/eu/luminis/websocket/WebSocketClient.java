@@ -25,10 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -149,6 +146,7 @@ public class WebSocketClient {
                 path = "/" + path;
             outStream = new CountingOutputStream(socketOutputStream);
             PrintWriter httpWriter = new PrintWriter(outStream);
+            // Fragment identifiers are never sent in HTTP requests and RFC 6455 explicitly states that fragment identifiers must not be used.
             httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
             log.debug(    ">> GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1");
             httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + "\r\n");
@@ -183,7 +181,7 @@ public class WebSocketClient {
             log.debug(">>");
             httpWriter.flush();
             
-            socketInputStream = wsSocket.getInputStream();
+            socketInputStream = new BufferedInputStream(wsSocket.getInputStream());
             inStream = new CountingInputStream(socketInputStream);
             responseHeaders = checkServerResponse(inStream, encodeNonce);
             connected = true;
@@ -344,22 +342,26 @@ public class WebSocketClient {
         return sendPingFrame(new byte[0]);
     }
 
-    public Frame sendPingFrame(byte[] requestData) throws IOException {
+    public Frame sendPingFrame(byte[] applicationData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send ping frame when state is " + state);
         }
 
-        PingFrame ping = new PingFrame(requestData);
+        PingFrame ping = new PingFrame(applicationData);
         socketOutputStream.write(ping.getFrameBytes());
         return ping;
     }
 
     public Frame sendPongFrame() throws IOException {
+        return sendPongFrame(new byte[0]);
+    }
+
+    public Frame sendPongFrame(byte[] applicationData) throws IOException {
         if (state != WebSocketState.CONNECTED) {
             throw new IllegalStateException("Cannot send pong frame when state is " + state);
         }
 
-        PongFrame pongFrame = new PongFrame(new byte[0]);
+        PongFrame pongFrame = new PongFrame(applicationData);
         socketOutputStream.write(pongFrame.getFrameBytes());
         return pongFrame;
     }
@@ -522,9 +524,12 @@ public class WebSocketClient {
             return wsURL;
         else
             try {
-                String path = wsURL.getPath();
+                String path = wsURL.getFile();  // getPath only returns the path, getFile includes the query string!
                 if (!path.trim().startsWith("/"))
                     path = "/" + path.trim();
+                if (wsURL.getRef() != null) {
+                    path = path + "#" + wsURL.getRef();
+                }
                 return new URL(wsURL.getProtocol(), wsURL.getHost(), wsURL.getPort(), path);
             } catch (MalformedURLException e) {
                 // Impossible

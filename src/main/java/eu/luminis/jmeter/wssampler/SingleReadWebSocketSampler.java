@@ -67,15 +67,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         try {
-            Frame receivedFrame;
-            if (! frameFilters.isEmpty()) {
-                receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-                if ((getBinary() && receivedFrame.isBinary()) || (!getBinary() && receivedFrame.isText()))
-                    return receivedFrame;
-                else
-                    throw new UnexpectedFrameException(receivedFrame);
-            } else
-                return getBinary() ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+            return readFrame(wsClient, result, getBinary());
         }
         catch (SocketTimeoutException readTimeout) {
             if (getOptional())
@@ -159,22 +151,6 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     public void setCreateNewConnection(boolean value) {
         setProperty("createNewConnection", value);
-    }
-
-    public String getConnectTimeout() {
-        return getPropertyAsString("connectTimeout", "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT).trim();
-    }
-
-    public void setConnectTimeout(String connectTimeout) {
-        setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
-    }
-
-    public String getReadTimeout() {
-        return getPropertyAsString("readTimeout", "" +WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
-    }
-
-    public void setReadTimeout(String readTimeout) {
-        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
     }
 
     public boolean getOptional() {

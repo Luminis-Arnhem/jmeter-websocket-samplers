@@ -21,7 +21,6 @@ package eu.luminis.websocket;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -37,7 +36,8 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class WebSocketClientTest {
 
@@ -274,6 +274,25 @@ public class WebSocketClientTest {
     public void urlPathWithLeadingSpacesShouldBeCorrected() throws MalformedURLException {
         URL url = new URL("https", "nowhere.com", 443, "   path");
         assertEquals("/path", new WebSocketClient(url).getConnectUrl().getPath());
+    }
+
+    @Test
+    public void urlPathCorrectionShouldKeepQueryParams() throws MalformedURLException {
+        URL url = new WebSocketClient(new URL("https", "nowhere.com", 443, "path?find=bug")).getConnectUrl();
+        assertThat(url.toString()).isEqualTo("https://nowhere.com:443/path?find=bug");
+    }
+
+    @Test
+    public void urlPathCorrectionShouldKeepRef() throws MalformedURLException {
+        URL url = new WebSocketClient(new URL("https", "nowhere.com", 443, "path#anchor")).getConnectUrl();
+        assertThat(url.toString()).isEqualTo("https://nowhere.com:443/path#anchor");
+    }
+
+    @Test
+    public void urlPathCorrectionShouldKeepAllElementsExceptUserInfo() throws MalformedURLException {
+        String urlString = "https://websockets.somewhere.net:8632/complex/path?query=string#anchor";
+        URL url = new WebSocketClient(new URL(urlString)).getConnectUrl();
+        assertThat(url.toString()).isEqualTo(urlString);
     }
 
     @Test

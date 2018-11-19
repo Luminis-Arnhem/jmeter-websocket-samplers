@@ -38,11 +38,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -250,8 +255,71 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     protected void handleUnexpectedFrameException(UnexpectedFrameException e, SampleResult result) {
         result.sampleEnd(); // End timimg
         getLogger().error("Unexpected frame type received in sampler '" + getName() + "': " + e.getReceivedFrame());
-        result.setResponseCode("Sampler error: unexpected frame type.");
+        result.setResponseCode("Sampler error: unexpected frame type (" + e.getReceivedFrame().getTypeAsString() + ").");
         result.setResponseMessage("Received: " + e.getReceivedFrame());
+    }
+
+    protected void sendFrame(WebSocketClient wsClient, SampleResult result, boolean binary, String requestData, File requestDataFile) throws SamplingAbortedException, IOException {
+        Frame sentFrame;
+        try {
+            if (binary) {
+                byte[] binRequestData;
+                String printableRequestData;
+
+                try {
+                    if (requestDataFile != null) {
+                        binRequestData = Files.readAllBytes(requestDataFile.toPath());
+                        printableRequestData = BinaryUtils.formatBinary(binRequestData, 100, "...");
+                    } else {
+                        binRequestData = BinaryUtils.parseBinaryString(requestData);
+                        printableRequestData = requestData;
+                    }
+                } catch (NumberFormatException noNumber) {
+                    // Thrown by BinaryUtils.parseBinaryString
+                    result.sampleEnd(); // End timimg
+                    getLogger().error("Sampler '" + getName() + "': request data is not binary: " + requestData);
+                    result.setResponseCode("Sampler Error");
+                    result.setResponseMessage("Request data is not binary: " + requestData);
+                    throw new SamplingAbortedException();
+                }
+                // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
+                result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + printableRequestData + "\n");
+                sentFrame = wsClient.sendBinaryFrame(binRequestData);
+            }
+            else {
+                if (requestDataFile != null) {
+                    requestData = new String(Files.readAllBytes(requestDataFile.toPath()), StandardCharsets.UTF_8.name());
+                }
+                result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + requestData + "\n");
+                sentFrame = wsClient.sendTextFrame(requestData);
+            }
+            result.setSentBytes(sentFrame.getSize());
+        }
+        catch (NoSuchFileException | AccessDeniedException fileError) {
+            // Thrown by Files.readAllBytes
+            result.sampleEnd(); // End timimg
+            String rootCause = "";
+            if (fileError instanceof NoSuchFileException)
+                rootCause = "file '" + fileError.getFile() + "' not found";
+            else if (fileError instanceof AccessDeniedException)
+                rootCause = "file '" + fileError.getFile() + "' not readable";
+            getLogger().error("Sampler '" + getName() + "': can't load request data; " + rootCause);
+            result.setResponseCode("Sampler Error");
+            result.setResponseMessage("Request data cannot be loaded, " + rootCause);
+            throw new SamplingAbortedException();
+        }
+    }
+
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result, boolean binary) throws IOException, UnexpectedFrameException {
+        Frame receivedFrame;
+        if (! frameFilters.isEmpty()) {
+            receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
+            if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
+                return receivedFrame;
+            else
+                throw new UnexpectedFrameException(receivedFrame);
+        } else
+            return binary ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
     }
 
     public void addTestElement(TestElement element) {
@@ -444,15 +512,15 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     }
 
     public void setConnectTimeout(String connectTimeout) {
-        setProperty("connectTimeout", connectTimeout, "" + WebSocketClient.DEFAULT_CONNECT_TIMEOUT);
+        setProperty("connectTimeout", connectTimeout);
     }
 
     public String getReadTimeout() {
-        return getPropertyAsString("readTimeout", "" +WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
+        return getPropertyAsString("readTimeout", "" + WebSocketClient.DEFAULT_READ_TIMEOUT).trim();
     }
 
     public void setReadTimeout(String readTimeout) {
-        setProperty("readTimeout", readTimeout, "" + WebSocketClient.DEFAULT_READ_TIMEOUT);
+        setProperty("readTimeout", readTimeout);
     }
 
     public boolean getTLS() {

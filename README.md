@@ -68,7 +68,10 @@ The request-response sampler is the most commonly used one. With this sampler yo
 ![Sampler GUI](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/request-response-sample.png)
 
 The request-response sampler, as well as the single-read and single-write samplers, support both text and binary frames. 
-For binary frames, enter the payload in hexadecimal format, e.g. `0xca 0xfe` or `ba be`; JMeter variables can be used, but should resolve to hex format at runtime. 
+For binary frames, enter the payload in hexadecimal format, e.g. `0xca 0xfe` or `ba be`; JMeter variables can be used, but should resolve to hex format at runtime. On linux system, you can use the following command to generate hex format from a binary file: `hexdump -e '16/1 "0x%02x " " "' myFile.wav`.
+
+The payload (request data) can also be loaded from file, in which case it is not interpreted at all, but sent as is. Hence, JMeter variables cannot be used (or at least: will not be resolved) and binary content should be stored in binary files; e.g. not encoded in hex.
+
 Standard JMeter cannot display binary responses in the results viewers, but this plugin adds a binary view to the "View Results Tree" listener element (if the "Response data" tab stays empty, select "Binary" in the types dropdown).
 
 ![Binary response](https://bytebucket.org/pjtr/jmeter-websocket-samplers/raw/master/docs/binary-response.png)
@@ -188,7 +191,9 @@ If you encounter any issues or ambiguities, please report them. Also questions, 
 
 ## Acknowledgements
 
-The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau, Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt, Amol Chavan, Vladimir Melnikov, David Hubbard, Tien Tran, Ray Oei, Steef Burghouts.
+The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau,
+Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt,
+Amol Chavan, Vladimir Melnikov, David Hubbard, Tien Tran, Ray Oei, Georgy O, Rytis Kymantas, Petra Vanickova.
 
 
 ## License

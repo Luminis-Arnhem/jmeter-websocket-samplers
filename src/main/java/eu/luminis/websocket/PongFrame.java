@@ -43,7 +43,7 @@ public class PongFrame extends ControlFrame {
 
     @Override
     public String toString() {
-        return "Ping frame with application data '" + new String(applicationData) + "'";
+        return "Pong frame with " + (applicationData.length > 0? "application data '" + new String(applicationData) + "'": "no application data");
     }
 
     @Override

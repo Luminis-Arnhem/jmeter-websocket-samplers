@@ -23,6 +23,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -65,28 +66,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
-        Frame sentFrame;
-        if (getBinary()) {
-            byte[] requestData;
-            try {
-                requestData = BinaryUtils.parseBinaryString(getRequestData());
-            } catch (NumberFormatException noNumber) {
-                // Thrown by BinaryUtils.parseBinaryString
-                result.sampleEnd(); // End timimg
-                log.error("Sampler '" + getName() + "': request data is not binary: " + getRequestData());
-                result.setResponseCode("Sampler Error");
-                result.setResponseMessage("Request data is not binary: " + getRequestData());
-                throw new SamplingAbortedException();
-            }
-            // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
-            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            sentFrame = wsClient.sendBinaryFrame(requestData);
-        }
-        else {
-            result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + getRequestData() + "\n");
-            sentFrame = wsClient.sendTextFrame(getRequestData());
-        }
-        result.setSentBytes(sentFrame.getSize());
+        sendFrame(wsClient, result, getBinary(), getRequestData(), getLoadDataFromFile()? new File(getDataFile()): null);
         return null;
     }
 
@@ -155,6 +135,27 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
     public void setCreateNewConnection(boolean value) {
         setProperty("createNewConnection", value);
+    }
+
+    @Override
+    public void setReadTimeout(String readTimeout) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean getLoadDataFromFile() {
+        return getPropertyAsBoolean("loadDataFromFile");
+    }
+
+    public void setLoadDataFromFile(boolean value) {
+        setProperty("loadDataFromFile", value);
+    }
+
+    public String getDataFile() {
+        return getPropertyAsString("dataFile");
+    }
+
+    public void setDataFile(String dataFile) {
+        setProperty("dataFile", dataFile);
     }
 
 }

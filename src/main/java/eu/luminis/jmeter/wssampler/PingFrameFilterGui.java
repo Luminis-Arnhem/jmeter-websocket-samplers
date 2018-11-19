@@ -58,6 +58,7 @@ public class PingFrameFilterGui extends AbstractConfigGui {
         if (element instanceof PingFrameFilter) {
             PingFrameFilter filter = (PingFrameFilter) element;
             settingsPanel.replyToPing.setSelected(filter.getReplyToPing());
+            settingsPanel.setFilterType(filter.getFilterType());
         }
 
     }
@@ -68,6 +69,7 @@ public class PingFrameFilterGui extends AbstractConfigGui {
         if (element instanceof PingFrameFilter) {
             PingFrameFilter filter = (PingFrameFilter) element;
             filter.setReplyToPing(settingsPanel.replyToPing.isSelected());
+            filter.setFilterType(settingsPanel.getFilterType());
         }
     }
 

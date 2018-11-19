@@ -109,4 +109,10 @@ public class CloseWebSocketSampler extends WebsocketSampler {
     public void setStatusCode(String status) {
         setProperty("statusCode", status);
     }
+
+    @Override
+    public void setTLS(boolean value) {
+        throw new UnsupportedOperationException();
+    }
+
 }

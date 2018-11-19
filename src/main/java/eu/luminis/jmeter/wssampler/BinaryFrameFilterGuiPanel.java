@@ -206,7 +206,7 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
 
     private void checkContentIsBinary() {
         try {
-            BinaryUtils.parseBinaryString(stripJMeterVariables(binaryContent.getText()));
+            BinaryUtils.parseBinaryString(JMeterUtils.stripJMeterVariables(binaryContent.getText()));
             binaryContent.setForeground(GuiUtils.getLookAndFeelColor("TextArea.foreground"));
         }
         catch (NumberFormatException notNumber) {
@@ -214,9 +214,6 @@ public class BinaryFrameFilterGuiPanel extends JPanel {
         }
     }
 
-    protected String stripJMeterVariables(String data) {
-        return WebSocketSamplerGuiPanel.DETECT_JMETER_VAR_REGEX.matcher(data).replaceAll("");
-    }
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
