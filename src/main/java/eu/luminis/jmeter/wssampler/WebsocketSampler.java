@@ -346,6 +346,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
+    public CookieManager getCookieManager() {
+        return cookieManager;
+    }
+
     protected String getConnectUrl(URL url) {
         String path = url.getFile();
         if (! path.startsWith("/"))
