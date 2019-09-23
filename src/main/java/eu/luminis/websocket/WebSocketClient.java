@@ -404,7 +404,7 @@ public class WebSocketClient {
 
         wsSocket.setSoTimeout(readTimeout);
 
-        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream);
+        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, log);
         if (lastDataFrameStatus == DataFrameType.NONE && receivedFrame.isData() && !((DataFrame) receivedFrame).isFinalFragment()) {
             lastDataFrameStatus = receivedFrame.isText()? DataFrameType.TEXT: DataFrameType.BIN;
         }

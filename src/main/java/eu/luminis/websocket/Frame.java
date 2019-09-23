@@ -18,6 +18,8 @@
  */
 package eu.luminis.websocket;
 
+import org.apache.log.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
@@ -43,8 +45,11 @@ public abstract class Frame {
 
     private int frameSize;
 
-
     static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
+        return parseFrame(previousDataFrameType, istream, null);
+    }
+
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, Logger log) throws IOException {
         int byte1 = istream.read();
         if (byte1 == -1)
             throw new EndOfStreamException("end of stream");
@@ -71,7 +76,7 @@ public abstract class Frame {
         }
         else {
             byte[] lengthBytes = new byte[8];
-            int bytesRead = readFromStream(istream, lengthBytes);
+            int bytesRead = readFromStream(istream, lengthBytes, log);
             if (bytesRead != lengthBytes.length)
                 throw new EndOfStreamException("WebSocket protocol error: expected " + lengthBytes.length + " length bytes, but can only read " + bytesRead + " bytes");
             // If most signicifant word (32 bytes) of length are non-zero, it results in an unsupported length (must fit in a Java int)
@@ -84,7 +89,7 @@ public abstract class Frame {
             nrOfLenghtBytes = 8;
         }
         byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
-        int bytesRead = readFromStream(istream, payload);
+        int bytesRead = readFromStream(istream, payload, log);
         if (bytesRead == -1)
             throw new EndOfStreamException("end of stream");
         if (bytesRead != length)
@@ -165,16 +170,21 @@ public abstract class Frame {
         return frame;
     }
 
+    protected static int readFromStream(InputStream stream, byte[] buffer) throws IOException {
+        return readFromStream(stream, buffer, null);
+    }
+
     /**
      *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
      *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
      * @param stream the stream to read from
      * @param buffer the buffer to write to
+     * @param log
      * @return the number of bytes read
      * @throws IOException if the underlying stream throws an IOException
      */
-    protected static int readFromStream(InputStream stream, byte[] buffer) throws IOException {
-        return readFromStream(stream, buffer, 0, buffer.length);
+    protected static int readFromStream(InputStream stream, byte[] buffer, Logger log) throws IOException {
+        return readFromStream(stream, buffer, 0, buffer.length, log);
     }
 
     /**
@@ -187,15 +197,17 @@ public abstract class Frame {
      * @return the number of bytes read
      * @throws IOException if the underlying stream throws an IOException
      */
-    protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected) throws IOException {
+    protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected, Logger logger) throws IOException {
         int toRead = expected;
         int totalRead = 0;
         do {
             int bytesRead = stream.read(buffer, offset, toRead);
             if (bytesRead < 0)  // -1: Stream is at end of file
                 return totalRead;
-            if (bytesRead == 0)   // Should not happen according to Javadoc, but just in case... avoid endless loop
+            if (bytesRead == 0) {  // Should not happen according to Javadoc, but just in case... avoid endless loop.
+                logger.error("Blocking read fails with 0 bytes read.");
                 return totalRead;
+            }
             totalRead += bytesRead;
             offset += bytesRead;
             toRead = expected - totalRead;
