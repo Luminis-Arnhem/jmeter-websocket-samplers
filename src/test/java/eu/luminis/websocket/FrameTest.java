@@ -23,15 +23,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 public class FrameTest {
 
@@ -218,6 +217,57 @@ public class FrameTest {
         for (int i = 0; i < 256; i++)
             assertEquals(inputBuffer[i], outputBuffer[i]);
         assertEquals(-1, input.read());
+    }
+
+    @Test
+    public void testReadStreamWithZeroReadFromInput() throws IOException {
+        // This test simulates the situation that the BufferedInputStream in Frame.readFromStream, sometimes reads
+        // zero bytes. Given the javadoc of InputStream, this is not expected, but apparently, this sometimes happens,
+        // see https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues/115/unsupported-frame-type-under-heavy-load.
+
+        InputStream simulateInputFromSocket = new InputStream() {
+            byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 };
+            int index = 0;
+            int simulationStep = 0;
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                int count = Integer.min(10, Integer.min(data.length - index, len));
+                if (simulationStep == 1)
+                    count = 0;
+                System.out.println("simulateInputFromSocket: read(byte[], off, len) called; len=" + len + "; reading " + count);
+                System.arraycopy(data, index, b, off, count);
+                index += count;
+                simulationStep++;
+                return count;
+            }
+
+            @Override
+            public int available() throws IOException {
+                // Always return 0, to make the caller believe there are currently no bytes available (but there will be later on)
+                System.out.println("simulateInputFromSocket: available()");
+                return 0;
+            }
+
+            @Override
+            public int read(byte[] b) throws IOException {
+                // Don't need to implement this method for the tests.
+                throw new RuntimeException("Not implemented");
+            }
+
+            @Override
+            public int read() throws IOException {
+                // Don't need to implement this method for the tests.
+                throw new RuntimeException("Not implemented");
+            }
+        };
+
+        byte[] buffer = new byte[20];
+        int nrBytesRead = Frame.readFromStream(new BufferedInputStream(simulateInputFromSocket, 8), buffer);
+
+        assertEquals(20, nrBytesRead);
+        for (int i = 0; i < 20; i++)
+            assertEquals(i, buffer[i]);
     }
 
     @Test
