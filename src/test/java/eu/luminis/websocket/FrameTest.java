@@ -235,7 +235,6 @@ public class FrameTest {
                 int count = Integer.min(10, Integer.min(data.length - index, len));
                 if (simulationStep == 1)
                     count = 0;
-                System.out.println("simulateInputFromSocket: read(byte[], off, len) called; len=" + len + "; reading " + count);
                 System.arraycopy(data, index, b, off, count);
                 index += count;
                 simulationStep++;
@@ -245,7 +244,6 @@ public class FrameTest {
             @Override
             public int available() throws IOException {
                 // Always return 0, to make the caller believe there are currently no bytes available (but there will be later on)
-                System.out.println("simulateInputFromSocket: available()");
                 return 0;
             }
 

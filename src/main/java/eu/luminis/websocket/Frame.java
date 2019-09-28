@@ -188,8 +188,8 @@ public abstract class Frame {
     }
 
     /**
-     *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
-     *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     * Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
+     * (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
      * @param stream the stream to read from
      * @param buffer the buffer to write to
      * @param offset the offset in the buffer
@@ -204,13 +204,25 @@ public abstract class Frame {
             int bytesRead = stream.read(buffer, offset, toRead);
             if (bytesRead < 0)  // -1: Stream is at end of file
                 return totalRead;
-            if (bytesRead == 0) {  // Should not happen according to Javadoc, but just in case... avoid endless loop.
-                logger.error("Blocking read fails with 0 bytes read.");
-                return totalRead;
+            if (bytesRead == 0) {
+                // According to the Javadoc this should not happen, but in reality, it sometimes does.
+                // Just block on a simple read of a single byte and continue the read loop.
+                int singleByte = stream.read();
+                if (singleByte == -1) { // Stream is at end of file
+                    return totalRead;
+                }
+                else {
+                    buffer[offset] = (byte) singleByte;
+                    totalRead += 1;
+                    offset += 1;
+                    toRead = expected - totalRead;
+                }
             }
-            totalRead += bytesRead;
-            offset += bytesRead;
-            toRead = expected - totalRead;
+            else {
+                totalRead += bytesRead;
+                offset += bytesRead;
+                toRead = expected - totalRead;
+            }
         }
         while (totalRead < expected);
         return totalRead;
