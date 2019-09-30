@@ -88,6 +88,9 @@ public abstract class Frame {
             length = ( (lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
             nrOfLenghtBytes = 8;
         }
+        if (length == 0) {
+            log.error("0-length payload for frame " + opCode);
+        }
         byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
         int bytesRead = readFromStream(istream, payload, log);
         if (bytesRead == -1)
@@ -198,6 +201,15 @@ public abstract class Frame {
      * @throws IOException if the underlying stream throws an IOException
      */
     protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected, Logger logger) throws IOException {
+        if (expected == 0 || buffer.length == 0) {
+            logger.error("readFromStream() called for reading 0 bytes");
+            return 0;
+        }
+        if (offset + expected > buffer.length) {
+            logger.error("readFromStream() called with wrong offset/expected; limiting number of bytes read");
+            expected = buffer.length - offset;
+        }
+
         int toRead = expected;
         int totalRead = 0;
         do {
@@ -205,6 +217,7 @@ public abstract class Frame {
             if (bytesRead < 0)  // -1: Stream is at end of file
                 return totalRead;
             if (bytesRead == 0) {
+                logger.error("Blocking read fails with 0 bytes read.");
                 // According to the Javadoc this should not happen, but in reality, it sometimes does.
                 // Just block on a simple read of a single byte and continue the read loop.
                 int singleByte = stream.read();

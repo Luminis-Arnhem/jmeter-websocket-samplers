@@ -18,10 +18,13 @@
  */
 package eu.luminis.websocket;
 
+import org.apache.jorphan.logging.LoggingManager;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import org.apache.log.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -32,14 +35,17 @@ import java.net.ProtocolException;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
 
+
 public class FrameTest {
+
+    private static Logger logger = LoggingManager.getLoggerForClass();;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void parseEmptyTextFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 0 } ), logger);
         assertTrue(frame.isText());
         assertEquals(2, frame.getSize());
     }
@@ -55,7 +61,7 @@ public class FrameTest {
 
     @Test
     public void parsePongFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x8a, 0 } ), logger);
         assertTrue(frame.isPong());
         assertEquals(0, ((PongFrame) frame).getData().length);
         assertEquals(2, frame.getSize());
@@ -261,11 +267,32 @@ public class FrameTest {
         };
 
         byte[] buffer = new byte[20];
-        int nrBytesRead = Frame.readFromStream(new BufferedInputStream(simulateInputFromSocket, 8), buffer);
+        int nrBytesRead = Frame.readFromStream(new BufferedInputStream(simulateInputFromSocket, 8), buffer, logger);
 
         assertEquals(20, nrBytesRead);
         for (int i = 0; i < 20; i++)
             assertEquals(i, buffer[i]);
+    }
+
+    @Test
+    public void testReadStreamWithEmptyBuffer() throws IOException {
+        int bytesRead = Frame.readFromStream(new ByteArrayInputStream(new byte[] { 0x01, 0x02, 0x03, 0x04 }), new byte[0], logger);
+
+        assertEquals(0, bytesRead);
+    }
+
+    @Test
+    public void testReadStreamForZeroBytes() throws IOException {
+        int bytesRead = Frame.readFromStream(new ByteArrayInputStream(new byte[] { 0x0a, 0x0b, 0x0c, 0x0d }), new byte[1024], 0, 0, logger);
+
+        assertEquals(0, bytesRead);
+    }
+
+    @Test
+    public void testReadStreamInvalidOffset() throws IOException {
+        int bytesRead = Frame.readFromStream(new ByteArrayInputStream(new byte[] { 0x0a, 0x0b, 0x0c, 0x0d }), new byte[1024], 1022, 4, logger);
+
+        assertEquals(2, bytesRead);
     }
 
     @Test
