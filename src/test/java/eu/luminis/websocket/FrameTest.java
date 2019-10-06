@@ -26,11 +26,11 @@ import org.junit.rules.ExpectedException;
 
 import org.apache.log.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.Iterator;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
@@ -296,6 +296,194 @@ public class FrameTest {
     }
 
     @Test
+    public void testTimeoutsDuringReadDoNotAffectResultOfParsingFrame() throws IOException {
+        // Setup an input stream that contains one text frame, but throws a SocketTimeoutException after each 8 bytes read.
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(
+                new byte[] { (byte) 0x81, 18, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x65, 0x62, 0x2d, 0x73, 0x6f, 0x63, 0x6b, 0x65, 0x74, 0x21, (byte) 0xca },
+                new Integer[] { 8, 16 }
+        );
+
+        InputStream input = (new BufferedInputStream(simulatedNetworkStream));
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+        gotTimeout = false;
+
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertEquals("Hello, web-socket!", ((TextFrame) frame).getText());
+        assertEquals((byte) 0xca, (byte) input.read());
+    }
+
+    @Test
+    public void testTimeoutAfterFirstByte() throws IOException {
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(
+                new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f },
+                new Integer[] { 1 }
+        );
+
+        InputStream input = (new BufferedInputStream(simulatedNetworkStream));
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertEquals("Hello", ((TextFrame) frame).getText());
+    }
+
+    @Test
+    public void testTimeoutAfterSecondByte() throws IOException {
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(
+                new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f },
+                new Integer[] { 2 }
+        );
+
+        InputStream input = (new BufferedInputStream(simulatedNetworkStream));
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertEquals("Hello", ((TextFrame) frame).getText());
+    }
+
+    @Test
+    public void testTimeoutInTwoBytesLengthField() throws IOException {
+        byte[] rawData = new byte[4 + 200 + 1];
+        System.arraycopy(new byte[] { (byte) 0x81, 126, 0, (byte) 200, 0x48, 0x65, 0x6c, 0x6c, 0x6f }, 0, rawData, 0, 9);
+        rawData[204] = (byte) 0xca;
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(rawData, new Integer[] { 3 });
+
+        InputStream input = (new BufferedInputStream(simulatedNetworkStream));
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertTrue(((TextFrame) frame).getText().startsWith("Hello"));
+        assertEquals(200, frame.getPayloadSize());
+        assertEquals((byte) 0xca, (byte) input.read());
+    }
+
+    @Test
+    public void testTimeoutInLastBytesOfTwoBytesLengthFieldFrame() throws IOException {
+        byte[] rawData = new byte[4 + 65535 + 1];
+        System.arraycopy(new byte[] { (byte) 0x81, 126, (byte) 0xff, (byte) 0xff, 0x48, 0x65, 0x6c, 0x6c, 0x6f }, 0, rawData, 0, 9);
+        rawData[4 + 65535 + 1 - 1] = (byte) 0xca;
+        // This will test whether the markLimit is large enough
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(rawData, new Integer[] { 65538 });
+
+        InputStream input = new BufferedInputStream(simulatedNetworkStream);
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertTrue(((TextFrame) frame).getText().startsWith("Hello"));
+        assertEquals(65535, frame.getPayloadSize());
+        assertEquals((byte) 0xca, (byte) input.read());
+    }
+
+    @Test
+    public void testTimeoutInEightBytesLengthField() throws IOException {
+        byte[] rawData = new byte[10 + 200 + 1];
+        // Using a length that can be fit in less than 8 bytes is against the specification, but this implementation allows it.
+        System.arraycopy(new byte[] { (byte) 0x81, 127, 0, 0, 0, 0, 0, 0, 0, (byte) 200, 0x48, 0x65, 0x6c, 0x6c, 0x6f }, 0, rawData, 0, 15);
+        rawData[210] = (byte) 0xca;
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(rawData, new Integer[] { 5 });
+
+        // BufferedInputStream's mark-limit is at least buffer size, so to test whether the markLimit is set correctly, a small buffer size is needed.
+        InputStream input = new BufferedInputStream(simulatedNetworkStream, 8);
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertTrue(((TextFrame) frame).getText().startsWith("Hello"));
+        assertEquals(200, frame.getPayloadSize());
+        assertEquals((byte) 0xca, (byte) input.read());
+    }
+
+    @Test
+    public void testTimeoutInFrameWithBytesLengthField() throws IOException {
+        byte[] rawData = new byte[10 + 200 + 1];
+        // Using a length that can be fit in less than 8 bytes is against the specification, but this implementation allows it.
+        System.arraycopy(new byte[] { (byte) 0x81, 127, 0, 0, 0, 0, 0, 0, 0, (byte) 200, 0x48, 0x65, 0x6c, 0x6c, 0x6f }, 0, rawData, 0, 15);
+        rawData[210] = (byte) 0xca;
+        InputStream simulatedNetworkStream = new SimulatedNetworkStreamWithTimeouts(rawData, new Integer[] { 195 });
+
+        InputStream input = new BufferedInputStream(simulatedNetworkStream, 8);
+
+        boolean gotTimeout = false;
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        } catch (SocketTimeoutException e) {
+            gotTimeout = true;
+        }
+        assertTrue(gotTimeout);
+
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, input, logger);
+        assertTrue(frame instanceof TextFrame);
+        assertTrue(((TextFrame) frame).getText().startsWith("Hello"));
+        assertEquals(200, frame.getPayloadSize());
+        assertEquals((byte) 0xca, (byte) input.read());
+    }
+
+    @Test
+    public void otherIoExceptionDoesNotResetStreamToStartOfFrame() {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[]{ (byte) 0x81, 127, 0, 0, 0, 0, 0, 0, 0, (byte) 200, 0x48, 0x65, 0x6c, 0x6c, 0x6f });
+        try {
+            Frame.parseFrame(Frame.DataFrameType.NONE, inputStream, logger);
+        } catch (IOException e) {
+            assertFalse(e instanceof SocketTimeoutException);
+        }
+        int nextRead = inputStream.read();
+        assertEquals(-1, nextRead);
+    }
+
+    @Test
     public void testParseFinalTextContinuationFrame() throws IOException {
         Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
         assertTrue(frame.isText());
@@ -340,5 +528,57 @@ public class FrameTest {
         thrown.expect(ProtocolException.class);
         thrown.expectMessage("no continuation frame expected");
         Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+    }
+
+    static class SimulatedNetworkStreamWithTimeouts extends InputStream {
+
+        // This input stream simulates the situation that part of a frame is read, but that reading more bytes throws
+        // a SocketTimeout exception, which can happen on slow or busy networks in combination with large frames.
+        byte[] data;
+        int index = 0;
+        Iterator<Integer> remainingTimeoutIndexes;
+        int nextTimeoutIndex;
+
+        SimulatedNetworkStreamWithTimeouts(byte[] data, Integer[] timeoutIndexes) {
+            this.data = data;
+            this.remainingTimeoutIndexes = Arrays.asList(timeoutIndexes).iterator();
+            nextTimeoutIndex = remainingTimeoutIndexes.next();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if (index == nextTimeoutIndex) {
+                nextTimeoutIndex();
+                throw new SocketTimeoutException();
+            }
+            else {
+                int count = Integer.min(nextTimeoutIndex - index, len);
+                if (index + count > data.length) {
+                    count = data.length - index;
+                }
+                System.arraycopy(data, index, b, off, count);
+                index += count;
+                return count;
+            }
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (index == nextTimeoutIndex) {
+                nextTimeoutIndex();
+                throw new SocketTimeoutException();
+            }
+            else if (index >= data.length)
+                return -1;
+            else
+                return data[index++];
+        }
+
+        private void nextTimeoutIndex() {
+            if (remainingTimeoutIndexes.hasNext())
+                nextTimeoutIndex = remainingTimeoutIndexes.next();
+            else
+                nextTimeoutIndex = Integer.MAX_VALUE;
+        }
     }
 }
