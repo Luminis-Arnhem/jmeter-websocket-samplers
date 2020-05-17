@@ -31,15 +31,17 @@ dependencies {
     compile('logkit:logkit:2.0') {
         transitive = false
     }
+    
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    compile('commons-io:commons-io:2.5') {
+        transitive = false
+    }
 
     testCompile 'junit:junit:4.12'
 
     testCompile('org.mockito:mockito-core:2.2.15')
 
     testCompile('avalon-framework:avalon-framework:4.1.4')
-
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    testCompile('commons-io:commons-io:2.5')
 
     testCompile 'org.assertj:assertj-core:3.8.0'
 }
