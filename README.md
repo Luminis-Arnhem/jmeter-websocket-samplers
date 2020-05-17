@@ -178,7 +178,8 @@ If you encounter any issues or ambiguities, please report them. Also questions, 
 
 The following people have contributed to this plugin by providing feedback, filing isssues, etc.: Eric Engels, Siarhei Huzau,
 Victor Komlev, Chitta Ranjan, Oswin Nathanial, Andrew, Fedor Pavkovcek, Alexander Barker, Sachin D. Agrawal, Nicholas Naisbitt,
-Amol Chavan, Vladimir Melnikov, David Hubbard, Tien Tran, Ray Oei, Georgy O, Rytis Kymantas, Petra Vanickova, Éliás Ádám, Nicolas Casaux.
+Amol Chavan, Vladimir Melnikov, David Hubbard, Tien Tran, Ray Oei, Georgy O, Rytis Kymantas, Petra Vanickova, Éliás Ádám, Nicolas Casaux,
+Andrzej Nosal, Philippe M.
 
 
 ## License
