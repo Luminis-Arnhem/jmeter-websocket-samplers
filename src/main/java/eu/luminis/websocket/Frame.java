@@ -100,9 +100,6 @@ public abstract class Frame {
                 nrOfLenghtBytes = 8;
                 updateMarkLimit(2 + 8 + length, istream, 10);
             }
-            if (length == 0) {
-                log.error("0-length payload for frame " + opCode);
-            }
             byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
             int bytesRead = readFromStream(istream, payload, log);
             if (bytesRead == -1)
@@ -210,7 +207,7 @@ public abstract class Frame {
      *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
      * @param stream the stream to read from
      * @param buffer the buffer to write to
-     * @param log
+     * @param log logger
      * @return the number of bytes read
      * @throws IOException if the underlying stream throws an IOException
      */
@@ -225,12 +222,12 @@ public abstract class Frame {
      * @param buffer the buffer to write to
      * @param offset the offset in the buffer
      * @param expected the expected number of bytes to read
+     * @param logger logger
      * @return the number of bytes read
      * @throws IOException if the underlying stream throws an IOException
      */
     protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected, Logger logger) throws IOException {
         if (expected == 0 || buffer.length == 0) {
-            logger.error("readFromStream() called for reading 0 bytes");
             return 0;
         }
         if (offset + expected > buffer.length) {
