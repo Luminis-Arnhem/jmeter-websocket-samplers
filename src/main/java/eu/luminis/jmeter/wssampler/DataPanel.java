@@ -19,16 +19,30 @@
 package eu.luminis.jmeter.wssampler;
 
 
-import org.apache.jmeter.gui.util.FileDialoger;
+import static javax.swing.BoxLayout.X_AXIS;
 
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import static javax.swing.BoxLayout.X_AXIS;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import org.apache.jmeter.gui.util.FileDialoger;
 
 public class DataPanel extends JPanel {
 
@@ -80,6 +94,7 @@ public class DataPanel extends JPanel {
             dataZone.add(requestDataLabel);
             requestDataField = new JTextArea();
             requestDataField.setColumns(40);
+            requestDataField.setRows(10);
             requestDataField.setLineWrap(true);
             requestDataField.setBorder(BorderFactory.createEmptyBorder());
             // Add a simple (huhuh!) on-change handler....
