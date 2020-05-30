@@ -291,15 +291,20 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     }
 
     protected Frame readFrame(WebSocketClient wsClient, SampleResult result, boolean binary) throws IOException, UnexpectedFrameException {
+        Frame receivedFrame = readFrame(wsClient, result);
+        if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
+            return receivedFrame;
+        else
+            throw new UnexpectedFrameException(receivedFrame);
+    }
+
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         Frame receivedFrame;
-        if (! frameFilters.isEmpty()) {
+        if (! frameFilters.isEmpty())
             receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-            if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
-                return receivedFrame;
-            else
-                throw new UnexpectedFrameException(receivedFrame);
-        } else
-            return binary ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        else
+            receivedFrame = wsClient.receiveFrame(readTimeout);
+        return receivedFrame;
     }
 
     public void addTestElement(TestElement element) {
