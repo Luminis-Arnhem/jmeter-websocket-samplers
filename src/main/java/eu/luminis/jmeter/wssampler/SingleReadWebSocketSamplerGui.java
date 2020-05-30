@@ -76,7 +76,7 @@ public class SingleReadWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.portField.setText(sampler.getPort());
             settingsPanel.pathField.setText(sampler.getPath());
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
-            settingsPanel.typeSelector.setSelectedItem(sampler.getBinary()? BINARY: TEXT);
+            settingsPanel.setType(sampler.getDataType());
             settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
             settingsPanel.optionalSampler.setSelected(sampler.getOptional());
         }
@@ -92,7 +92,7 @@ public class SingleReadWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());
             sampler.setConnectTimeout(settingsPanel.connectionTimeoutField.getText());
-            sampler.setBinary(settingsPanel.typeSelector.getSelectedItem() == BINARY);
+            sampler.setDataType(settingsPanel.getType());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
             sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
             sampler.setOptional(settingsPanel.optionalSampler.isSelected());
