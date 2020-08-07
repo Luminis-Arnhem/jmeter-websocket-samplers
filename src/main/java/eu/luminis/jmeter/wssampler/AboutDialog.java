@@ -54,6 +54,7 @@ public class AboutDialog extends JDialog {
     private static final String DOWNLOAD_API_URL = "https://api.bitbucket.org/2.0/repositories/pjtr/jmeter-websocket-samplers/downloads";
     private static final String DOWNLOAD_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads";
     private static final String ISSUES_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues";
+    private static final String DOC_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/README.md";
 
     private static AboutDialog aboutDlg;
 
@@ -81,6 +82,9 @@ public class AboutDialog extends JDialog {
             JLabel versionMessage = new JLabel("WebSocket Samplers plugin, version " + (getVersion() != null ? getVersion() : "unknown") + ".");
             versionMessage.setAlignmentX(LEFT_ALIGNMENT);
             panel.add(versionMessage);
+            JLabel docsLabel = new JLabel("<html>For documentation, see the <a href=\"" + DOC_URL + "\">" + "README" + "</a>.</html>");
+            makeClickGoto(docsLabel, DOC_URL);
+            panel.add(docsLabel);
 
             // "cards" has to be final, so cannot assign new JPanel here.
             {

@@ -19,6 +19,7 @@
 package eu.luminis.websocket;
 
 import eu.luminis.websocket.Frame.DataFrameType;
+import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
 import org.slf4j.Logger;
@@ -38,10 +39,10 @@ import java.util.regex.Pattern;
 public class WebSocketClient {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketClient.class);
-
-    public static int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
-    public static int DEFAULT_READ_TIMEOUT = 6 * 1000;
-
+    private static final String NEW_LINE = "\r\n";
+    private static final Pattern HTTP_STATUS_PATTERN = Pattern.compile("^HTTP/\\d\\.\\d (\\d{3}?)");
+    public static final int DEFAULT_CONNECT_TIMEOUT = 20 * 1000;
+    public static final int DEFAULT_READ_TIMEOUT = 6 * 1000;
     public static Set<String> UPGRADE_HEADERS;
 
     static {
@@ -97,11 +98,11 @@ public class WebSocketClient {
     }
 
     public HttpResult connect() throws IOException, HttpException {
-        return connect(Collections.EMPTY_MAP, DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+        return connect(Collections.emptyMap(), DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
     }
 
     public HttpResult connect(int connectTimeout, int readTimeout) throws IOException, HttpException {
-        return connect(Collections.EMPTY_MAP, connectTimeout, readTimeout);
+        return connect(Collections.emptyMap(), connectTimeout, readTimeout);
     }
 
     public HttpResult connect(Map<String, String> headers) throws IOException, HttpException {
@@ -119,7 +120,7 @@ public class WebSocketClient {
             headers = additionalHeaders;
         }
         if (headers == null) {
-            headers = Collections.EMPTY_MAP;
+            headers = Collections.emptyMap();
         }
 
         if (state != WebSocketState.CLOSED) {
@@ -136,7 +137,7 @@ public class WebSocketClient {
         Map<String, String> responseHeaders = null;
         CountingOutputStream outStream = null;
         CountingInputStream inStream = null;
-
+        PrintWriter httpWriter = null;
         try {
             wsSocket.setSoTimeout(readTimeout);
             socketOutputStream = wsSocket.getOutputStream();
@@ -145,18 +146,18 @@ public class WebSocketClient {
             if (path == null || !path.trim().startsWith("/"))
                 path = "/" + path;
             outStream = new CountingOutputStream(socketOutputStream);
-            PrintWriter httpWriter = new PrintWriter(outStream);
+            httpWriter = new PrintWriter(outStream);
             // Fragment identifiers are never sent in HTTP requests and RFC 6455 explicitly states that fragment identifiers must not be used.
             httpWriter.print("GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1\r\n");
             log.debug(    ">> GET " + (useProxy? connectUrl.toString(): path) + " HTTP/1.1");
-            httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + "\r\n");
+            httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + NEW_LINE);
             log.debug(    ">> Host: " + connectUrl.getHost() + ":" + connectUrl.getPort());
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 if (! UPGRADE_HEADERS.contains(header.getKey())) {
                     String headerLine = header.getKey() + ": " + header.getValue();
                     // Ensure header line does _not_ contain new line
                     if (!headerLine.contains("\r") && !headerLine.contains("\n")) {
-                        httpWriter.print(headerLine + "\r\n");
+                        httpWriter.print(headerLine + NEW_LINE);
                         log.debug(">> " + headerLine);
                     }
                     else {
@@ -173,11 +174,11 @@ public class WebSocketClient {
             byte[] nonce = new byte[16];
             randomGenerator.nextBytes(nonce);
             String encodeNonce = new String(Base64.getEncoder().encode(nonce));
-            httpWriter.print("Sec-WebSocket-Key: " + encodeNonce + "\r\n");
+            httpWriter.print("Sec-WebSocket-Key: " + encodeNonce + NEW_LINE);
             log.debug(">> Sec-WebSocket-Key: " + encodeNonce);
             httpWriter.print("Sec-WebSocket-Version: 13\r\n");
             log.debug(">> Sec-WebSocket-Version: 13");
-            httpWriter.print("\r\n");
+            httpWriter.print(NEW_LINE);
             log.debug(">>");
             httpWriter.flush();
             
@@ -186,19 +187,17 @@ public class WebSocketClient {
             responseHeaders = checkServerResponse(inStream, encodeNonce);
             connected = true;
             state = WebSocketState.CONNECTED;
+            return new HttpResult(responseHeaders, outStream.getCount(), inStream.getCount());
         }
         finally {
             if (! connected) {
-                if (socketInputStream != null)
-                    socketInputStream.close();
-                if (socketOutputStream != null)
-                    socketOutputStream.close();
-                if (wsSocket != null)
-                    wsSocket.close();
+            	IOUtils.closeQuietly(socketInputStream);
+            	IOUtils.closeQuietly(socketOutputStream);
+            	IOUtils.closeQuietly(wsSocket);
+            	IOUtils.closeQuietly(httpWriter);
                 state = WebSocketState.CLOSED;
             }
         }
-        return new HttpResult(responseHeaders, outStream.getCount(), inStream.getCount());
     }
 
     public boolean isConnected() {
@@ -237,14 +236,14 @@ public class WebSocketClient {
             PrintWriter proxyWriter = new PrintWriter(socket.getOutputStream());
             proxyWriter.print("CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1\r\n");
             log.debug(">proxy> CONNECT " + connectUrl.getHost() + ":" + connectUrl.getPort() + " HTTP/1.1");
-            proxyWriter.print("Host: " + connectUrl.getHost() + "\r\n");
+            proxyWriter.print("Host: " + connectUrl.getHost() + NEW_LINE);
             log.debug(">proxy> Host: " + connectUrl.getHost());
             if (proxyUsername != null && proxyPassword != null) {
                 String authentication = proxyUsername + ":" + proxyPassword;
-                proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + "\r\n");
+                proxyWriter.print("Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()) + NEW_LINE);
                 log.debug(">proxy> Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString(authentication.getBytes()));
             }
-            proxyWriter.print("\r\n");
+            proxyWriter.print(NEW_LINE);
             proxyWriter.flush();
 
             HttpLineReader httpReader = new HttpLineReader(socket.getInputStream());
@@ -277,15 +276,10 @@ public class WebSocketClient {
     }
 
     public void dispose() {
-        try {
-            if (socketInputStream != null)
-                socketInputStream.close();
-            if (socketOutputStream != null)
-                socketOutputStream.close();
-            if (wsSocket != null)
-                wsSocket.close();
-            state = WebSocketState.CLOSED;
-        } catch (IOException e) {}
+    	IOUtils.closeQuietly(socketInputStream);
+    	IOUtils.closeQuietly(socketOutputStream);
+    	IOUtils.closeQuietly(wsSocket);
+    	state = WebSocketState.CLOSED;
     }
 
     public void finalize() {
@@ -404,7 +398,7 @@ public class WebSocketClient {
 
         wsSocket.setSoTimeout(readTimeout);
 
-        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream);
+        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, log);
         if (lastDataFrameStatus == DataFrameType.NONE && receivedFrame.isData() && !((DataFrame) receivedFrame).isFinalFragment()) {
             lastDataFrameStatus = receivedFrame.isText()? DataFrameType.TEXT: DataFrameType.BIN;
         }
@@ -503,11 +497,12 @@ public class WebSocketClient {
     }
 
     private void checkHttpStatus(String statusLine, int expectedStatusCode) throws HttpException {
-        Matcher matcher = Pattern.compile("^HTTP/\\d\\.\\d (\\d{3}?)").matcher(statusLine);
+        Matcher matcher = HTTP_STATUS_PATTERN.matcher(statusLine);
         if (matcher.find()) {
             int statusCode = Integer.parseInt(matcher.group(1));
             if (statusCode != expectedStatusCode)
-                throw new HttpUpgradeException(statusCode);
+                throw new HttpUpgradeException("Got unexpected status " + statusCode 
+                		+ " with statusLine:"+statusLine, statusCode);
         }
         else
             throw new HttpProtocolException("Invalid status line");
@@ -533,7 +528,7 @@ public class WebSocketClient {
                 return new URL(wsURL.getProtocol(), wsURL.getHost(), wsURL.getPort(), path);
             } catch (MalformedURLException e) {
                 // Impossible
-                throw new RuntimeException();
+                throw new RuntimeException(e);
             }
     }
 

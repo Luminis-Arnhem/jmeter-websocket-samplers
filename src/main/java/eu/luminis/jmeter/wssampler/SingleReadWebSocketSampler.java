@@ -33,6 +33,8 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     private static final Logger log = LoggerFactory.getLogger(SingleReadWebSocketSampler.class);
 
+    public enum DataType { Text, Binary, Any }
+
     public SingleReadWebSocketSampler() {
         super.setName("Read WebSocket Sampler");
     }
@@ -67,7 +69,7 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
         try {
-            return readFrame(wsClient, result, getBinary());
+            return readFrame(wsClient, result);
         }
         catch (SocketTimeoutException readTimeout) {
             if (getOptional())
@@ -78,6 +80,32 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
     }
 
     @Override
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
+        Frame receivedFrame = super.readFrame(wsClient, result);
+
+        boolean gotExpectedFrameType;
+        switch (getDataType()) {
+            case Text:
+                gotExpectedFrameType = receivedFrame instanceof TextFrame;
+                break;
+            case Binary:
+                gotExpectedFrameType = receivedFrame instanceof BinaryFrame;
+                break;
+            case Any:
+                gotExpectedFrameType = receivedFrame instanceof DataFrame;
+                break;
+            default:
+                gotExpectedFrameType = false;
+        }
+
+        if (gotExpectedFrameType)
+            return receivedFrame;
+        else
+            throw new UnexpectedFrameException(receivedFrame);
+    }
+
+
+    @Override
     protected void postProcessResponse(Frame response, SampleResult result) {
         if (response == null && getOptional()) {
             log.debug("Sampler '" + getName() + "' received no response (read timeout).");
@@ -85,8 +113,9 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
             result.setResponseCode("No response");
             result.setResponseMessage("Read timeout, no response received.");
         }
-        else
-            processDefaultReadResponse((DataFrame) response, getBinary(), result);
+        else {
+            processDefaultReadResponse((DataFrame) response, response instanceof BinaryFrame, result);
+        }
     }
 
 
@@ -139,6 +168,23 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
 
     public void setBinary(boolean binary) {
         setProperty("binaryPayload", binary);
+    }
+
+    public DataType getDataType() {
+        String dataTypeValue = getPropertyAsString("dataType");
+        if (dataTypeValue != null && !dataTypeValue.isEmpty()) {
+            return DataType.valueOf(dataTypeValue);
+        }
+        else if (getBinary()) {
+            return DataType.Binary;
+        }
+        else {
+            return DataType.Text;
+        }
+    }
+
+    public void setDataType(DataType dataType) {
+        setProperty("dataType", dataType.name());
     }
 
     public String toString() {

@@ -18,9 +18,12 @@
  */
 package eu.luminis.websocket;
 
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.util.Random;
 
 public abstract class Frame {
@@ -43,73 +46,103 @@ public abstract class Frame {
 
     private int frameSize;
 
-
     static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
-        int byte1 = istream.read();
-        if (byte1 == -1)
-            throw new EndOfStreamException("end of stream");
-        int byte2 = istream.read();
-        if (byte2 == -1)
-            throw new EndOfStreamException("end of stream");
+        return parseFrame(previousDataFrameType, istream, null);
+    }
 
-        boolean fin = (byte1 & 0x80) != 0;
-        int opCode = byte1 & 0x0f;
-        int firstLengthByte = byte2 & 0x7f;
-        int length;
-        int nrOfLenghtBytes = 0;
-        if (firstLengthByte < 126)
-            length = firstLengthByte;
-        else if (firstLengthByte == 126) {
-            byte1 = istream.read();
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, Logger log) throws IOException {
+        boolean markSupported = istream.markSupported();
+        if (! markSupported) {
+            throw new IllegalStateException("readFromStream should be called with an InputStream that supports mark/reset");
+        }
+
+        try {
+            istream.mark(2 + 8);  // Extended payload length is 8 bytes, 2 bytes for opcode and payload len.
+            int byte1 = istream.read();
             if (byte1 == -1)
                 throw new EndOfStreamException("end of stream");
-            byte2 = istream.read();
+            int byte2 = istream.read();
             if (byte2 == -1)
                 throw new EndOfStreamException("end of stream");
-            length = ((byte1 & 0xff) << 8) | (byte2 & 0xff);
-            nrOfLenghtBytes = 2;
+
+            boolean fin = (byte1 & 0x80) != 0;
+            int opCode = byte1 & 0x0f;
+            int firstLengthByte = byte2 & 0x7f;
+            int length;
+            int nrOfLenghtBytes = 0;
+            if (firstLengthByte < 126) {
+                length = firstLengthByte;
+                updateMarkLimit(2 + length, istream, 2);
+            }
+            else if (firstLengthByte == 126) {
+                byte1 = istream.read();
+                if (byte1 == -1)
+                    throw new EndOfStreamException("end of stream");
+                byte2 = istream.read();
+                if (byte2 == -1)
+                    throw new EndOfStreamException("end of stream");
+                length = ((byte1 & 0xff) << 8) | (byte2 & 0xff);
+                updateMarkLimit(2 + 2 + length, istream, 4);
+                nrOfLenghtBytes = 2;
+            }
+            else {
+                byte[] lengthBytes = new byte[8];
+                int bytesRead = readFromStream(istream, lengthBytes, log);
+                if (bytesRead != lengthBytes.length)
+                    throw new EndOfStreamException("WebSocket protocol error: expected " + lengthBytes.length + " length bytes, but can only read " + bytesRead + " bytes");
+                // If most signicifant word (32 bytes) of length are non-zero, it results in an unsupported length (must fit in a Java int)
+                if (lengthBytes[0] != 0 || lengthBytes[1] != 0 || lengthBytes[2] != 0 || lengthBytes[3] != 0)
+                    throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
+                // Must check for most significant bit on least significant word set to avoid negative array size
+                if ((lengthBytes[4] & 0x80) == 128)
+                    throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
+                length = ((lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
+                nrOfLenghtBytes = 8;
+                updateMarkLimit(2 + 8 + length, istream, 10);
+            }
+            byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
+            int bytesRead = readFromStream(istream, payload, log);
+            if (bytesRead == -1)
+                throw new EndOfStreamException("end of stream");
+            if (bytesRead != length)
+                throw new EndOfStreamException("WebSocket protocol error: expected payload of length " + length + ", but can only read " + bytesRead + " bytes");
+            switch (opCode) {
+                case OPCODE_CONT:
+                    if (previousDataFrameType == DataFrameType.TEXT)
+                        return new TextContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                    else if (previousDataFrameType == DataFrameType.BIN)
+                        return new BinaryContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                    else
+                        throw new ProtocolException("no continuation frame expected");
+                case OPCODE_TEXT:
+                    return new TextFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                case OPCODE_BINARY:
+                    return new BinaryFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                case OPCODE_CLOSE:
+                    return new CloseFrame(payload, 2 + nrOfLenghtBytes + length);
+                case OPCODE_PING:
+                    return new PingFrame(payload, 2 + nrOfLenghtBytes + length);
+                case OPCODE_PONG:
+                    return new PongFrame(payload, 2 + nrOfLenghtBytes + length);
+                default:
+                    throw new RuntimeException("unsupported frame type: " + opCode);
+            }
         }
-        else {
-            byte[] lengthBytes = new byte[8];
-            int bytesRead = readFromStream(istream, lengthBytes);
-            if (bytesRead != lengthBytes.length)
-                throw new EndOfStreamException("WebSocket protocol error: expected " + lengthBytes.length + " length bytes, but can only read " + bytesRead + " bytes");
-            // If most signicifant word (32 bytes) of length are non-zero, it results in an unsupported length (must fit in a Java int)
-            if (lengthBytes[0] != 0  || lengthBytes[1] != 0  || lengthBytes[2] != 0  || lengthBytes[3] != 0 )
-                throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-            // Must check for most significant bit on least significant word set to avoid negative array size
-            if ( (lengthBytes[4] & 0x80) == 128)
-                throw new RuntimeException("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-            length = ( (lengthBytes[4] & 0xff) << 24) | ((lengthBytes[5] & 0xff) << 16) | ((lengthBytes[6] & 0xff) << 8) | ((lengthBytes[7] & 0xff) << 0);
-            nrOfLenghtBytes = 8;
+        catch (SocketTimeoutException timeout) {
+            // Reset the stream to the start of the frame, so a next call might succesfully read the complete frame.
+            istream.reset();
+            // Rethrow, because caller must know there was a socket timeout
+            throw timeout;
         }
-        byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
-        int bytesRead = readFromStream(istream, payload);
-        if (bytesRead == -1)
-            throw new EndOfStreamException("end of stream");
-        if (bytesRead != length)
-            throw new EndOfStreamException("WebSocket protocol error: expected payload of length " + length + ", but can only read " + bytesRead + " bytes");
-        switch (opCode) {
-            case OPCODE_CONT:
-                if (previousDataFrameType == DataFrameType.TEXT)
-                    return new TextContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
-                else if (previousDataFrameType == DataFrameType.BIN)
-                    return new BinaryContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
-                else
-                    throw new ProtocolException("no continuation frame expected");
-            case OPCODE_TEXT:
-                return new TextFrame(fin, payload, 2 + nrOfLenghtBytes + length);
-            case OPCODE_BINARY:
-                return new BinaryFrame(fin, payload, 2 + nrOfLenghtBytes + length);
-            case OPCODE_CLOSE:
-                return new CloseFrame(payload, 2 + nrOfLenghtBytes + length);
-            case OPCODE_PING:
-                return new PingFrame(payload, 2 + nrOfLenghtBytes + length);
-            case OPCODE_PONG:
-                return new PongFrame(payload, 2 + nrOfLenghtBytes + length);
-            default:
-                throw new RuntimeException("unsupported frame type: " + opCode);
-        }
+    }
+
+    private static void updateMarkLimit(int readLimit, InputStream stream, int bytesRead) throws IOException {
+        // Reset the stream to the original mark, so we can mark again.
+        stream.reset();
+        // Mark with the updated read limit
+        stream.mark(readLimit);
+        // Reread (and discard) the number of bytes read (and processed) already.
+        stream.read(new byte[bytesRead]);
     }
 
     protected Frame(int size) {
@@ -165,16 +198,8 @@ public abstract class Frame {
         return frame;
     }
 
-    /**
-     *  Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
-     *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
-     * @param stream the stream to read from
-     * @param buffer the buffer to write to
-     * @return the number of bytes read
-     * @throws IOException if the underlying stream throws an IOException
-     */
     protected static int readFromStream(InputStream stream, byte[] buffer) throws IOException {
-        return readFromStream(stream, buffer, 0, buffer.length);
+        return readFromStream(stream, buffer, null);
     }
 
     /**
@@ -182,25 +207,71 @@ public abstract class Frame {
      *  (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
      * @param stream the stream to read from
      * @param buffer the buffer to write to
-     * @param offset the offset in the buffer
-     * @param expected the expected number of bytes to read
+     * @param log logger
      * @return the number of bytes read
      * @throws IOException if the underlying stream throws an IOException
      */
-    protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected) throws IOException {
+    protected static int readFromStream(InputStream stream, byte[] buffer, Logger log) throws IOException {
+        return readFromStream(stream, buffer, 0, buffer.length, log);
+    }
+
+    /**
+     * Read from stream until expected number of bytes is read, or the stream is closed. So, this method might block!
+     * (Note that this is the difference with java.io.BufferedInputStream: that reads as much as available.)
+     * @param stream the stream to read from
+     * @param buffer the buffer to write to
+     * @param offset the offset in the buffer
+     * @param expected the expected number of bytes to read
+     * @param logger logger
+     * @return the number of bytes read
+     * @throws IOException if the underlying stream throws an IOException
+     */
+    protected static int readFromStream(InputStream stream, byte[] buffer, int offset, int expected, Logger logger) throws IOException {
+        if (expected == 0 || buffer.length == 0) {
+            return 0;
+        }
+        if (offset + expected > buffer.length) {
+            logger.error("readFromStream() called with wrong offset/expected; limiting number of bytes read");
+            expected = buffer.length - offset;
+        }
+
         int toRead = expected;
         int totalRead = 0;
-        do {
-            int bytesRead = stream.read(buffer, offset, toRead);
-            if (bytesRead < 0)  // -1: Stream is at end of file
-                return totalRead;
-            if (bytesRead == 0)   // Should not happen according to Javadoc, but just in case... avoid endless loop
-                return totalRead;
-            totalRead += bytesRead;
-            offset += bytesRead;
-            toRead = expected - totalRead;
+        try {
+            do {
+                int bytesRead = stream.read(buffer, offset, toRead);
+                if (bytesRead < 0)  // -1: Stream is at end of file
+                    return totalRead;
+                if (bytesRead == 0) {
+                    logger.error("Blocking read fails with 0 bytes read.");
+                    // According to the Javadoc this should not happen, but in reality, it sometimes does.
+                    // Just block on a simple read of a single byte and continue the read loop.
+                    int singleByte = stream.read();
+                    if (singleByte == -1) { // Stream is at end of file
+                        return totalRead;
+                    }
+                    else {
+                        buffer[offset] = (byte) singleByte;
+                        totalRead += 1;
+                        offset += 1;
+                        toRead = expected - totalRead;
+                    }
+                }
+                else {
+                    totalRead += bytesRead;
+                    offset += bytesRead;
+                    toRead = expected - totalRead;
+                }
+            }
+            while (totalRead < expected);
         }
-        while (totalRead < expected);
+        catch (SocketTimeoutException timeout) {
+            // Just catch to log if bytes where read before the timeout; this can be useful info when debugging.
+            if (totalRead > 0) {
+                logger.debug("Read was interrupted by socket timeout; " + totalRead + " bytes read.");
+            }
+            throw timeout;
+        }
         return totalRead;
     }
 

@@ -84,6 +84,13 @@ public class MockWebSocketClientCreator {
                     return new TextFrame("ws-response-data");
                 }
             });
+            when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<TextFrame>(){
+                @Override
+                public TextFrame answer(InvocationOnMock invocation) throws Throwable {
+                    Thread.sleep(300);
+                    return new TextFrame("ws-response-data");
+                }
+            });
             return mockWsClient;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -273,9 +280,14 @@ public class MockWebSocketClientCreator {
                 @Override
                 public String answer(InvocationOnMock invocation) throws Throwable {
                     Thread.sleep(300);
-                    //if (exception != null)
-                        throw exception;
-                    //return "ws-response-data";
+                    throw exception;
+                }
+            });
+            when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<String>(){
+                @Override
+                public String answer(InvocationOnMock invocation) throws Throwable {
+                    Thread.sleep(300);
+                    throw exception;
                 }
             });
             return mockWsClient;

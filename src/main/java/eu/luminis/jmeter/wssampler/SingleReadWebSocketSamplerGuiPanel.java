@@ -21,12 +21,14 @@ package eu.luminis.jmeter.wssampler;
 import javax.swing.*;
 import java.awt.*;
 
+import static eu.luminis.jmeter.wssampler.SingleReadWebSocketSampler.DataType.*;
 import static javax.swing.BoxLayout.Y_AXIS;
 
 public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
     public static final String BINARY = "Binary";
     public static final String TEXT = "Text";
+    public static final String ANY = "Text or Binary";
 
     JComboBox typeSelector;
     JCheckBox optionalSampler;
@@ -52,7 +54,7 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
             JPanel topBar = new JPanel();
             {
                 topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
-                String[] typeOptions = {TEXT, BINARY};
+                String[] typeOptions = {TEXT, BINARY, ANY};
                 typeSelector = new JComboBox(typeOptions);
                 typeSelector.setMaximumSize(typeSelector.getMinimumSize());
                 topBar.add(typeSelector);
@@ -96,6 +98,32 @@ public class SingleReadWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel
         setCreateNewConnection(false);
     }
 
+    public SingleReadWebSocketSampler.DataType getType() {
+        if (typeSelector.getSelectedItem().equals(TEXT)) {
+            return Text;
+        }
+        if (typeSelector.getSelectedItem().equals(BINARY)) {
+            return Binary;
+        }
+        if (typeSelector.getSelectedItem().equals(ANY)) {
+            return Any;
+        }
+        throw new IllegalStateException();
+    }
+
+    public void setType(SingleReadWebSocketSampler.DataType dataType) {
+        switch (dataType) {
+            case Text:
+                typeSelector.setSelectedItem(TEXT);
+                break;
+            case Binary:
+                typeSelector.setSelectedItem(BINARY);
+                break;
+            case Any:
+                typeSelector.setSelectedItem(ANY);
+                break;
+        }
+    }
 
 
     public static void main(String[] args) {

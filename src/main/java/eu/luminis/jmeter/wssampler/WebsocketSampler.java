@@ -21,7 +21,6 @@ package eu.luminis.jmeter.wssampler;
 import eu.luminis.websocket.*;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.gui.GuiPackage;
-import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -43,16 +42,11 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -311,15 +305,20 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     }
 
     protected Frame readFrame(WebSocketClient wsClient, SampleResult result, boolean binary) throws IOException, UnexpectedFrameException {
+        Frame receivedFrame = readFrame(wsClient, result);
+        if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
+            return receivedFrame;
+        else
+            throw new UnexpectedFrameException(receivedFrame);
+    }
+
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
         Frame receivedFrame;
-        if (! frameFilters.isEmpty()) {
+        if (! frameFilters.isEmpty())
             receivedFrame = frameFilters.get(0).receiveFrame(frameFilters.subList(1, frameFilters.size()), wsClient, readTimeout, result);
-            if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
-                return receivedFrame;
-            else
-                throw new UnexpectedFrameException(receivedFrame);
-        } else
-            return binary ? wsClient.receiveBinaryData(readTimeout) : wsClient.receiveText(readTimeout);
+        else
+            receivedFrame = wsClient.receiveFrame(readTimeout);
+        return receivedFrame;
     }
 
     public void addTestElement(TestElement element) {
@@ -372,6 +371,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
+    public CookieManager getCookieManager() {
+        return cookieManager;
+    }
+
     protected String getConnectUrl(URL url) {
         String path = url.getFile();
         if (! path.startsWith("/"))
@@ -391,11 +394,15 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         if (binary) {
             byte[] responseData = ((BinaryFrame) response).getBinaryData();
             result.setResponseData(responseData);
-            getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with data: " + BinaryUtils.formatBinary(responseData));
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with data: " + BinaryUtils.formatBinary(responseData));
+            }
         }
         else {
             result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
-            getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with text: '" + ((TextFrame) response).getText() + "'");
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with text: '" + ((TextFrame) response).getText() + "'");
+            }
         }
         result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
         JMeterContextService.getContext().getVariables().put(VAR_WEBSOCKET_LAST_FRAME_FINAL, String.valueOf(response.isFinalFragment()));

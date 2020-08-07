@@ -18,14 +18,16 @@
  */
 package eu.luminis.jmeter.wssampler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import java.awt.*;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+
 
 public class GuiUtils {
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(GuiUtils.class);
 
     /** Color used for error messages and to signal invalid input */
     private static final Color DEFAULT_ERROR_COLOR = Color.RED;

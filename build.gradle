@@ -30,9 +30,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     compile ('org.slf4j:slf4j-api:1.7.25')
 
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    compile('commons-io:commons-io:2.5') {
+        transitive = false
+    }
+
     testCompile 'junit:junit:4.12'
 
     testCompile('org.mockito:mockito-core:2.2.15')
+
 
     testCompile 'org.assertj:assertj-core:3.8.0'
     

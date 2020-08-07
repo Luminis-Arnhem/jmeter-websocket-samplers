@@ -19,6 +19,8 @@
 package eu.luminis.websocket;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,6 +29,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class CloseFrameTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(CloseFrameTest.class);
+
 
     @Test
     public void closeFrameWithOnlyStatusShouldHaveSize4() throws Exception {
@@ -50,7 +55,7 @@ public class CloseFrameTest {
 
     @Test
     public void minimumCloseFrameShouldHaveSize2() throws IOException {
-        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x00 }));
+        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x00 }), logger);
 
         assertTrue(close.isClose());
         assertEquals(2, close.getSize());
