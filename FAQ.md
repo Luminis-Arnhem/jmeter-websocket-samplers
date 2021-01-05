@@ -14,3 +14,14 @@ As you probably know, HTTP status code 404 means "NOT FOUND", so the problem is 
 Of course, the sample should work. If it doesn't and you did not change it, please check the [websocket.org](http://www.websocket.org/echo.html) website and try the echo demo in your browser; sometimes their websocket server is down or otherwise not fully available.
 Another reason could be that you are using a proxy; older (0.7.x and before) versions of the plugin do not yet support http proxy.
 
+
+## Can I use the websocket plugin for Protobuf, SignalR, Stomp, ...?
+
+Yes, you can, but you have to assemble the Protobuf, SignalR, Stomp, ..., messages yourself in your JMeter test plan.
+The websocket plugin implements the WebSocket protocol and (obviously) facilitates sending and receiving WebSocket messages.
+Lots of applications use another protocol _on top_ of the WebSocket protocol, e.g. SignalR, and in order to test such a
+protocol with the plugin, you will need to adapt your test plan to send these higher level protocol messages. 
+In case the higher level protocol is text or JSON based (e.g. SignalR) or text oriented (STOMP), you can simply enter the text or JSON string in the request data field.
+For binary protocols (e.g. Protocol Buffers), assembling the message payload can be more challenging, but it is feasible (the websocket plugin can send binary data frames, 
+select "Binary" in the data type dropdown).
+
