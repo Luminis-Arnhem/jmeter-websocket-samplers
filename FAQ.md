@@ -25,3 +25,10 @@ In case the higher level protocol is text or JSON based (e.g. SignalR) or text o
 For binary protocols (e.g. Protocol Buffers), assembling the message payload can be more challenging, but it is feasible (the websocket plugin can send binary data frames, 
 select "Binary" in the data type dropdown).
 
+
+## How to define websocket subprotocol?
+
+Even though you cannot set the WebSocket Subprotocol in the WebSocket Sampler GUI, you can define it by adding the standard JMeter Header Manager.
+Add the Header Manager somewhere in your testplan (e.g. just before the first websocket Sampler) and add an entry with name "Sec-WebSocket-Protocol" 
+and as value the identifier of the subprotocol you want to use, e.g. "ocpp1.6" or "v12.stomp".
+
