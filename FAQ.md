@@ -9,6 +9,15 @@ The 404 status code in the error message is just the HTTP status that was return
 As you probably know, HTTP status code 404 means "NOT FOUND", so the problem is that your sampler is trying to access an URL that does not exist.
 
 
+## When trying to connect to websocket server, i get "Response code: 200 Response message: Got unexpected status 200 with statusLine:HTTP/1.1 200 OK". 
+
+You are probably connecting to a server or server URL that does not support the WebSocket protocol. 
+
+Every WebSocket connection starts with an "upgrade request", which is standard HTTP GET call with some special headers. 
+The server _must_ respond with http status 101 ("Switching Protocols") and a set of defined headers. 
+If you get status 200 ("OK") instead, the server did not upgrade, but interpreted the upgrade request as a normal GET.
+
+
 ## When running the "Basic request-response sample" sample test plan, it fails with a time out error. Shouldn't this sample work?
 
 Of course, the sample should work. If it doesn't and you did not change it, please check the [websocket.org](http://www.websocket.org/echo.html) website and try the echo demo in your browser; sometimes their websocket server is down or otherwise not fully available.
