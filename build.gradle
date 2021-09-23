@@ -121,21 +121,21 @@ group = 'net.luminis.jmeter'
 publishing {
     publications {
         mavenJava(MavenPublication) {
-	    pom {
-	        name = 'JMeter WebSocket Samplers'
+            pom {
+                name = 'JMeter WebSocket Samplers'
                 artifactId = 'jmeter-websocket-samplers'
                 description = 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
                 url = 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
 
-		licenses {
-		    license {
+                licenses {
+                    license {
                         name = 'GNU Lesser General Public License v3'
                         url = 'https://www.gnu.org/licenses/lgpl-3.0-standalone.html'
                         distribution = 'repo'
                     }
                 }
 
-		developers {
+                developers {
                     developer {
                         id = 'peterd'
                         name = 'Peter Doornbosch'
@@ -150,16 +150,16 @@ publishing {
                     developerConnection = 'scm:git:ssh://bitbucket.org:pjtr/jmeter-websocket-samplers.git'
                     url = 'https://bitbucket.org/pjtr/jmeter-websocket-samplers/src'
                 }
-	    }
+            }
         }
     }
     repositories {
         maven {
-	    url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-	    credentials {
-	        username = project.properties.ossrhUsername
-	        password = project.properties.ossrhPassword
-	    }
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = project.properties.ossrhUsername
+                password = project.properties.ossrhPassword
+            }
         }
     }
 }
