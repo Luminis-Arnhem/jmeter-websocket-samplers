@@ -115,6 +115,50 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
+task publishToJMeterLocal(dependsOn: jar) {
+    def pluginName = rootProject.name // "JMeterWebSocketSamplers"
+    doLast {
+        def jmeterHome = System.getenv('JMETER_HOME') // Gradle has case sensitivity
+        if (jmeterHome == null || jmeterHome.trim().isEmpty()) {
+            throw new GradleException("To install the plugin please specify `JMETER_HOME` enviroment variable")
+        } else {
+            logger.quiet("jmeter_home: " + jmeterHome)
+        }
+
+        def jmeterExtPath = java.nio.file.Paths.get(jmeterHome, "lib", "ext")
+        if (!java.nio.file.Files.exists(jmeterExtPath)) {
+            throw new GradleException("Please specify valid `JMETER_HOME` enviroment variable, lib/ext subdirectory " +
+                    "should exist but it's not: " + jmeterExtPath)
+        }
+
+        def jmeterExtDir = jmeterExtPath.toAbsolutePath().toString()
+        def installedProdVersion = java.nio.file.Files.list(jmeterExtPath)
+                .map { path -> path.toFile() }
+                .filter { file -> file.isFile() }
+                .filter { file -> file.name.matches(pluginName + ".*\\.jar") }
+                .filter {file -> !file.name.equalsIgnoreCase(pluginName + "-dev.jar") }
+                .collect()
+
+        if (!installedProdVersion.isEmpty()) {
+            def prodFilesNames = installedProdVersion.stream().map { file -> file.name }.collect()
+
+            throw new GradleException('Found other versions of the plugin in lib/ext directory, collision may ocure: '
+                    + prodFilesNames + ". It's recommended to remove them from " + jmeterExtPath + " before publising current dev version.")
+        }
+
+        logger.quiet("installing the plugin into " + jmeterExtDir)
+        copy {
+            from "build/libs"
+            into jmeterExtDir
+            include "*-dev.jar"
+        }
+    }
+}
+
+configure(publishToJMeterLocal) {
+    group = 'publishing'
+    description = 'Publish development version into local JMeter'
+}
 
 group = 'net.luminis.jmeter'
 
