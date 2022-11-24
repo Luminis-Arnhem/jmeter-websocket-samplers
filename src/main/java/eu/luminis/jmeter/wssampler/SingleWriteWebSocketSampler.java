@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class SingleWriteWebSocketSampler extends WebsocketSampler {
+public class SingleWriteWebSocketSampler extends WebsocketGeneralSampler {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -65,7 +65,7 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
-        sendFrame(wsClient, result, getBinary(), getRequestData(), getLoadDataFromFile()? new File(getDataFile()): null);
+        sendFrame(wsClient, result, getType(), getRequestData(), getLoadDataFromFile()? new File(getDataFile()): null);
         return null;
     }
 
@@ -114,14 +114,6 @@ public class SingleWriteWebSocketSampler extends WebsocketSampler {
 
     public void setRequestData(String requestData) {
         setProperty("requestData", requestData);
-    }
-
-    public boolean getBinary() {
-        return getPropertyAsBoolean("binaryPayload");
-    }
-
-    public void setBinary(boolean binary) {
-        setProperty("binaryPayload", binary);
     }
 
     public String toString() {
