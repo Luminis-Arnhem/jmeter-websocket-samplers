@@ -72,7 +72,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     public static final int MIN_CONNECTION_TIMEOUT = 1;
     public static final int MAX_CONNECTION_TIMEOUT = 999999;
     public static final int MIN_READ_TIMEOUT = 0;
-    public static final int MAX_READ_TIMEOUT = 999999;
+    public static final int MAX_READ_TIMEOUT = 9999999;
     public static final int DEFAULT_WS_PORT = 80;
 
     // Control reuse of cached SSL Context in subsequent connections on the same thread
