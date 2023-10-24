@@ -102,8 +102,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
 
     private static final Function<String, String> PREPROCESSOR_NOOP = text -> text;
-    private static final Function<String, String> PREPROCESSOR_STOMP = text ->
-            text.replaceAll("\\^@", "\0");
+    private static final Function<String, String> PREPROCESSOR_STOMP = text -> text.replaceAll("\\^@", "\0");
 
     static {
         checkJMeterVersion();
@@ -242,12 +241,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
-    protected Frame sendBinaryFrame(
-            final WebSocketClient wsClient,
-            final SampleResult result,
-            final String requestData,
-            final File requestDataFile
-    ) throws IOException, SamplingAbortedException {
+    protected Frame sendBinaryFrame(WebSocketClient wsClient, SampleResult result, String requestData, File requestDataFile) throws IOException, SamplingAbortedException {
         byte[] binRequestData;
         String printableRequestData;
 
@@ -259,7 +253,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 binRequestData = BinaryUtils.parseBinaryString(requestData);
                 printableRequestData = requestData;
             }
-        } catch (NumberFormatException noNumber) {
+        }
+        catch (NumberFormatException noNumber) {
             // Thrown by BinaryUtils.parseBinaryString
             result.sampleEnd(); // End timimg
             getLogger().error("Sampler '" + getName() + "': request data is not binary: " + requestData);
@@ -272,13 +267,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         return wsClient.sendBinaryFrame(binRequestData);
     }
 
-    protected Frame sendTextFrame(
-            final WebSocketClient wsClient,
-            final SampleResult result,
-            final String requestData,
-            final File requestDataFile,
-            final Function<String, String> requestPreprocessor
-    ) throws IOException {
+    protected Frame sendTextFrame(WebSocketClient wsClient, SampleResult result, String requestData, File requestDataFile, Function<String, String> requestPreprocessor) throws IOException {
         final String rawRequestData;
         if (requestDataFile != null) {
             rawRequestData = new String(Files.readAllBytes(requestDataFile.toPath()), StandardCharsets.UTF_8);
@@ -290,13 +279,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         return wsClient.sendTextFrame(processedRequestData);
     }
 
-    protected void sendFrame(
-            final WebSocketClient wsClient,
-            final SampleResult result,
-            final DataPayloadType type,
-            final String requestData,
-            final File requestDataFile
-    ) throws SamplingAbortedException, IOException {
+    protected void sendFrame(WebSocketClient wsClient, SampleResult result, DataPayloadType type, String requestData, File requestDataFile) throws SamplingAbortedException, IOException {
         final Frame sentFrame;
         try {
             switch (type) {
@@ -313,7 +296,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                     sentFrame = sendTextFrame(wsClient, result, requestData, requestDataFile, PREPROCESSOR_NOOP);
             }
             result.setSentBytes(sentFrame.getSize());
-        } catch (NoSuchFileException | AccessDeniedException fileError) {
+        }
+        catch (NoSuchFileException | AccessDeniedException fileError) {
             // Thrown by Files.readAllBytes
             result.sampleEnd(); // End timimg
             String rootCause = "";
@@ -351,7 +335,6 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 throw new UnexpectedFrameException(receivedFrame);
         }
         return receivedFrame;
-
     }
 
     protected Frame readFrame(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
