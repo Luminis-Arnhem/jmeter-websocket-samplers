@@ -27,12 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
-import java.awt.CardLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.FlowLayout;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -49,12 +44,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.awt.FlowLayout.LEFT;
+
 public class AboutDialog extends JDialog {
 
     private static final String DOWNLOAD_API_URL = "https://api.bitbucket.org/2.0/repositories/pjtr/jmeter-websocket-samplers/downloads";
     private static final String DOWNLOAD_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads";
-    private static final String ISSUES_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues";
-    private static final String DOC_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/src/master/README.md";
+    private static final String DOC_URL = "https://github.com/Luminis-Arnhem/jmeter-websocket-samplers/blob/master/README.md";
+    private static final String FAQ_URL = "https://github.com/Luminis-Arnhem/jmeter-websocket-samplers/blob/master/FAQ.md";
 
     private static AboutDialog aboutDlg;
 
@@ -82,9 +79,17 @@ public class AboutDialog extends JDialog {
             JLabel versionMessage = new JLabel("WebSocket Samplers plugin, version " + (getVersion() != null ? getVersion() : "unknown") + ".");
             versionMessage.setAlignmentX(LEFT_ALIGNMENT);
             panel.add(versionMessage);
-            JLabel docsLabel = new JLabel("<html>For documentation, see the <a href=\"" + DOC_URL + "\">" + "README" + "</a>.</html>");
+            panel.add(Box.createVerticalStrut(5));
+            JPanel docsPanel = new JPanel(new FlowLayout(LEFT, 0, 0));
+            // docsPanel.setBackground(Color.RED);
+            docsPanel.setAlignmentX(LEFT_ALIGNMENT);
+            JLabel docsLabel = new JLabel("<html>For documentation, see the <a href=\"" + DOC_URL + "\">" + "README" + "</a> </html>");
             makeClickGoto(docsLabel, DOC_URL);
-            panel.add(docsLabel);
+            docsPanel.add(docsLabel);
+            JLabel faqLabel = new JLabel("<html>&nbsp;and <a href=\"" + FAQ_URL + "\">" + "FAQ" + "</a>.</html>");
+            makeClickGoto(faqLabel, FAQ_URL);
+            docsPanel.add(faqLabel);
+            panel.add(docsPanel);
 
             // "cards" has to be final, so cannot assign new JPanel here.
             {
@@ -128,10 +133,6 @@ public class AboutDialog extends JDialog {
                     card4.setLayout(new BoxLayout(card4, BoxLayout.Y_AXIS));
                     card4.add(new JLabel("No update available; you have the latest version."));
                     card4.add(Box.createVerticalStrut(10));
-                    card4.add(new JLabel("If you encountered an issue or ambiguity, please file an issue at"));
-                    JLabel issuesUrlLabel = new JLabel("<html><a href=\"" + ISSUES_URL + "\">" + ISSUES_URL + "</a>.");
-                    makeClickGoto(issuesUrlLabel, ISSUES_URL);
-                    card4.add(issuesUrlLabel);
                 }
                 cards.add(card4);
             }
