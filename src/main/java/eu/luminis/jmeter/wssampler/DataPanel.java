@@ -25,6 +25,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -48,6 +49,7 @@ public class DataPanel extends JPanel {
 
     public static final String BINARY = "Binary";
     public static final String TEXT = "Text";
+    public static final String TEXT_STOMP = "STOMP Text (having ^@)";
 
     private JTextArea requestDataField;
     private JComboBox typeSelector;
@@ -66,7 +68,7 @@ public class DataPanel extends JPanel {
         JPanel topBar = new JPanel();
         {
             topBar.setLayout(new BoxLayout(topBar, X_AXIS));
-            String[] typeOptions = {TEXT, BINARY};
+            String[] typeOptions = {TEXT, BINARY, TEXT_STOMP};
             typeSelector = new JComboBox(typeOptions);
             typeSelector.setMaximumSize(typeSelector.getMinimumSize());
             typeSelector.addActionListener(e -> {
@@ -180,12 +182,16 @@ public class DataPanel extends JPanel {
     }
 
     public DataPayloadType getType() {
-        if (typeSelector.getSelectedItem().equals(BINARY))
+        final Object selected = typeSelector.getSelectedItem();
+        if (Objects.equals(selected, BINARY)){
             return DataPayloadType.Binary;
-        else if (typeSelector.getSelectedItem().equals(TEXT))
+        } else if (Objects.equals(selected, TEXT)) {
             return DataPayloadType.Text;
-        else
-            throw new RuntimeException("Unknown type");
+        } else if (Objects.equals(selected, TEXT_STOMP)) {
+            return DataPayloadType.TextStomp;
+        } else {
+            throw new RuntimeException("Unknown type: " + selected);
+        }
     }
 
     public void setType(DataPayloadType type) {
@@ -193,11 +199,14 @@ public class DataPanel extends JPanel {
             case Binary:
                 typeSelector.setSelectedItem(BINARY);
                 break;
+            case TextStomp:
+                typeSelector.setSelectedItem(TEXT_STOMP);
+                break;
             case Text:
                 typeSelector.setSelectedItem(TEXT);
                 break;
             default:
-                throw new RuntimeException("Unknown type");
+                throw new RuntimeException("Unknown type: '" + type + "'");
         }
     }
 

@@ -74,7 +74,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.portField.setText(sampler.getPort());
             settingsPanel.pathField.setText(sampler.getPath());
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
-            settingsPanel.setType(sampler.getBinary()? DataPayloadType.Binary: DataPayloadType.Text);
+            settingsPanel.setType(sampler.getType());
             settingsPanel.setRequestData(sampler.getRequestData());
             settingsPanel.readTimeoutField.setText(sampler.getReadTimeout());
             settingsPanel.setReadDataFromFile(sampler.getLoadDataFromFile());
@@ -92,7 +92,7 @@ public class RequestResponseWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setPort(settingsPanel.portField.getText());
             sampler.setPath(settingsPanel.pathField.getText());
             sampler.setConnectTimeout(settingsPanel.connectionTimeoutField.getText());
-            sampler.setBinary(settingsPanel.getType().equals(DataPayloadType.Binary));
+            sampler.setType(settingsPanel.getType());
             sampler.setRequestData(settingsPanel.getRequestData());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
             sampler.setReadTimeout(settingsPanel.readTimeoutField.getText());
