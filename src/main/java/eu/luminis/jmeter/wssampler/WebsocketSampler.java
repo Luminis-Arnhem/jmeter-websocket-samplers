@@ -426,12 +426,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    protected String identity(String value) {
-        return value;
-    }
-
     protected void processDefaultReadResponse(DataFrame response, DataPayloadType type, SampleResult result) {
-
         switch (type) {
             case Binary:
                 byte[] responseData = ((BinaryFrame) response).getBinaryData();
