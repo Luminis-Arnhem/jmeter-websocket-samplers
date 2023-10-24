@@ -50,6 +50,7 @@ sourceSets {
     main {
         resources {
             srcDir "${buildDir}/generated"
+            exclude 'sources/**'
         }
     }
 }
@@ -83,7 +84,7 @@ task determineVersion {
     }
 }
 
-compileJava.dependsOn determineVersion
+compileJava.dependsOn (determineVersion, processResources)
 
 test {
   testLogging {
@@ -93,26 +94,6 @@ test {
       }
     }
   }
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-tasks.withType(Javadoc) {
-    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
-}
-
-task sourcesJar(type: Jar) {
-    dependsOn(compileJava)
-    dependsOn(compileTestJava)
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
 }
 
 task publishToJMeterLocal(dependsOn: jar) {
@@ -162,12 +143,22 @@ configure(publishToJMeterLocal) {
 
 group = 'net.luminis.jmeter'
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = 'jmeter-websocket-samplers'
+            from components.java
             pom {
                 name = 'JMeter WebSocket Samplers'
-                artifactId = 'jmeter-websocket-samplers'
                 description = 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
                 url = 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
 
