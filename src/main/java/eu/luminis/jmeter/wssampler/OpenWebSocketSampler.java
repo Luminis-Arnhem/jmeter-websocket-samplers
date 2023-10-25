@@ -71,7 +71,7 @@ public class OpenWebSocketSampler extends WebsocketSampler {
     @Override
     public void addTestElement(TestElement element) {
         if (element instanceof HeaderManager) {
-            headerManager = (HeaderManager) element;
+            headerManager =  getMergedHeaderManager((HeaderManager) element);
         } else {
             super.addTestElement(element);
         }
