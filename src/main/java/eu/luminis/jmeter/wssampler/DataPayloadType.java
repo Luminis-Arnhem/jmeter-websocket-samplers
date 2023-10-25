@@ -19,7 +19,10 @@
 package eu.luminis.jmeter.wssampler;
 
 public enum DataPayloadType {
-
     Binary,
-    Text
+    Text,
+    /**
+     * Text type with additional syntax for binary data
+     */
+    TextStomp
 }

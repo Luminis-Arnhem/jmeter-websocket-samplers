@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -51,6 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -72,7 +72,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     public static final int MIN_CONNECTION_TIMEOUT = 1;
     public static final int MAX_CONNECTION_TIMEOUT = 999999;
     public static final int MIN_READ_TIMEOUT = 0;
-    public static final int MAX_READ_TIMEOUT = 999999;
+    public static final int MAX_READ_TIMEOUT = 9999999;
     public static final int DEFAULT_WS_PORT = 80;
 
     // Control reuse of cached SSL Context in subsequent connections on the same thread
@@ -101,6 +101,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
     abstract protected WebSocketClient prepareWebSocketClient(SampleResult result);
 
+    private static final Function<String, String> PREPROCESSOR_NOOP = text -> text;
+    private static final Function<String, String> PREPROCESSOR_STOMP = text -> text.replaceAll("\\^@", "\0");
 
     static {
         checkJMeterVersion();
@@ -239,39 +241,59 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         result.setResponseMessage("Received: " + e.getReceivedFrame());
     }
 
-    protected void sendFrame(WebSocketClient wsClient, SampleResult result, boolean binary, String requestData, File requestDataFile) throws SamplingAbortedException, IOException {
-        Frame sentFrame;
-        try {
-            if (binary) {
-                byte[] binRequestData;
-                String printableRequestData;
+    protected Frame sendBinaryFrame(WebSocketClient wsClient, SampleResult result, String requestData, File requestDataFile) throws IOException, SamplingAbortedException {
+        byte[] binRequestData;
+        String printableRequestData;
 
-                try {
-                    if (requestDataFile != null) {
-                        binRequestData = Files.readAllBytes(requestDataFile.toPath());
-                        printableRequestData = BinaryUtils.formatBinary(binRequestData, 100, "...");
-                    } else {
-                        binRequestData = BinaryUtils.parseBinaryString(requestData);
-                        printableRequestData = requestData;
-                    }
-                } catch (NumberFormatException noNumber) {
-                    // Thrown by BinaryUtils.parseBinaryString
-                    result.sampleEnd(); // End timimg
-                    getLogger().error("Sampler '" + getName() + "': request data is not binary: " + requestData);
-                    result.setResponseCode("Sampler Error");
-                    result.setResponseMessage("Request data is not binary: " + requestData);
-                    throw new SamplingAbortedException();
-                }
-                // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
-                result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + printableRequestData + "\n");
-                sentFrame = wsClient.sendBinaryFrame(binRequestData);
+        try {
+            if (requestDataFile != null) {
+                binRequestData = Files.readAllBytes(requestDataFile.toPath());
+                printableRequestData = BinaryUtils.formatBinary(binRequestData, 100, "...");
+            } else {
+                binRequestData = BinaryUtils.parseBinaryString(requestData);
+                printableRequestData = requestData;
             }
-            else {
-                if (requestDataFile != null) {
-                    requestData = new String(Files.readAllBytes(requestDataFile.toPath()), StandardCharsets.UTF_8.name());
-                }
-                result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + requestData + "\n");
-                sentFrame = wsClient.sendTextFrame(requestData);
+        }
+        catch (NumberFormatException noNumber) {
+            // Thrown by BinaryUtils.parseBinaryString
+            result.sampleEnd(); // End timimg
+            getLogger().error("Sampler '" + getName() + "': request data is not binary: " + requestData);
+            result.setResponseCode("Sampler Error");
+            result.setResponseMessage("Request data is not binary: " + requestData);
+            throw new SamplingAbortedException();
+        }
+        // If the sendBinaryFrame method throws an IOException, some data may have been send, so we'd better register all request data
+        result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + printableRequestData + "\n");
+        return wsClient.sendBinaryFrame(binRequestData);
+    }
+
+    protected Frame sendTextFrame(WebSocketClient wsClient, SampleResult result, String requestData, File requestDataFile, Function<String, String> requestPreprocessor) throws IOException {
+        final String rawRequestData;
+        if (requestDataFile != null) {
+            rawRequestData = new String(Files.readAllBytes(requestDataFile.toPath()), StandardCharsets.UTF_8);
+        } else {
+            rawRequestData = requestData;
+        }
+        final String processedRequestData = requestPreprocessor == null ? rawRequestData : requestPreprocessor.apply(rawRequestData);
+        result.setSamplerData(result.getSamplerData() + "\nRequest data:\n" + processedRequestData + "\n");
+        return wsClient.sendTextFrame(processedRequestData);
+    }
+
+    protected void sendFrame(WebSocketClient wsClient, SampleResult result, DataPayloadType type, String requestData, File requestDataFile) throws SamplingAbortedException, IOException {
+        final Frame sentFrame;
+        try {
+            switch (type) {
+                case Binary:
+                    sentFrame = sendBinaryFrame(wsClient, result, requestData, requestDataFile);
+                    break;
+
+                case TextStomp:
+                    sentFrame = sendTextFrame(wsClient, result, requestData, requestDataFile, PREPROCESSOR_STOMP);
+                    break;
+
+                case Text:
+                default:
+                    sentFrame = sendTextFrame(wsClient, result, requestData, requestDataFile, PREPROCESSOR_NOOP);
             }
             result.setSentBytes(sentFrame.getSize());
         }
@@ -290,12 +312,29 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    protected Frame readFrame(WebSocketClient wsClient, SampleResult result, boolean binary) throws IOException, UnexpectedFrameException {
-        Frame receivedFrame = readFrame(wsClient, result);
-        if ((binary && receivedFrame.isBinary()) || (!binary && receivedFrame.isText()))
-            return receivedFrame;
-        else
-            throw new UnexpectedFrameException(receivedFrame);
+    protected Frame readFrame(WebSocketClient wsClient, SampleResult result, DataPayloadType type) throws IOException, UnexpectedFrameException {
+        final Frame receivedFrame = readFrame(wsClient, result);
+        switch (type) {
+            case Binary:
+                if (!receivedFrame.isBinary()) {
+                    getLogger().warn("Expected type is " + type + ", but received frame is not a binary");
+                    throw new UnexpectedFrameException(receivedFrame);
+                }
+                break;
+                
+            case TextStomp:
+            case Text:
+                if (receivedFrame.isBinary()) {
+                    getLogger().warn("Expected type is " + type + ", but received frame is a binary");
+                    throw new UnexpectedFrameException(receivedFrame);
+                }
+                break;
+
+            default:
+                getLogger().warn("Unexpected type: '" + type + "'");
+                throw new UnexpectedFrameException(receivedFrame);
+        }
+        return receivedFrame;
     }
 
     protected Frame readFrame(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException {
@@ -394,21 +433,26 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
         }
     }
 
-    protected void processDefaultReadResponse(DataFrame response, boolean binary, SampleResult result) {
-        if (binary) {
-            byte[] responseData = ((BinaryFrame) response).getBinaryData();
-            result.setResponseData(responseData);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with data: " + BinaryUtils.formatBinary(responseData));
-            }
+    protected void processDefaultReadResponse(DataFrame response, DataPayloadType type, SampleResult result) {
+        switch (type) {
+            case Binary:
+                byte[] responseData = ((BinaryFrame) response).getBinaryData();
+                result.setResponseData(responseData);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with data: " + BinaryUtils.formatBinary(responseData));
+                }
+                result.setDataType(SampleResult.BINARY);
+                break;
+
+            case TextStomp:
+            case Text:
+            default:
+                result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with text: '" + ((TextFrame) response).getText() + "'");
+                }
+                result.setDataType(SampleResult.TEXT);
         }
-        else {
-            result.setResponseData(((TextFrame) response).getText(), StandardCharsets.UTF_8.name());
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Sampler '" + getName() + "' received " + response.getTypeAsString() + " frame with text: '" + ((TextFrame) response).getText() + "'");
-            }
-        }
-        result.setDataType(binary ? SampleResult.BINARY : SampleResult.TEXT);
         JMeterContextService.getContext().getVariables().put(VAR_WEBSOCKET_LAST_FRAME_FINAL, String.valueOf(response.isFinalFragment()));
     }
 
