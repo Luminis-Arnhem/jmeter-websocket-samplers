@@ -352,10 +352,10 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
     }
 
     /**
-     * Sets the HeaderManager for this component. If an existing HeaderManager is present,
+     * Returns the merged HeaderManager for this component. If an existing HeaderManager is present,
      * it will be merged with the provided HeaderManager.
      *
-     * @param value The HeaderManager to set or merge.
+     * @param value The HeaderManager to merge.
      * @return The resulting HeaderManager after the merge operation.
      */
     public HeaderManager getMergedHeaderManager(final HeaderManager value) {
