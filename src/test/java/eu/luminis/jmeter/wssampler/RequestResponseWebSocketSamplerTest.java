@@ -24,23 +24,15 @@ import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.nio.file.Files;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.offset;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -192,7 +184,7 @@ public class RequestResponseWebSocketSamplerTest {
                 return mocker.createErrorOnWriteWsClientMock();
             }
         };
-        sampler.setBinary(false);
+        sampler.setType(DataPayloadType.Text);
         sampler.setRequestData("goodbye");
 
         SampleResult result = sampler.sample(null);
@@ -208,7 +200,7 @@ public class RequestResponseWebSocketSamplerTest {
                 return mocker.createErrorOnWriteWsClientMock();
             }
         };
-        sampler.setBinary(true);
+        sampler.setType(DataPayloadType.Binary);
         sampler.setRequestData("0xba 0xbe");
 
         SampleResult result = sampler.sample(null);
@@ -295,7 +287,7 @@ public class RequestResponseWebSocketSamplerTest {
                 return mock;
             }
         };
-        sampler.setBinary(true);
+        sampler.setType(DataPayloadType.Binary);
 
         File dataFile = File.createTempFile("data", ".bin");
         dataFile.deleteOnExit();

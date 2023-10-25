@@ -114,7 +114,9 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
             result.setResponseMessage("Read timeout, no response received.");
         }
         else {
-            processDefaultReadResponse((DataFrame) response, response instanceof BinaryFrame, result);
+            final boolean binaryFrame = response instanceof BinaryFrame;
+            final DataPayloadType frameType = binaryFrame ? DataPayloadType.Binary : DataPayloadType.Text;
+            processDefaultReadResponse((DataFrame) response, frameType, result);
         }
     }
 

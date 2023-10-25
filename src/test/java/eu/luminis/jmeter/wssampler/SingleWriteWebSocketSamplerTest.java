@@ -18,23 +18,14 @@
  */
 package eu.luminis.jmeter.wssampler;
 
-import eu.luminis.websocket.EndOfStreamException;
 import eu.luminis.websocket.MockWebSocketClientCreator;
 import eu.luminis.websocket.WebSocketClient;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.net.URL;
-import java.util.Collections;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 public class SingleWriteWebSocketSamplerTest {
 
@@ -48,13 +39,30 @@ public class SingleWriteWebSocketSamplerTest {
                 return mocker.createErrorOnWriteWsClientMock();
             }
         };
-        sampler.setBinary(false);
+        sampler.setType(DataPayloadType.Text);
         sampler.setRequestData("goodbye");
 
         SampleResult result = sampler.sample(null);
         assertFalse(result.isSuccessful());
         assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
         assertTrue(result.getSamplerData().contains("Request data:\ngoodbye"));
+    }
+
+    @Test
+    public void partialTextStompWriteShouldShowRequestDataInResult() {
+        SingleWriteWebSocketSampler sampler = new SingleWriteWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return mocker.createErrorOnWriteWsClientMock();
+            }
+        };
+        sampler.setType(DataPayloadType.TextStomp);
+        sampler.setRequestData("goodbye^@");
+
+        SampleResult result = sampler.sample(null);
+        assertFalse(result.isSuccessful());
+        assertTrue(result.getSamplerData().contains("Connect URL:\nws://nowhere.com"));
+        assertTrue(result.getSamplerData().contains("Request data:\ngoodbye\0"));
     }
 
     @Test
@@ -65,7 +73,7 @@ public class SingleWriteWebSocketSamplerTest {
                 return mocker.createErrorOnWriteWsClientMock();
             }
         };
-        sampler.setBinary(true);
+        sampler.setType(DataPayloadType.Binary);
         sampler.setRequestData("0xca 0xfe 0xba 0xbe");
 
         SampleResult result = sampler.sample(null);

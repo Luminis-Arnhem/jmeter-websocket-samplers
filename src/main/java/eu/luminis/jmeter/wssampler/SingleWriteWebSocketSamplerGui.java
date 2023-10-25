@@ -72,7 +72,7 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             settingsPanel.enableConnectionIdOption((WebsocketSampler.multipleConnectionsEnabled));
             settingsPanel.connectionIdField.setText(sampler.getConnectionId());
             settingsPanel.connectionTimeoutField.setText(sampler.getConnectTimeout());
-            settingsPanel.setType(sampler.getBinary()? DataPayloadType.Binary: DataPayloadType.Text);
+            settingsPanel.setType(sampler.getType());
             settingsPanel.setRequestData(sampler.getRequestData());
             settingsPanel.setReadDataFromFile(sampler.getLoadDataFromFile());
             settingsPanel.setDataFile(sampler.getDataFile());
@@ -90,7 +90,7 @@ public class SingleWriteWebSocketSamplerGui extends AbstractSamplerGui {
             sampler.setPath(settingsPanel.pathField.getText());
             sampler.setConnectionId(settingsPanel.connectionIdField.getText());
             sampler.setConnectTimeout(settingsPanel.connectionTimeoutField.getText());
-            sampler.setBinary(settingsPanel.getType().equals(DataPayloadType.Binary));
+            sampler.setType(settingsPanel.getType());
             sampler.setRequestData(settingsPanel.getRequestData());
             sampler.setCreateNewConnection(settingsPanel.newConnection.isSelected());
             sampler.setLoadDataFromFile(settingsPanel.getReadDataFromFile());

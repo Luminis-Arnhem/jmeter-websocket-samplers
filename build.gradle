@@ -1,6 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 repositories {
@@ -10,45 +10,45 @@ repositories {
 dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/ApacheJMeter_core
-    compile('org.apache.jmeter:ApacheJMeter_core:4.0') {
+    implementation('org.apache.jmeter:ApacheJMeter_core:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_components:4.0') {
+    implementation('org.apache.jmeter:ApacheJMeter_components:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
-    compile('org.apache.jmeter:ApacheJMeter_http:4.0') {
+    implementation('org.apache.jmeter:ApacheJMeter_http:4.0') {
         transitive = false    // Just avoid downloading half the internet
     }
 
     // https://mvnrepository.com/artifact/org.apache.jmeter/jorphan
-    compile('org.apache.jmeter:jorphan:4.0') {
+    implementation('org.apache.jmeter:jorphan:4.0') {
         transitive = false
     }
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    compile ('org.slf4j:slf4j-api:1.7.25')
+    implementation('org.slf4j:slf4j-api:1.7.25')
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    compile('commons-io:commons-io:2.5') {
+    implementation('commons-io:commons-io:2.5') {
         transitive = false
     }
 
-    testCompile 'junit:junit:4.12'
+    testImplementation('junit:junit:4.12')
 
-    testCompile('org.mockito:mockito-core:2.2.15')
+    testImplementation('org.mockito:mockito-core:2.2.15')
 
-
-    testCompile 'org.assertj:assertj-core:3.8.0'
+    testImplementation 'org.assertj:assertj-core:3.8.0'
     
-    testRuntime 'commons-io:commons-io:2.6'
+    testRuntimeOnly 'commons-io:commons-io:2.6'
 }
 
 sourceSets {
     main {
         resources {
             srcDir "${buildDir}/generated"
+            exclude 'sources/**'
         }
     }
 }
@@ -82,7 +82,7 @@ task determineVersion {
     }
 }
 
-compileJava.dependsOn determineVersion
+compileJava.dependsOn (determineVersion, processResources)
 
 test {
   testLogging {
@@ -94,75 +94,109 @@ test {
   }
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
+task publishToJMeterLocal(dependsOn: jar) {
+    def pluginName = rootProject.name // "JMeterWebSocketSamplers"
+    doLast {
+        def jmeterHome = System.getenv('JMETER_HOME') // Gradle has case sensitivity
+        if (jmeterHome == null || jmeterHome.trim().isEmpty()) {
+            throw new GradleException("To install the plugin please specify `JMETER_HOME` enviroment variable")
+        } else {
+            logger.quiet("jmeter_home: " + jmeterHome)
+        }
+
+        def jmeterExtPath = java.nio.file.Paths.get(jmeterHome, "lib", "ext")
+        if (!java.nio.file.Files.exists(jmeterExtPath)) {
+            throw new GradleException("Please specify valid `JMETER_HOME` enviroment variable, lib/ext subdirectory " +
+                    "should exist but it's not: " + jmeterExtPath)
+        }
+
+        def jmeterExtDir = jmeterExtPath.toAbsolutePath().toString()
+        def installedProdVersion = java.nio.file.Files.list(jmeterExtPath)
+                .map { path -> path.toFile() }
+                .filter { file -> file.isFile() }
+                .filter { file -> file.name.matches(pluginName + ".*\\.jar") }
+                .filter {file -> !file.name.equalsIgnoreCase(pluginName + "-dev.jar") }
+                .collect()
+
+        if (!installedProdVersion.isEmpty()) {
+            def prodFilesNames = installedProdVersion.stream().map { file -> file.name }.collect()
+
+            throw new GradleException('Found other versions of the plugin in lib/ext directory, collision may ocure: '
+                    + prodFilesNames + ". It's recommended to remove them from " + jmeterExtPath + " before publising current dev version.")
+        }
+
+        logger.quiet("installing the plugin into " + jmeterExtDir)
+        copy {
+            from "build/libs"
+            into jmeterExtDir
+            include "*-dev.jar"
+        }
+    }
 }
 
-tasks.withType(Javadoc) {
-    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
+configure(publishToJMeterLocal) {
+    group = 'publishing'
+    description = 'Publish development version into local JMeter'
 }
 
 group = 'net.luminis.jmeter'
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
-            beforeDeployment { deployment -> signing.signPom(deployment) }
+javadoc {
+    options.addStringOption('link', 'https://docs.oracle.com/javase/8/docs/api/')
+}
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: project.properties.ossrhUsername, password: project.properties.ossrhPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: project.properties.ossrhUsername, password: project.properties.ossrhPassword)
-            }
-	    
-            pom.project {
-                name 'JMeter WebSocket Samplers'
-                packaging 'jar'
-                artifactId 'jmeter-websocket-samplers'
-                description 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
-                url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'jmeter-websocket-samplers'
+            from components.java
+            pom {
+                name = 'JMeter WebSocket Samplers'
+                description = 'JMeter add-on that defines a number of samplers for load testing WebSocket applications.'
+                url = 'https://bitbucket.org/pjtr/jmeter-websocket-samplers'
 
                 licenses {
                     license {
-                        name 'GNU Lesser General Public License v3'
-                        url 'https://www.gnu.org/licenses/lgpl-3.0-standalone.html'
-                        distribution 'repo'
+                        name = 'GNU Lesser General Public License v3'
+                        url = 'https://www.gnu.org/licenses/lgpl-3.0-standalone.html'
+                        distribution = 'repo'
                     }
                 }
+
                 developers {
                     developer {
-                        id 'peterd'
-                        name 'Peter Doornbosch'
-                        email 'peter.doornbosch@luminis.eu'
-                        organization 'Luminis'
-                        organizationUrl 'http://www.luminis.eu'
+                        id = 'peterd'
+                        name = 'Peter Doornbosch'
+                        email = 'peter.doornbosch@luminis.eu'
+                        organization  = 'Luminis'
+                        organizationUrl = 'http://www.luminis.eu'
                     }
                 }
+
                 scm {
-                    connection 'scm:git:git://bitbucket.org/pjtr/jmeter-websocket-samplers.git'
-                    developerConnection 'scm:git:ssh://bitbucket.org:pjtr/jmeter-websocket-samplers.git'
-                    url 'https://bitbucket.org/pjtr/jmeter-websocket-samplers/src'
+                    connection = 'scm:git:git://bitbucket.org/pjtr/jmeter-websocket-samplers.git'
+                    developerConnection = 'scm:git:ssh://bitbucket.org:pjtr/jmeter-websocket-samplers.git'
+                    url = 'https://bitbucket.org/pjtr/jmeter-websocket-samplers/src'
                 }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = project.properties.ossrhUsername
+                password = project.properties.ossrhPassword
             }
         }
     }
 }
 
+signing {
+    sign publishing.publications.mavenJava
+}

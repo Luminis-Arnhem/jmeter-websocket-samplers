@@ -27,12 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 
 
-public class RequestResponseWebSocketSampler extends WebsocketSampler {
+public class RequestResponseWebSocketSampler extends WebsocketGeneralSampler {
 
     private static final Logger log = LoggerFactory.getLogger(RequestResponseWebSocketSampler.class);
 
@@ -72,13 +69,13 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     @Override
     protected Frame doSample(WebSocketClient wsClient, SampleResult result) throws IOException, UnexpectedFrameException, SamplingAbortedException {
-        sendFrame(wsClient, result, getBinary(), getRequestData(), getLoadDataFromFile()? new File(getDataFile()): null);
-        return readFrame(wsClient, result, getBinary());
+        sendFrame(wsClient, result, getType(), getRequestData(), getLoadDataFromFile()? new File(getDataFile()): null);
+        return readFrame(wsClient, result, getType());
     }
 
     @Override
     protected void postProcessResponse(Frame response, SampleResult result) {
-        processDefaultReadResponse((DataFrame) response, getBinary(), result);
+        processDefaultReadResponse((DataFrame) response, getType(), result);
     }
 
     @Override
@@ -133,14 +130,6 @@ public class RequestResponseWebSocketSampler extends WebsocketSampler {
 
     public void setRequestData(String requestData) {
         setProperty("requestData", requestData);
-    }
-
-    public boolean getBinary() {
-        return getPropertyAsBoolean("binaryPayload");
-    }
-
-    public void setBinary(boolean binary) {
-        setProperty("binaryPayload", binary);
     }
 
     public String toString() {

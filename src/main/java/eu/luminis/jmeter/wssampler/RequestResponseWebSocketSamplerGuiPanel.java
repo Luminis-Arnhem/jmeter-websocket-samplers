@@ -26,9 +26,6 @@ import static javax.swing.BoxLayout.Y_AXIS;
 
 public class RequestResponseWebSocketSamplerGuiPanel extends WebSocketSamplerGuiPanel {
 
-    public static final String BINARY = "Binary";
-    public static final String TEXT = "Text";
-
     private DataPanel dataPanel;
 
     public RequestResponseWebSocketSamplerGuiPanel() {

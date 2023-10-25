@@ -23,9 +23,6 @@ import org.apache.jmeter.testelement.TestElement;
 
 import java.awt.BorderLayout;
 
-import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.BINARY;
-import static eu.luminis.jmeter.wssampler.RequestResponseWebSocketSamplerGuiPanel.TEXT;
-
 public class SingleReadWebSocketSamplerGui extends AbstractSamplerGui {
 
     private SingleReadWebSocketSamplerGuiPanel settingsPanel;
