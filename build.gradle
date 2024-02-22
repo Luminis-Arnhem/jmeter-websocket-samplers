@@ -3,6 +3,9 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
+sourceCompatibility = 8
+targetCompatibility = 8
+
 repositories {
     mavenCentral()
 }
