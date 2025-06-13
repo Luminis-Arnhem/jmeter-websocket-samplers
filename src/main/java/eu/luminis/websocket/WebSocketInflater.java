@@ -1,0 +1,111 @@
+package eu.luminis.websocket;
+
+import eu.luminis.utils.WebSocketInflaterConstants;
+import org.apache.log.Logger;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
+
+/**
+ * Class with logic to decompress websocket messages.
+ */
+public class WebSocketInflater {
+
+    private final Inflater inflater;
+    private final boolean contextDecompressionEnabled;
+    private final ByteArrayOutputStream compressedMessageData;
+    private final ByteArrayOutputStream decompressedMessageData;
+
+    public WebSocketInflater(Inflater inflater,
+                             boolean contextDecompressionEnabled,
+                             ByteArrayOutputStream compressedMessageData,
+                             ByteArrayOutputStream decompressedMessageData) {
+
+        this.inflater = inflater;
+
+        // Condition whether message compressed with context or not.
+        this.contextDecompressionEnabled = contextDecompressionEnabled;
+
+        this.compressedMessageData = compressedMessageData;
+        this.decompressedMessageData = decompressedMessageData;
+    }
+
+    /**
+     * Append compressed data into dynamic output stream.
+     *
+     * @param compressedData - frame's compressed data.
+     * @param fin            - condition whether frame is final or not.
+     * @param logger         - logger to log information.
+     */
+    public void appendCompressedData(byte[] compressedData, boolean fin, Logger logger) {
+        try {
+            compressedMessageData.write(compressedData);
+
+            if (fin && contextDecompressionEnabled) {
+                //In case with compression within LZ77 Sliding window(without header "server_no_context_takeover")
+                //it is needed to append 4 octets(FRAME_TAIL) to the tail end of the payload of the message
+                //to correctly decompress the message.
+                compressedMessageData.write(WebSocketInflaterConstants.FRAME_TAIL);
+                logger.debug("compressed payload size: " + compressedMessageData.size());
+            }
+
+        } catch (IOException e) {
+            logger.info("Failed to write(collect) compressed data to output stream", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Decompress completed compressed frame's message data which was collected in output stream.
+     * In case with header "server_no_context_takeover" it is needed to reset inflater
+     * to correctly decompress each message without context.
+     *
+     * @param logger - logger to log information.
+     * @return decompressed message.
+     */
+    public byte[] decompressNextMessage(Logger logger) {
+
+        inflater.setInput(compressedMessageData.toByteArray());
+
+        byte[] buffer = new byte[1024];
+
+        int bytesRead = 0;
+        try {
+            bytesRead = inflater.inflate(buffer);
+        } catch (DataFormatException e) {
+            logger.info("Compressed data format is not valid", e);
+            inflater.reset();
+            throw new RuntimeException(e);
+        }
+
+        if (bytesRead > 0) {
+            decompressedMessageData.reset(); //Allow to overwrite previous decompressed message data by new data.
+            decompressedMessageData.write(buffer, 0, bytesRead);
+        }
+
+        if (!contextDecompressionEnabled) {
+            //In case without using LZ77 Sliding window compression(with header "server_no_context_takeover")
+            //it is needed to reset inflater to clean up previous message context.
+            inflater.reset();
+        }
+
+        compressedMessageData.reset(); //Allow to overwrite previous compressed message data by new data
+
+        return decompressedMessageData.toByteArray();
+    }
+
+    /**
+     * Close WebSocketInflater resources.
+     */
+    public void close() {
+        inflater.end();
+        try {
+            compressedMessageData.close();
+            decompressedMessageData.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}

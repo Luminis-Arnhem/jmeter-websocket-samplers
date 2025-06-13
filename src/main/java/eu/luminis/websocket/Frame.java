@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
+import java.util.Arrays;
 import java.util.Random;
 
 public abstract class Frame {
@@ -46,11 +47,15 @@ public abstract class Frame {
 
     private int frameSize;
 
-    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
-        return parseFrame(previousDataFrameType, istream, null);
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, Logger log) throws IOException {
+        return parseFrame(previousDataFrameType, istream, null, log);
     }
 
-    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, Logger log) throws IOException {
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
+        return parseFrame(previousDataFrameType, istream, null, null);
+    }
+
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, WebSocketInflater webSocketInflater, Logger log) throws IOException {
         boolean markSupported = istream.markSupported();
         if (! markSupported) {
             throw new IllegalStateException("readFromStream should be called with an InputStream that supports mark/reset");
@@ -66,7 +71,13 @@ public abstract class Frame {
                 throw new EndOfStreamException("end of stream");
 
             boolean fin = (byte1 & 0x80) != 0;
+            boolean rsv1 = (byte1 & 0x40) != 0; // RSV1 flag (bit 6) → 1 means compressed
+            log.debug("isCompressed: " + rsv1);
+            log.debug("isFIN: " + fin);
             int opCode = byte1 & 0x0f;
+            log.debug("opCode: " + opCode);
+            boolean masked = (byte2 & 0x80) != 0; // Mask flag (bit 7)
+            log.debug("masked: " + masked);
             int firstLengthByte = byte2 & 0x7f;
             int length;
             int nrOfLenghtBytes = 0;
@@ -102,6 +113,23 @@ public abstract class Frame {
             }
             byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
             int bytesRead = readFromStream(istream, payload, log);
+
+            //For the first check whether frame is compressed or not
+            if (rsv1) {
+                //Then check frame type(text, continuation or binary)
+                if (opCode == OPCODE_TEXT || opCode == OPCODE_CONT || opCode == OPCODE_BINARY) {
+                    //To collect the compressed frames data into ByteArrayOutputStream(it is necessary in case within multiple frames)
+                    webSocketInflater.appendCompressedData(payload, fin, log);
+                    //Check whether frame is final or not
+                    if (fin) {
+                        //Decompress completed compressed frame
+                        payload = webSocketInflater.decompressNextMessage(log);
+                    }
+                }
+            }
+            log.debug("payload length: " + payload.length);
+            log.debug("payload bytes: " + Arrays.toString(payload));
+
             if (bytesRead == -1)
                 throw new EndOfStreamException("end of stream");
             if (bytesRead != length)

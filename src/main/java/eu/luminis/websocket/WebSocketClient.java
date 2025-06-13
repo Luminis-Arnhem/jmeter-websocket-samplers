@@ -18,42 +18,23 @@
  */
 package eu.luminis.websocket;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.net.ssl.SSLSocketFactory;
-
+import eu.luminis.websocket.Frame.DataFrameType;
 import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import eu.luminis.websocket.Frame.DataFrameType;
-
+import javax.net.ssl.SSLSocketFactory;
+import java.io.*;
+import java.net.*;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.Inflater;
 
 public class WebSocketClient {
 
@@ -95,6 +76,8 @@ public class WebSocketClient {
     private int proxyPort;
     private String proxyUsername;
     private String proxyPassword;
+
+    private WebSocketInflater webSocketInflater;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = correctUrl(wsURL);
@@ -172,6 +155,9 @@ public class WebSocketClient {
             httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + NEW_LINE);
             log.debug(    ">> Host: " + connectUrl.getHost() + ":" + connectUrl.getPort());
             for (Map.Entry<String, String> header : headers.entrySet()) {
+
+                initializeStreamingInflater(header);
+
                 if (! UPGRADE_HEADERS.contains(header.getKey())) {
                     String headerLine = header.getKey() + ": " + header.getValue();
                     // Ensure header line does _not_ contain new line
@@ -214,6 +200,11 @@ public class WebSocketClient {
             	IOUtils.closeQuietly(socketOutputStream);
             	IOUtils.closeQuietly(wsSocket);
             	IOUtils.closeQuietly(httpWriter);
+
+                if (webSocketInflater != null) {
+                    webSocketInflater.close();
+                }
+
                 state = WebSocketState.CLOSED;
             }
         }
@@ -298,6 +289,11 @@ public class WebSocketClient {
     	IOUtils.closeQuietly(socketInputStream);
     	IOUtils.closeQuietly(socketOutputStream);
     	IOUtils.closeQuietly(wsSocket);
+
+        if (webSocketInflater != null) {
+            webSocketInflater.close();
+        }
+
     	state = WebSocketState.CLOSED;
     }
 
@@ -417,7 +413,7 @@ public class WebSocketClient {
 
         wsSocket.setSoTimeout(readTimeout);
 
-        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, log);
+        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, webSocketInflater, log);
         if (lastDataFrameStatus == DataFrameType.NONE && receivedFrame.isData() && !((DataFrame) receivedFrame).isFinalFragment()) {
             lastDataFrameStatus = receivedFrame.isText()? DataFrameType.TEXT: DataFrameType.BIN;
         }
@@ -463,6 +459,31 @@ public class WebSocketClient {
             return (PongFrame) frame;
         else
             throw new UnexpectedFrameException(frame);
+    }
+
+    public void initializeStreamingInflater(Map.Entry<String, String> header) {
+
+        ByteArrayOutputStream compressedMessageData = new ByteArrayOutputStream();
+        ByteArrayOutputStream decompressedMessageData = new ByteArrayOutputStream();
+
+        if (header.getKey().contains("Sec-WebSocket-Extensions") && header.getValue().contains("permessage-deflate")) {
+            if (header.getValue().contains("server_no_context_takeover")) {
+                webSocketInflater =
+                        new WebSocketInflater(
+                                new Inflater(true),
+                                false,
+                                compressedMessageData,
+                                decompressedMessageData);
+            }
+            else {
+                webSocketInflater =
+                        new WebSocketInflater(
+                                new Inflater(true),
+                                true,
+                                compressedMessageData,
+                                decompressedMessageData);
+            }
+        }
     }
 
     protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {

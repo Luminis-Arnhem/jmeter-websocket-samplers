@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -545,6 +546,68 @@ public class WebSocketClientTest {
         client.receiveFrame(1);
     }
 
+    @Test
+    public void testInitializeWebSocketInflaterWithServerNoContextTakeover() throws MalformedURLException {
+
+        //GIVEN
+        WebSocketClient webSocketClient = new WebSocketClient(new URL("http://nowhere"));
+
+        Map.Entry<String, String> header =
+                new AbstractMap
+                        .SimpleEntry<>("Sec-WebSocket-Extensions", "permessage-deflate;server_no_context_takeover");
+
+        //WHEN
+        webSocketClient.initializeStreamingInflater(header);
+
+        //THEN
+        WebSocketInflater webSocketInflater =
+                (WebSocketInflater) getPrivateClientField(webSocketClient, "webSocketInflater");
+
+        assertNotNull(webSocketInflater);
+        assertEquals(
+                Boolean.FALSE,
+                getPrivateStreamingInflaterField(webSocketInflater));
+    }
+
+    @Test
+    public void testInitializeWebSocketInflaterWithoutServerNoContextTakeover() throws MalformedURLException {
+
+        //GIVEN
+        WebSocketClient webSocketClient = new WebSocketClient(new URL("http://nowhere"));
+
+        Map.Entry<String, String> header =
+                new AbstractMap.SimpleEntry<>("Sec-WebSocket-Extensions", "permessage-deflate");
+
+        //WHEN
+        webSocketClient.initializeStreamingInflater(header);
+
+        //THEN
+        WebSocketInflater webSocketInflater =
+                (WebSocketInflater) getPrivateClientField(webSocketClient, "webSocketInflater");
+
+        assertNotNull(webSocketInflater);
+        assertEquals(
+                Boolean.TRUE,
+                getPrivateStreamingInflaterField(webSocketInflater));
+    }
+
+    @Test
+    public void testInitializeWebSocketInflaterWithoutPerMessageDeflate() throws MalformedURLException {
+        //GIVEN
+        WebSocketClient webSocketClient = new WebSocketClient(new URL("http://nowhere"));
+
+        Map.Entry<String, String> header =
+                new AbstractMap.SimpleEntry<>("Sec-WebSocket-Extensions", "");
+
+        //WHEN
+        webSocketClient.initializeStreamingInflater(header);
+
+        //THEN
+        WebSocketInflater webSocketInflater =
+                (WebSocketInflater) getPrivateClientField(webSocketClient, "webSocketInflater");
+
+        assertNull(webSocketInflater);
+    }
 
     private Object getPrivateClientField(WebSocketClient client, String fieldName) {
         Field field;
@@ -556,6 +619,18 @@ public class WebSocketClientTest {
             // Impossible
             return null;
         } catch (IllegalAccessException e) {
+            // Impossible
+            return null;
+        }
+    }
+
+    private Object getPrivateStreamingInflaterField(WebSocketInflater streamingInflater) {
+        Field field;
+        try {
+            field = WebSocketInflater.class.getDeclaredField("contextDecompressionEnabled");
+            field.setAccessible(true);
+            return field.get(streamingInflater);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             // Impossible
             return null;
         }
