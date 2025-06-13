@@ -52,7 +52,7 @@ public class FrameTest {
 
     @Test
     public void parseTextFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -69,7 +69,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrameNoCloseReason() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ), logger);
         assertTrue(frame.isClose());
         assertEquals(null, ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -78,7 +78,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ), logger);
         assertTrue(frame.isClose());
         assertEquals("going away", ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -100,7 +100,7 @@ public class FrameTest {
             bytes[8] = (byte) 0xff;
             bytes[9] = (byte) 0xff;
 
-            Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+            Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
             Assert.fail("expected exception");
         }
         catch (EndOfStreamException e) {
@@ -127,7 +127,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
     }
 
     @Test
@@ -146,7 +146,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
     }
 
     @Test
@@ -485,7 +485,7 @@ public class FrameTest {
 
     @Test
     public void testParseFinalTextContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -495,7 +495,7 @@ public class FrameTest {
 
     @Test
     public void testParseNonFinalTextContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -505,7 +505,7 @@ public class FrameTest {
 
     @Test
     public void testParseFinalBinaryContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isBinary());
         assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
         assertEquals(7, frame.getSize());
@@ -515,7 +515,7 @@ public class FrameTest {
 
     @Test
     public void testParseNonFinalBinaryContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isBinary());
         assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
         assertEquals(7, frame.getSize());
@@ -527,7 +527,7 @@ public class FrameTest {
     public void testUnexpectContinuationFrame() throws IOException {
         thrown.expect(ProtocolException.class);
         thrown.expectMessage("no continuation frame expected");
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
     }
 
     static class SimulatedNetworkStreamWithTimeouts extends InputStream {

@@ -51,10 +51,6 @@ public abstract class Frame {
         return parseFrame(previousDataFrameType, istream, null, log);
     }
 
-    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream) throws IOException {
-        return parseFrame(previousDataFrameType, istream, null, null);
-    }
-
     static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, WebSocketInflater webSocketInflater, Logger log) throws IOException {
         boolean markSupported = istream.markSupported();
         if (! markSupported) {
