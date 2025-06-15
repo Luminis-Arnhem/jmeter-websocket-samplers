@@ -1,0 +1,12 @@
+[
+  {
+    "name": "<project>",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.2.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.2.1",
+    "commit": {
+      "sha": "295f0b0f9c002d935ec37b62839e26a40f02ecba",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/295f0b0f9c002d935ec37b62839e26a40f02ecba"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjIuMQ=="
+  }
+],
