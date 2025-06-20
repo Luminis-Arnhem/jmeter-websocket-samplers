@@ -66,23 +66,27 @@ public class WebSocketInflater {
      * @return decompressed message.
      */
     public byte[] decompressNextMessage(Logger logger) {
+        decompressedMessageData.reset();
 
         inflater.setInput(compressedMessageData.toByteArray());
 
         byte[] buffer = new byte[1024];
 
-        int bytesRead = 0;
         try {
-            bytesRead = inflater.inflate(buffer);
-        } catch (DataFormatException e) {
+            do {
+                int count = inflater.inflate(buffer);
+                decompressedMessageData.write(buffer, 0, count);
+            }
+            while (inflater.getRemaining() > 0);
+
+        }
+        catch (DataFormatException e) {
             logger.info("Compressed data format is not valid", e);
             inflater.reset();
             throw new RuntimeException(e);
         }
-
-        if (bytesRead > 0) {
-            decompressedMessageData.reset(); //Allow to overwrite previous decompressed message data by new data.
-            decompressedMessageData.write(buffer, 0, bytesRead);
+        finally {
+            inflater.end();
         }
 
         if (!contextDecompressionEnabled) {
