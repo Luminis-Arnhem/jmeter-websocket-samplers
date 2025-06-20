@@ -232,7 +232,8 @@ public class WebSocketInflaterTest {
                 "64b4ced49b59161f531c0a93b3130a2be2f5cef20138717f72966bbcb808e58600cf7d90cd49618c9a2f9ded6d969b8b829a" +
                 "d3c533bd6dfa21061c38745e5c1ff42a9900d087780252b137a0fdfb0c1537fecaabdf00");
 
-        WebSocketInflater webSocketInflater = new WebSocketInflater(new Inflater(true), true, new ByteArrayOutputStream(), new ByteArrayOutputStream());
+        Inflater inflater = spy(new Inflater(true));
+        WebSocketInflater webSocketInflater = new WebSocketInflater(inflater, true, new ByteArrayOutputStream(), new ByteArrayOutputStream());
 
         // When
         webSocketInflater.appendCompressedData(compressedData, true, LOGGER);
@@ -244,6 +245,7 @@ public class WebSocketInflaterTest {
                 .startsWith("1.  Introduction")
                 .endsWith("compression context.")
                 .hasSize(2144);
+        verify(inflater, never()).end();
     }
 
     private void mockInflater(int decompressedDataLength) throws DataFormatException {

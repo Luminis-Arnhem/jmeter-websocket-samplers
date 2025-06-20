@@ -85,9 +85,6 @@ public class WebSocketInflater {
             inflater.reset();
             throw new RuntimeException(e);
         }
-        finally {
-            inflater.end();
-        }
 
         if (!contextDecompressionEnabled) {
             //In case without using LZ77 Sliding window compression(with header "server_no_context_takeover")
