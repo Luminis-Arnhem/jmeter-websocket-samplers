@@ -120,7 +120,7 @@ public class WebSocketInflaterTest {
         //GIVEN
         int decompressedByteArrayLength = DECOMPRESSED_DATA.length;
 
-        mockInfalater(decompressedByteArrayLength);
+        mockInflater(decompressedByteArrayLength);
 
         //WHEN
         byte[] actualDecompressedData = webSocketInflaterWithContextDecompression.decompressNextMessage(LOGGER);
@@ -139,7 +139,7 @@ public class WebSocketInflaterTest {
         //GIVEN
         int decompressedByteArrayLength = DECOMPRESSED_DATA.length;
 
-        mockInfalater(decompressedByteArrayLength);
+        mockInflater(decompressedByteArrayLength);
 
         //WHEN
         byte[] actualDecompressedData = webSocketInflaterWithoutContextDecompression.decompressNextMessage(LOGGER);
@@ -158,7 +158,7 @@ public class WebSocketInflaterTest {
         //GIVEN
         int decompressedByteArrayLength = 0;
 
-        mockInfalater(decompressedByteArrayLength);
+        mockInflater(decompressedByteArrayLength);
 
         //WHEN
         byte[] actualDecompressedData = webSocketInflaterWithoutContextDecompression.decompressNextMessage(LOGGER);
@@ -212,7 +212,7 @@ public class WebSocketInflaterTest {
         webSocketInflaterWithContextDecompression.close();
     }
 
-    private void mockInfalater(int decompressedDataLength) throws DataFormatException {
+    private void mockInflater(int decompressedDataLength) throws DataFormatException {
         when(compressedData.toByteArray()).thenReturn(COMPRESSED_DATA);
         doNothing().when(compressedData).reset();
 
