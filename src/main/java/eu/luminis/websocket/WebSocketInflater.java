@@ -17,7 +17,7 @@
 package eu.luminis.websocket;
 
 import eu.luminis.utils.WebSocketInflaterConstants;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

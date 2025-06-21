@@ -17,13 +17,13 @@
 package eu.luminis.websocket;
 
 import eu.luminis.utils.WebSocketInflaterConstants;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class WebSocketInflaterTest {
 
-    private static final Logger LOGGER = LoggingManager.getLoggerForClass();
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketInflaterTest.class);
 
     private static final byte[] COMPRESSED_DATA = "compressedData".getBytes();
     private static final byte[] DECOMPRESSED_DATA = "decompressedData".getBytes();
