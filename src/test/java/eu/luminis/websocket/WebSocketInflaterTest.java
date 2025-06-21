@@ -156,7 +156,7 @@ public class WebSocketInflaterTest {
     @Test
     public void decompressNextMessageIfNumberOfDecompressedBytesIsNull() throws DataFormatException {
         // Given
-        WebSocketInflater webSocketInflater = new WebSocketInflater(new Inflater(true), true, new ByteArrayOutputStream(), new ByteArrayOutputStream());
+        WebSocketInflater webSocketInflater = new WebSocketInflater(true);
 
         // When
         webSocketInflater.appendCompressedData(new byte[0], true, LOGGER);

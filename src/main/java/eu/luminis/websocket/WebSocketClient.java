@@ -464,27 +464,9 @@ public class WebSocketClient {
     }
 
     public void initializeStreamingInflater(Map.Entry<String, String> header) {
-
-        ByteArrayOutputStream compressedMessageData = new ByteArrayOutputStream();
-        ByteArrayOutputStream decompressedMessageData = new ByteArrayOutputStream();
-
         if (header.getKey().contains("Sec-WebSocket-Extensions") && header.getValue().contains("permessage-deflate")) {
-            if (header.getValue().contains("server_no_context_takeover")) {
-                webSocketInflater =
-                        new WebSocketInflater(
-                                new Inflater(true),
-                                false,
-                                compressedMessageData,
-                                decompressedMessageData);
-            }
-            else {
-                webSocketInflater =
-                        new WebSocketInflater(
-                                new Inflater(true),
-                                true,
-                                compressedMessageData,
-                                decompressedMessageData);
-            }
+            boolean serverNoContextTakeover = header.getValue().contains("server_no_context_takeover");
+            webSocketInflater = new WebSocketInflater(!serverNoContextTakeover);
         }
     }
 

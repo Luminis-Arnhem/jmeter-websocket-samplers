@@ -619,7 +619,7 @@ public class FrameTest {
     }
 
     private WebSocketInflater createWebSocketInflater() {
-        return new WebSocketInflater(new Inflater(true), true, new ByteArrayOutputStream(), new ByteArrayOutputStream());
+        return new WebSocketInflater(true);
     }
 
     static class SimulatedNetworkStreamWithTimeouts extends InputStream {

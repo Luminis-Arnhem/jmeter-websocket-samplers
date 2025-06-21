@@ -18,7 +18,18 @@ public class WebSocketInflater {
     private final ByteArrayOutputStream compressedMessageData;
     private final ByteArrayOutputStream decompressedMessageData;
 
-    public WebSocketInflater(Inflater inflater,
+    public WebSocketInflater(boolean contextDecompressionEnabled) {
+        // Condition whether message compressed with context or not.
+        this.contextDecompressionEnabled = contextDecompressionEnabled;
+
+        inflater = new Inflater(true);
+
+        this.compressedMessageData = new ByteArrayOutputStream();
+        this.decompressedMessageData = new ByteArrayOutputStream();
+    }
+
+    // For testing purposes only
+    protected WebSocketInflater(Inflater inflater,
                              boolean contextDecompressionEnabled,
                              ByteArrayOutputStream compressedMessageData,
                              ByteArrayOutputStream decompressedMessageData) {
