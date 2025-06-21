@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -48,10 +49,10 @@ public abstract class Frame {
     private int frameSize;
 
     static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, Logger log) throws IOException {
-        return parseFrame(previousDataFrameType, istream, null, log);
+        return parseFrame(previousDataFrameType, istream, null, false, log);
     }
 
-    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, WebSocketInflater webSocketInflater, Logger log) throws IOException {
+    static Frame parseFrame(DataFrameType previousDataFrameType, InputStream istream, WebSocketInflater webSocketInflater, boolean currentMessageIsCompressed, Logger log) throws IOException {
         boolean markSupported = istream.markSupported();
         if (! markSupported) {
             throw new IllegalStateException("readFromStream should be called with an InputStream that supports mark/reset");
@@ -110,19 +111,25 @@ public abstract class Frame {
             byte[] payload = new byte[length];  // Note that this can still throw an OutOfMem, as the max array size is JVM dependent.
             int bytesRead = readFromStream(istream, payload, log);
 
-            //For the first check whether frame is compressed or not
-            if (rsv1) {
-                //Then check frame type(text, continuation or binary)
-                if (opCode == OPCODE_TEXT || opCode == OPCODE_CONT || opCode == OPCODE_BINARY) {
-                    //To collect the compressed frames data into ByteArrayOutputStream(it is necessary in case within multiple frames)
-                    webSocketInflater.appendCompressedData(payload, fin, log);
-                    //Check whether frame is final or not
-                    if (fin) {
-                        //Decompress completed compressed frame
-                        payload = webSocketInflater.decompressNextMessage(log);
+            boolean compressed = (rsv1 && (opCode == OPCODE_TEXT || opCode == OPCODE_BINARY))
+                    || (currentMessageIsCompressed && opCode == OPCODE_CONT);
+            if (compressed) {
+                // collect the compressed frames data (necessary for fragemented messages)
+                webSocketInflater.appendCompressedData(payload, fin, log);
+                if (fin) {
+                    // message payload is complete and can now be decompressed
+                    payload = webSocketInflater.decompressNextMessage(log);
+                }
+                else {
+                    if (opCode == OPCODE_TEXT || previousDataFrameType == DataFrameType.TEXT) {
+                        payload = "<not showing response data, because it is compressed and at this stage incomplete>".getBytes(StandardCharsets.UTF_8);
+                    }
+                    else {
+                        payload = "".getBytes(StandardCharsets.UTF_8);
                     }
                 }
             }
+
             log.debug("payload length: " + payload.length);
             log.debug("payload bytes: " + Arrays.toString(payload));
 
@@ -133,15 +140,15 @@ public abstract class Frame {
             switch (opCode) {
                 case OPCODE_CONT:
                     if (previousDataFrameType == DataFrameType.TEXT)
-                        return new TextContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                        return new TextContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length, compressed);
                     else if (previousDataFrameType == DataFrameType.BIN)
-                        return new BinaryContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                        return new BinaryContinuationFrame(fin, payload, 2 + nrOfLenghtBytes + length, compressed);
                     else
                         throw new ProtocolException("no continuation frame expected");
                 case OPCODE_TEXT:
-                    return new TextFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                    return new TextFrame(fin, payload, 2 + nrOfLenghtBytes + length, compressed);
                 case OPCODE_BINARY:
-                    return new BinaryFrame(fin, payload, 2 + nrOfLenghtBytes + length);
+                    return new BinaryFrame(fin, payload, 2 + nrOfLenghtBytes + length, compressed);
                 case OPCODE_CLOSE:
                     return new CloseFrame(payload, 2 + nrOfLenghtBytes + length);
                 case OPCODE_PING:

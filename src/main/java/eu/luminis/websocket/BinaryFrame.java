@@ -35,6 +35,11 @@ public class BinaryFrame extends DataFrame {
         data = payload;
     }
 
+    public BinaryFrame(boolean fin, byte[] payload, int size, boolean compressed) {
+        super(fin, size, compressed);
+        data = payload;
+    }
+
     public byte[] getBinaryData() {
         return data;
     }

@@ -36,6 +36,12 @@ public class TextFrame extends DataFrame {
         text = new String(payload, StandardCharsets.UTF_8);
     }
 
+    public TextFrame(boolean fin, byte[] payload, int size, boolean compressed) {
+        super(fin, size, compressed);
+        payloadSize = payload.length;
+        text = new String(payload, StandardCharsets.UTF_8);
+    }
+
     public String getText() {
         return text;
     }

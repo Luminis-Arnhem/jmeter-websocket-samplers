@@ -51,6 +51,7 @@ public class WebSocketClient {
     }
 
     private DataFrameType lastDataFrameStatus = DataFrameType.NONE;
+    private boolean lastFrameWasCompressed;
 
     enum WebSocketState {
         CLOSED,
@@ -413,7 +414,8 @@ public class WebSocketClient {
 
         wsSocket.setSoTimeout(readTimeout);
 
-        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, webSocketInflater, log);
+        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, webSocketInflater, lastFrameWasCompressed, log);
+        lastFrameWasCompressed = receivedFrame.isData() && ((DataFrame) receivedFrame).isCompressed();
         if (lastDataFrameStatus == DataFrameType.NONE && receivedFrame.isData() && !((DataFrame) receivedFrame).isFinalFragment()) {
             lastDataFrameStatus = receivedFrame.isText()? DataFrameType.TEXT: DataFrameType.BIN;
         }

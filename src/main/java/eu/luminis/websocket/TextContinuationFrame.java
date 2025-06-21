@@ -25,6 +25,10 @@ public class TextContinuationFrame extends TextFrame {
         super(fin, payload, size);
     }
 
+    public TextContinuationFrame(boolean fin, byte[] payload, int size, boolean compressed) {
+        super(fin, payload, size, compressed);
+    }
+
     @Override
     public String getTypeAsString() {
         if (isFinalFragment())

@@ -20,15 +20,24 @@ package eu.luminis.websocket;
 
 public abstract class DataFrame extends Frame {
 
+    protected final boolean compressed;
     protected boolean finalFragment = true;
 
     public DataFrame() {
         super(0);
+        compressed = false;
     }
 
     public DataFrame(boolean fin, int size) {
         super(size);
         finalFragment = fin;
+        compressed = false;
+    }
+
+    public DataFrame(boolean fin, int size, boolean compressed) {
+        super(size);
+        finalFragment = fin;
+        this.compressed = compressed;
     }
 
     public abstract Object getData();
@@ -39,5 +48,9 @@ public abstract class DataFrame extends Frame {
 
     public boolean isContinuationFrame() {
         return false;
+    }
+
+    public boolean isCompressed() {
+        return compressed;
     }
 }
