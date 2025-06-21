@@ -25,6 +25,10 @@ public class BinaryContinuationFrame extends BinaryFrame {
         super(fin, payload, size);
     }
 
+    public BinaryContinuationFrame(boolean fin, byte[] payload, int size, boolean compressed) {
+        super(fin, payload, size, compressed);
+    }
+
     @Override
     public String getTypeAsString() {
         if (isFinalFragment())

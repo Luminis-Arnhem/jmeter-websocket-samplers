@@ -31,9 +31,13 @@ import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.zip.Inflater;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.spy;
 
 
 public class FrameTest {
@@ -52,7 +56,7 @@ public class FrameTest {
 
     @Test
     public void parseTextFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -69,7 +73,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrameNoCloseReason() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 2, 0x03, (byte) 0xe9 } ), logger);
         assertTrue(frame.isClose());
         assertEquals(null, ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -78,7 +82,7 @@ public class FrameTest {
 
     @Test
     public void parseCloseFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 12, 0x03, (byte) 0xe9, 0x67, 0x6f, 0x69, 0x6e, 0x67, 0x20, 0x61, 0x77, 0x61, 0x79 } ), logger);
         assertTrue(frame.isClose());
         assertEquals("going away", ((CloseFrame) frame).getCloseReason());
         assertEquals(1001, (int) ((CloseFrame) frame).getCloseStatus());
@@ -100,7 +104,7 @@ public class FrameTest {
             bytes[8] = (byte) 0xff;
             bytes[9] = (byte) 0xff;
 
-            Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+            Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
             Assert.fail("expected exception");
         }
         catch (EndOfStreamException e) {
@@ -127,7 +131,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
     }
 
     @Test
@@ -146,7 +150,7 @@ public class FrameTest {
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Frame too large; Java does not support arrays longer than 2147483647 bytes.");
-        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes));
+        Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(bytes), logger);
     }
 
     @Test
@@ -485,7 +489,7 @@ public class FrameTest {
 
     @Test
     public void testParseFinalTextContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -495,7 +499,7 @@ public class FrameTest {
 
     @Test
     public void testParseNonFinalTextContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isText());
         assertEquals("Hello", ((TextFrame) frame).getText());
         assertEquals(7, frame.getSize());
@@ -505,7 +509,7 @@ public class FrameTest {
 
     @Test
     public void testParseFinalBinaryContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isBinary());
         assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
         assertEquals(7, frame.getSize());
@@ -515,7 +519,7 @@ public class FrameTest {
 
     @Test
     public void testParseNonFinalBinaryContinuationFrame() throws IOException {
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.BIN, new ByteArrayInputStream(new byte[] { (byte) 0x00, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
         assertTrue(frame.isBinary());
         assertArrayEquals("Hello".getBytes(), ((BinaryFrame) frame).getBinaryData());
         assertEquals(7, frame.getSize());
@@ -527,7 +531,95 @@ public class FrameTest {
     public void testUnexpectContinuationFrame() throws IOException {
         thrown.expect(ProtocolException.class);
         thrown.expectMessage("no continuation frame expected");
-        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ));
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x80, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f } ), logger);
+    }
+
+    @Test
+    public void plainTextFrameShouldHaveStatusUncompressed1() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = true;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{(byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f});
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, mock(WebSocketInflater.class), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextFrame.class);
+        assertThat(((TextFrame) frame).isCompressed()).isFalse();
+    }
+
+    @Test
+    public void plainTextFrameShouldHaveStatusUncompressed2() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = false;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{(byte) 0x81, 5, 0x48, 0x65, 0x6c, 0x6c, 0x6f});
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, mock(WebSocketInflater.class), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextFrame.class);
+        assertThat(((TextFrame) frame).isCompressed()).isFalse();
+    }
+
+    @Test
+    public void compressedTextFrameShouldHaveStatusCompressed1() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = false;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{ (byte) 0xc1, 0x07, (byte) 0xf2, 0x48, (byte) 0xcd, (byte) 0xc9, (byte) 0xc9, 0x07, 0x00 });
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, createWebSocketInflater(), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextFrame.class);
+        assertThat(((TextFrame) frame).isCompressed()).isTrue();
+    }
+
+    @Test
+    public void compressedTextFrameShouldHaveStatusCompressed2() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = false;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{ (byte) 0xc1, 0x07, (byte) 0xf2, 0x48, (byte) 0xcd, (byte) 0xc9, (byte) 0xc9, 0x07, 0x00 });
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, createWebSocketInflater(), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextFrame.class);
+        assertThat(((TextFrame) frame).isCompressed()).isTrue();
+    }
+
+    @Test
+    public void whenPreviousFrameWasCompressedContinuationFrameShouldHaveStatusCompressed() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = true;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{ (byte) 0x00, 5, 0x66, 0x65, 0x64, 0x63, 0x62 });  // Arbitrary content: non-final continuation frame will not be decompressed on its own
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, mock(WebSocketInflater.class), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextContinuationFrame.class);
+        assertThat(((DataFrame) frame).isCompressed()).isTrue();
+    }
+
+    @Test
+    public void whenPreviousFrameWasNotCompressedContinuationFrameShouldHaveStatusUncompressed() throws IOException {
+        // Given
+        boolean previousFrameWasCompressed = false;
+        ByteArrayInputStream data = new ByteArrayInputStream(new byte[]{ (byte) 0x00, 5, 0x66, 0x65, 0x64, 0x63, 0x62 });  // Arbitrary content: non-final continuation frame will not be decompressed on its own
+
+        // When
+        Frame frame = Frame.parseFrame(Frame.DataFrameType.TEXT, data, mock(WebSocketInflater.class), previousFrameWasCompressed, logger);
+
+        // Then
+        assertThat(frame).isInstanceOf(TextContinuationFrame.class);
+        assertThat(((DataFrame) frame).isCompressed()).isFalse();
+    }
+
+    private WebSocketInflater createWebSocketInflater() {
+        return new WebSocketInflater(true);
     }
 
     static class SimulatedNetworkStreamWithTimeouts extends InputStream {

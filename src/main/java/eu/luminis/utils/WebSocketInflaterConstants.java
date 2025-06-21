@@ -1,6 +1,4 @@
 /*
- * Copyright © 2016, 2017, 2018 Peter Doornbosch
- *
  * This file is part of JMeter-WebSocket-Samplers, a JMeter add-on for load-testing WebSocket applications.
  *
  * JMeter-WebSocket-Samplers is free software: you can redistribute it and/or modify
@@ -16,29 +14,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package eu.luminis.websocket;
+package eu.luminis.utils;
 
+public final class WebSocketInflaterConstants {
 
-public class TextContinuationFrame extends TextFrame {
+    public static final byte[] FRAME_TAIL = new byte[]{0, 0, -1, -1};
 
-    public TextContinuationFrame(boolean fin, byte[] payload, int size) {
-        super(fin, payload, size);
-    }
-
-    public TextContinuationFrame(boolean fin, byte[] payload, int size, boolean compressed) {
-        super(fin, payload, size, compressed);
-    }
-
-    @Override
-    public String getTypeAsString() {
-        if (isFinalFragment())
-            return "final continuation";
-        else
-            return "continuation";
-    }
-
-    @Override
-    public boolean isContinuationFrame() {
-        return true;
+    private WebSocketInflaterConstants() {
+        //Utility class
     }
 }
