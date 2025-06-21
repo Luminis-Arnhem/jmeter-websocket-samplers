@@ -69,12 +69,7 @@ public abstract class Frame {
 
             boolean fin = (byte1 & 0x80) != 0;
             boolean rsv1 = (byte1 & 0x40) != 0; // RSV1 flag (bit 6) → 1 means compressed
-            log.debug("isCompressed: " + rsv1);
-            log.debug("isFIN: " + fin);
             int opCode = byte1 & 0x0f;
-            log.debug("opCode: " + opCode);
-            boolean masked = (byte2 & 0x80) != 0; // Mask flag (bit 7)
-            log.debug("masked: " + masked);
             int firstLengthByte = byte2 & 0x7f;
             int length;
             int nrOfLenghtBytes = 0;
@@ -129,9 +124,6 @@ public abstract class Frame {
                     }
                 }
             }
-
-            log.debug("payload length: " + payload.length);
-            log.debug("payload bytes: " + Arrays.toString(payload));
 
             if (bytesRead == -1)
                 throw new EndOfStreamException("end of stream");
