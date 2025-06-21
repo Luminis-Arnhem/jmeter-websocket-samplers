@@ -363,7 +363,7 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
 
     public void addTestElement(TestElement element) {
         if (element instanceof HeaderManager) {
-            headerManager = (HeaderManager) element;
+            headerManager =  getMergedHeaderManager((HeaderManager) element);
         } else if (element instanceof CookieManager) {
             cookieManager = (CookieManager) element;
         } else if (element instanceof FrameFilter) {
@@ -409,6 +409,30 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
             }
             threadLocalCachedConnection.get().clear();
         }
+    }
+
+    /**
+     * Returns the merged HeaderManager for this component. If an existing HeaderManager is present,
+     * it will be merged with the provided HeaderManager.
+     *
+     * @param value The HeaderManager to merge.
+     * @return The resulting HeaderManager after the merge operation.
+     */
+    public HeaderManager getMergedHeaderManager(final HeaderManager value) {
+        HeaderManager currentHeaderMgr = getHeaderManager();
+        HeaderManager mergedHeaderMgr = value;
+        if (currentHeaderMgr != null) {
+            mergedHeaderMgr = currentHeaderMgr.merge(value,true);
+            getLogger().debug("Existing HeaderManager " + currentHeaderMgr.getName() + " merged with " + mergedHeaderMgr.getName());
+            for (int i = 0; i < mergedHeaderMgr.getHeaders().size(); i++) {
+                getLogger().debug(mergedHeaderMgr.getHeader(i).getName() +" = " + mergedHeaderMgr.getHeader(i).getValue());
+            }
+        }
+        return mergedHeaderMgr;
+    }
+
+    public HeaderManager getHeaderManager() {
+        return headerManager;
     }
 
     public CookieManager getCookieManager() {

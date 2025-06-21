@@ -40,16 +40,20 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.awt.FlowLayout.LEFT;
 
 public class AboutDialog extends JDialog {
 
-    private static final String DOWNLOAD_API_URL = "https://api.bitbucket.org/2.0/repositories/pjtr/jmeter-websocket-samplers/downloads";
-    private static final String DOWNLOAD_URL = "https://bitbucket.org/pjtr/jmeter-websocket-samplers/downloads";
+    private static final String DOWNLOAD_API_URL = "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tags";
+    private static final String DOWNLOAD_URL = "https://central.sonatype.com/artifact/net.luminis.jmeter/jmeter-websocket-samplers/versions";
     private static final String DOC_URL = "https://github.com/Luminis-Arnhem/jmeter-websocket-samplers/blob/master/README.md";
     private static final String FAQ_URL = "https://github.com/Luminis-Arnhem/jmeter-websocket-samplers/blob/master/FAQ.md";
 
@@ -203,9 +207,8 @@ public class AboutDialog extends JDialog {
     String checkForUpdate() throws CannotDetermineUpdateException {
         try {
             URL downloads = new URL(DOWNLOAD_API_URL);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(downloads.openStream()))) {
-                return getHigherVersion(reader.readLine(), getVersion());
-            }
+            List<String> releasedVersions = getReleasedVersions(downloads);
+            return getHigherVersion(releasedVersions, getVersion());
         }
         catch (Exception error) {
             throw new CannotDetermineUpdateException();
@@ -224,6 +227,24 @@ public class AboutDialog extends JDialog {
         else return null;
     }
 
+    static java.util.List<String> getReleasedVersions(URL githubTagApi) throws CannotDetermineUpdateException {
+        try (InputStream inputStream = githubTagApi.openStream()) {
+            if (inputStream == null) {
+                throw new CannotDetermineUpdateException();
+            }
+            String formattedJson = JsonFormatter.formatJson(githubTagApi.openStream());
+            String versionTagRegex = ".*\"name\":\\s+\"(v?(\\d+\\.\\d+(\\.\\d+)?))\".*";
+            return Arrays.stream(formattedJson.split("\n"))
+                    .filter(line -> line.matches(versionTagRegex))
+                    .map(line -> line.replaceAll(versionTagRegex, "$2"))
+                    .filter(version -> ! version.isEmpty())
+                    .collect(Collectors.toList());
+        }
+        catch (Exception error) {
+            throw new CannotDetermineUpdateException();
+        }
+    }
+
     void makeClickGoto(JLabel label, String url) {
         label.setCursor(new Cursor(Cursor.HAND_CURSOR));
         label.addMouseListener(new MouseAdapter() {
@@ -238,40 +259,57 @@ public class AboutDialog extends JDialog {
         });
     }
 
-    static String getHigherVersion(String content, String current) throws CannotDetermineUpdateException {
-        if (current == null)
+    static String getHigherVersion(java.util.List<String> releasedVersions, String currentVersion) throws CannotDetermineUpdateException {
+        if (currentVersion == null)
             throw new IllegalArgumentException("current version is unknown");
 
-        Matcher m = Pattern.compile("((\\d+)\\.(\\d+)(\\.(\\d+))?)").matcher(current);
-        if (! m.find()) {
-            throw new IllegalArgumentException("current version cannt be parsed");
+        String highestReleasedVersion = getHighestVersion(releasedVersions);
+        if (highestReleasedVersion == null || highestReleasedVersion.isEmpty()) {
+            return null; // No released versions available, cannot determine update
         }
-        int currentVersion = (Integer.parseInt(m.group(2)) * 1000000) + Integer.parseInt(m.group(3)) * 1000;
-        if (m.group(5) != null) {
-            currentVersion += Integer.parseInt(m.group(5));
+        else if (currentVersion.trim().equals(highestReleasedVersion.trim())) {
+            return null; // No update available, already at highest version
         }
-
-        int higherVersion = 0;
-        m = Pattern.compile("-((\\d+)\\.(\\d+)(\\.(\\d+))?)\\.jar").matcher(content);
-        while (m.find()) {
-            int version = (Integer.parseInt(m.group(2)) * 1000000) + Integer.parseInt(m.group(3)) * 1000;
-            if (m.group(5) != null) {
-                version += Integer.parseInt(m.group(5));
+        else {
+            if (getHighestVersion(listOf(highestReleasedVersion, currentVersion)).equals(currentVersion)) {
+                return null; // No update available, current version is higher than highest released version
             }
-            if (version > higherVersion)
-                higherVersion = version;
+            else {
+                return highestReleasedVersion;  // There is an update available, return the highest released version
+            }
+        }
+    }
+
+    static String getHighestVersion(java.util.List<String> allVersions) throws CannotDetermineUpdateException {
+        int highestVersion = 0;
+        String highestVersionString = null;
+
+        String versionRegex = "(\\d+)\\.(\\d+)(\\.(\\d+))?";
+        Pattern regex = Pattern.compile(versionRegex);
+        for (String version : allVersions) {
+            Matcher m = regex.matcher(version);
+            if (! m.matches()) {
+                continue;
+            }
+            int v = (Integer.parseInt(m.group(1)) * 1000000) + Integer.parseInt(m.group(2)) * 1000;
+            if (m.group(4) != null) {
+                v += Integer.parseInt(m.group(4));
+            }
+            if (v > highestVersion) {
+                highestVersion = v;
+                highestVersionString = m.group(0);
+            }
         }
 
-        if (higherVersion > 0 && higherVersion > currentVersion) {
-            String result = "" + (higherVersion / 1000000) + "." + ((higherVersion % 1000000) / 1000);
-            if (higherVersion % 1000 > 0)
-                result += "." + (higherVersion % 1000);
-            return result;
+        return highestVersionString;
+    }
+
+    private static List<String> listOf(String... items) {
+        ArrayList<String> result = new ArrayList<>();
+        for (String item : items) {
+            result.add(item);
         }
-        else if (higherVersion > 0)
-            return null;
-        else
-            throw new CannotDetermineUpdateException();
+        return result;
     }
 
     public static void showDialog(Window parent) {

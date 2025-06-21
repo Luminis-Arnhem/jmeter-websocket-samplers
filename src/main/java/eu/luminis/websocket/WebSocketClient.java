@@ -51,6 +51,7 @@ public class WebSocketClient {
     }
 
     private DataFrameType lastDataFrameStatus = DataFrameType.NONE;
+    private boolean lastFrameWasCompressed;
 
     enum WebSocketState {
         CLOSED,
@@ -76,6 +77,8 @@ public class WebSocketClient {
     private int proxyPort;
     private String proxyUsername;
     private String proxyPassword;
+
+    private WebSocketInflater webSocketInflater;
 
     public WebSocketClient(URL wsURL) {
         connectUrl = correctUrl(wsURL);
@@ -153,6 +156,9 @@ public class WebSocketClient {
             httpWriter.print("Host: " + connectUrl.getHost() + ":" + connectUrl.getPort() + NEW_LINE);
             log.debug(    ">> Host: " + connectUrl.getHost() + ":" + connectUrl.getPort());
             for (Map.Entry<String, String> header : headers.entrySet()) {
+
+                initializeStreamingInflater(header);
+
                 if (! UPGRADE_HEADERS.contains(header.getKey())) {
                     String headerLine = header.getKey() + ": " + header.getValue();
                     // Ensure header line does _not_ contain new line
@@ -195,6 +201,11 @@ public class WebSocketClient {
             	IOUtils.closeQuietly(socketOutputStream);
             	IOUtils.closeQuietly(wsSocket);
             	IOUtils.closeQuietly(httpWriter);
+
+                if (webSocketInflater != null) {
+                    webSocketInflater.close();
+                }
+
                 state = WebSocketState.CLOSED;
             }
         }
@@ -279,6 +290,11 @@ public class WebSocketClient {
     	IOUtils.closeQuietly(socketInputStream);
     	IOUtils.closeQuietly(socketOutputStream);
     	IOUtils.closeQuietly(wsSocket);
+
+        if (webSocketInflater != null) {
+            webSocketInflater.close();
+        }
+
     	state = WebSocketState.CLOSED;
     }
 
@@ -398,7 +414,8 @@ public class WebSocketClient {
 
         wsSocket.setSoTimeout(readTimeout);
 
-        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, log);
+        Frame receivedFrame = Frame.parseFrame(lastDataFrameStatus, socketInputStream, webSocketInflater, lastFrameWasCompressed, log);
+        lastFrameWasCompressed = receivedFrame.isData() && ((DataFrame) receivedFrame).isCompressed();
         if (lastDataFrameStatus == DataFrameType.NONE && receivedFrame.isData() && !((DataFrame) receivedFrame).isFinalFragment()) {
             lastDataFrameStatus = receivedFrame.isText()? DataFrameType.TEXT: DataFrameType.BIN;
         }
@@ -444,6 +461,13 @@ public class WebSocketClient {
             return (PongFrame) frame;
         else
             throw new UnexpectedFrameException(frame);
+    }
+
+    public void initializeStreamingInflater(Map.Entry<String, String> header) {
+        if (header.getKey().contains("Sec-WebSocket-Extensions") && header.getValue().contains("permessage-deflate")) {
+            boolean serverNoContextTakeover = header.getValue().contains("server_no_context_takeover");
+            webSocketInflater = new WebSocketInflater(!serverNoContextTakeover);
+        }
     }
 
     protected Map<String, String> checkServerResponse(InputStream inputStream, String nonce) throws IOException {

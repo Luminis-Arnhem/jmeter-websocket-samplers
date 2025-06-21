@@ -1,0 +1,302 @@
+[
+  {
+    "name": "v1.2.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.2.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.2.1",
+    "commit": {
+      "sha": "295f0b0f9c002d935ec37b62839e26a40f02ecba",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/295f0b0f9c002d935ec37b62839e26a40f02ecba"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjIuMQ=="
+  },
+  {
+    "name": "v1.2",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.2",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.2",
+    "commit": {
+      "sha": "303565d0f540c0cedb690558e5513e52677cd578",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/303565d0f540c0cedb690558e5513e52677cd578"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjI="
+  },
+  {
+    "name": "v1.1.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.1.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.1.1",
+    "commit": {
+      "sha": "1f58539d84a8f248923c98c5ced1d0ea3217c7e7",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/1f58539d84a8f248923c98c5ced1d0ea3217c7e7"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjEuMQ=="
+  },
+  {
+    "name": "v1.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.1",
+    "commit": {
+      "sha": "ecd65a2ff12fb317c8dda8d2f0455f69bc61c865",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/ecd65a2ff12fb317c8dda8d2f0455f69bc61c865"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjE="
+  },
+  {
+    "name": "v1.0",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v1.0",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v1.0",
+    "commit": {
+      "sha": "d32e983d9b23626aba166b713275c4d9b35f177b",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/d32e983d9b23626aba166b713275c4d9b35f177b"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YxLjA="
+  },
+  {
+    "name": "v0.12",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.12",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.12",
+    "commit": {
+      "sha": "9630772914ecc14779b7520a50f6bf6a3138510a",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/9630772914ecc14779b7520a50f6bf6a3138510a"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjEy"
+  },
+  {
+    "name": "v0.11.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.11.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.11.1",
+    "commit": {
+      "sha": "5eb7e6bb9563cdf2b022af3aae0bc3c7269fd527",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/5eb7e6bb9563cdf2b022af3aae0bc3c7269fd527"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjExLjE="
+  },
+  {
+    "name": "v0.11",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.11",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.11",
+    "commit": {
+      "sha": "b042d7ab2708570adda008b6762e33803a9403e4",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/b042d7ab2708570adda008b6762e33803a9403e4"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjEx"
+  },
+  {
+    "name": "v0.10",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.10",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.10",
+    "commit": {
+      "sha": "504c48fd16b5f7ddae720ee25066dc46214ac115",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/504c48fd16b5f7ddae720ee25066dc46214ac115"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjEw"
+  },
+  {
+    "name": "v0.9.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.9.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.9.1",
+    "commit": {
+      "sha": "0a0a7ff1b9c0469afa7340c0192d4324dc87cb46",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/0a0a7ff1b9c0469afa7340c0192d4324dc87cb46"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjkuMQ=="
+  },
+  {
+    "name": "v0.9",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.9",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.9",
+    "commit": {
+      "sha": "6002215d92f8ddf659232eb091c97d554cca736c",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/6002215d92f8ddf659232eb091c97d554cca736c"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjk="
+  },
+  {
+    "name": "v0.8",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.8",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.8",
+    "commit": {
+      "sha": "94ac9000b4cfe397c76de8c760ef76b58d712179",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/94ac9000b4cfe397c76de8c760ef76b58d712179"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjg="
+  },
+  {
+    "name": "v0.7.3",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.7.3",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.7.3",
+    "commit": {
+      "sha": "bd574fa6db5de647ecc23bc813a3858d097efeb9",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/bd574fa6db5de647ecc23bc813a3858d097efeb9"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjcuMw=="
+  },
+  {
+    "name": "v0.7.2",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.7.2",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.7.2",
+    "commit": {
+      "sha": "7dd8d29fcacc9ce861146307ef2b270227bfb3b4",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/7dd8d29fcacc9ce861146307ef2b270227bfb3b4"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjcuMg=="
+  },
+  {
+    "name": "v0.7.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.7.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.7.1",
+    "commit": {
+      "sha": "c46e00cbaaab8ca2ccf5c058a650db1d1f992536",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/c46e00cbaaab8ca2ccf5c058a650db1d1f992536"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjcuMQ=="
+  },
+  {
+    "name": "v0.7",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.7",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.7",
+    "commit": {
+      "sha": "08dff691468a73a0f2293ee9441a3471de42968c",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/08dff691468a73a0f2293ee9441a3471de42968c"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjc="
+  },
+  {
+    "name": "v0.6",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.6",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.6",
+    "commit": {
+      "sha": "e69f134d3e75a7c6fac972cb7705de8670fd51e4",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/e69f134d3e75a7c6fac972cb7705de8670fd51e4"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjY="
+  },
+  {
+    "name": "v0.5",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.5",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.5",
+    "commit": {
+      "sha": "ac24de2c7365deac8cb081be31aa1b4094310950",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/ac24de2c7365deac8cb081be31aa1b4094310950"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjU="
+  },
+  {
+    "name": "v0.4",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.4",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.4",
+    "commit": {
+      "sha": "cb3daa00a760a8c2aec38c4717de11d6ee11fec1",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/cb3daa00a760a8c2aec38c4717de11d6ee11fec1"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjQ="
+  },
+  {
+    "name": "v0.3",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.3",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.3",
+    "commit": {
+      "sha": "6abc86d3e4136e0b4cec0d9e49fa0a5981ecafbc",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/6abc86d3e4136e0b4cec0d9e49fa0a5981ecafbc"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjM="
+  },
+  {
+    "name": "v0.2",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.2",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.2",
+    "commit": {
+      "sha": "746ec7a287ee924523254f2b2e9ada4b7a47cdee",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/746ec7a287ee924523254f2b2e9ada4b7a47cdee"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjI="
+  },
+  {
+    "name": "v0.1",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/v0.1",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/v0.1",
+    "commit": {
+      "sha": "f8fafd418053be74cd7da807a544fec1a67d14aa",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/f8fafd418053be74cd7da807a544fec1a67d14aa"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzL3YwLjE="
+  },
+  {
+    "name": "1.2.10",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.10",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.10",
+    "commit": {
+      "sha": "27fa9a31f4a0451f14f8e35d42abfd08d763753d",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/27fa9a31f4a0451f14f8e35d42abfd08d763753d"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi4xMA=="
+  },
+  {
+    "name": "1.2.9",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.9",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.9",
+    "commit": {
+      "sha": "d338a1b82b9941088a7e0f796a853db1692205c6",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/d338a1b82b9941088a7e0f796a853db1692205c6"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi45"
+  },
+  {
+    "name": "1.2.8",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.8",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.8",
+    "commit": {
+      "sha": "c112c06c856b0cd682e54e8adc480e864babdcd1",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/c112c06c856b0cd682e54e8adc480e864babdcd1"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi44"
+  },
+  {
+    "name": "1.2.7",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.7",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.7",
+    "commit": {
+      "sha": "16bf807e3f43393db5df7cccc0159787ff8c6620",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/16bf807e3f43393db5df7cccc0159787ff8c6620"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi43"
+  },
+  {
+    "name": "1.2.6",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.6",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.6",
+    "commit": {
+      "sha": "165185c26b5e7f86e776357ae045f3615b1b3ecf",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/165185c26b5e7f86e776357ae045f3615b1b3ecf"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi42"
+  },
+  {
+    "name": "1.2.5",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.5",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.5",
+    "commit": {
+      "sha": "da419e5837db3206b94c5643dc207b288561ec62",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/da419e5837db3206b94c5643dc207b288561ec62"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi41"
+  },
+  {
+    "name": "1.2.4",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.4",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.4",
+    "commit": {
+      "sha": "334cf783fbf91c43a5a4df9386b2082bc7adcb56",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/334cf783fbf91c43a5a4df9386b2082bc7adcb56"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi40"
+  },
+  {
+    "name": "1.2.3",
+    "zipball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/zipball/refs/tags/1.2.3",
+    "tarball_url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/tarball/refs/tags/1.2.3",
+    "commit": {
+      "sha": "7b7e9c2a9f0e4f346b49e427339b32648bb8e205",
+      "url": "https://api.github.com/repos/Luminis-Arnhem/jmeter-websocket-samplers/commits/7b7e9c2a9f0e4f346b49e427339b32648bb8e205"
+    },
+    "node_id": "MDM6UmVmNzQ2MDYwNzg6cmVmcy90YWdzLzEuMi4z"
+  }
+]

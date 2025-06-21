@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class CloseFrameTest {
 
@@ -35,7 +36,7 @@ public class CloseFrameTest {
 
     @Test
     public void closeFrameWithOnlyStatusShouldHaveSize4() throws Exception {
-        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x02, 0x03, (byte) 0xe8}));
+        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x02, 0x03, (byte) 0xe8}), logger);
 
         assertTrue(close.isClose());
         assertEquals(1000, (int) ((CloseFrame) close).getCloseStatus());
@@ -45,7 +46,7 @@ public class CloseFrameTest {
 
     @Test
     public void closeFrameCloseReasonShouldHaveLargerPayloadSize() throws Exception {
-        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x0e, 0x03, (byte) 0xe8, 0x6e, 0x6f, 0x72, 0x6d, 0x61, 0x6c, 0x20, 0x63, 0x6c, 0x6f, 0x73, 0x65 }));
+        Frame close = Frame.parseFrame(Frame.DataFrameType.NONE, new ByteArrayInputStream(new byte[] { (byte) 0x88, 0x0e, 0x03, (byte) 0xe8, 0x6e, 0x6f, 0x72, 0x6d, 0x61, 0x6c, 0x20, 0x63, 0x6c, 0x6f, 0x73, 0x65 }), logger);
 
         assertTrue(close.isClose());
         assertEquals(1000, (int) ((CloseFrame) close).getCloseStatus());
