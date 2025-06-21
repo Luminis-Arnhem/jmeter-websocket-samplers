@@ -34,6 +34,7 @@ The WebSocket Samplers plugin provides the following features:
 * integrates with JMeter's Header Manager to set additional HTTP headers on WebScoket upgrade request
 * sends cookies defined by JMeter's Cookie Manager with each upgrade request (i.e. the HTTP request that initiates the WebSocket connection)
 * proxy support
+* uncompresses ("inflates") compressed server responses (RFC 7692)
 * provides filters for discarding frames that are not relevant for the test
 * many sample JMeter test plans illustrate the various features.
 
@@ -160,7 +161,7 @@ Gradle is used as build tool, so execute
 
     gradle assemble
 
-to build. Almost any version of gradle will do (tested with 2.2). If you don't have installed gradle, use the gradle wrapper:
+to build. A recent version of gradle will do (7.x or 8.x). If you don't have installed gradle, use the gradle wrapper:
 
     ./gradlew
     
@@ -171,7 +172,9 @@ Gradle can also generate IntelliJ Idea project files for you:
 
 ## Feedback
 
-If you encounter any issues or ambiguities, please report them. Also questions, problems, or other feedback (appreciation ;-)) is always welcome. Please mail the author (peter dot doornbosch) at luminis dot eu, or create an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
+If you encounter an issue, please report by creating an issue at <https://bitbucket.org/pjtr/jmeter-websocket-samplers/issues>.
+If you have questions about (using) the plugin, [Stackoverflow](https://stackoverflow.com) is the best way to get help. 
+If you want to contact the author directly, send an email to (peter dot doornbosch) at luminis dot eu. 
 
 
 ## Acknowledgements
