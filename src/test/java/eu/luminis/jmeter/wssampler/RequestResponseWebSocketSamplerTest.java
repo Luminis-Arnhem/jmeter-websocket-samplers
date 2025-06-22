@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 
 import java.io.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -302,6 +303,25 @@ public class RequestResponseWebSocketSamplerTest {
         verify(mock).sendBinaryFrame("this is a file with binary content (really!)".getBytes());
     }
 
+    @Test
+    public void readingControlFrameLeadsToUnexpectedFrameException() {
+        // Given
+        WebSocketClient client = mocker.createMultipleTextFollowedByCloseClient(1);
+        RequestResponseWebSocketSampler sampler = new RequestResponseWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return client;
+            }
+        };
+
+        // When
+        sampler.sample(null);
+        SampleResult result = sampler.sample(null);
+
+        // Then
+        assertThat(result.getResponseCode()).contains("unexpected frame type");
+        assertThat(result.getResponseMessage()).contains("Close frame");
+    }
 
     /**
      * Creates a JMeter HeaderManager that provides exactly one (dummy) header.

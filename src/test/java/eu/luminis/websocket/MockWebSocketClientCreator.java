@@ -154,6 +154,12 @@ public class MockWebSocketClientCreator {
             WebSocketClient mockWsClient = Mockito.mock(WebSocketClient.class);
             when(mockWsClient.getConnectUrl()).thenReturn(new URL("http://nowhere.com:80"));
             when(mockWsClient.connect(anyInt(), anyInt())).thenReturn(new WebSocketClient.HttpResult());
+            when(mockWsClient.sendTextFrame(anyString())).thenAnswer(new Answer<TextFrame>() {
+                @Override
+                public TextFrame answer(InvocationOnMock invocation) {
+                    return new TextFrame(invocation.getArgument(0));
+                }
+            });
             when(mockWsClient.sendClose(anyInt(), anyString())).thenReturn(new CloseFrame(1000, "sampler requested close"));
             when(mockWsClient.receiveFrame(anyInt())).thenAnswer(new Answer<Frame>(){
                 private int callCount = 0;

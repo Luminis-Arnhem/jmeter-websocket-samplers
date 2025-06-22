@@ -26,18 +26,14 @@ import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.net.SocketTimeoutException;
-import java.net.URL;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.when;
+
 
 public class SingleReadWebSocketSamplerTest {
 
@@ -180,4 +176,24 @@ public class SingleReadWebSocketSamplerTest {
         assertEquals(3, result.getSubResults().length);
     }
 
+    @Test
+    public void readingControlFrameLeadsToUnexpectedFrameException() {
+        // Given
+        WebSocketClient client = mocker.createMultipleTextFollowedByCloseClient(1);
+
+        SingleReadWebSocketSampler sampler = new SingleReadWebSocketSampler() {
+            @Override
+            protected WebSocketClient prepareWebSocketClient(SampleResult result) {
+                return client;
+            }
+        };
+
+        // When
+        sampler.sample(null);
+        SampleResult result = sampler.sample(null);
+
+        // Then
+        assertThat(result.getResponseCode()).contains("unexpected frame type");
+        assertThat(result.getResponseMessage()).contains("Close frame");
+    }
 }
