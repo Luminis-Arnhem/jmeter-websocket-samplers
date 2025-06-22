@@ -324,8 +324,8 @@ abstract public class WebsocketSampler extends AbstractSampler implements Thread
                 
             case TextStomp:
             case Text:
-                if (receivedFrame.isBinary()) {
-                    getLogger().warn("Expected type is " + type + ", but received frame is a binary");
+                if (!receivedFrame.isText()) {
+                    getLogger().warn("Expected type is " + type + ", but received frame is not a text frame");
                     throw new UnexpectedFrameException(receivedFrame);
                 }
                 break;
