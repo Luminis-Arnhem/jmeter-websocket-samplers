@@ -43,7 +43,7 @@ public class OpenWebsocketSamplerTest {
                 try {
                     return mocker.createMockWebSocketClientWithResponse(outputBuffer, serverResponse.getBytes());
                 } catch (MalformedURLException e) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("Invalid URL: " + e.getMessage(), e);
                 }
             }
         };
