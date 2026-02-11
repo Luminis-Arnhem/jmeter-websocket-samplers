@@ -30,6 +30,8 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,12 +44,44 @@ public class OpenWebSocketSampler extends WebsocketSampler {
     @Override
     protected WebSocketClient prepareWebSocketClient(SampleResult result) {
         dispose(threadLocalCachedConnection.get());
+
+        // Validate required parameters
+        String server = getServer();
+        String port = getPort();
+        String path = getPath();
+        
+        if (server == null || server.trim().isEmpty()) {
+            throw new RuntimeException("Server parameter is required but not provided");
+        }
+        
+        if (path == null || path.trim().isEmpty()) {
+            throw new RuntimeException("Path parameter is required but not provided");
+        }
+
         try {
-            URL url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
+            String scheme = getTLS() ? "https" : "http";
+            String host = server.trim();
+            int portNumber = Integer.parseInt(port);
+            String rawPath = path.trim();
+
+            String pathComponent = rawPath;
+            String query = null;
+
+            int queryIndex = rawPath.indexOf('?');
+            if (queryIndex != -1) {
+                pathComponent = rawPath.substring(0, queryIndex);
+                query = rawPath.substring(queryIndex + 1); // skip '?'
+            }
+
+            URI uri = new URI(scheme, null, host, portNumber, "/" + pathComponent, query, null);
+            URL url = uri.toURL();
             return new WebSocketClient(url);
         } catch (MalformedURLException e) {
-            // Impossible
-            throw new RuntimeException();
+            throw new RuntimeException("Invalid URL: " + e.getMessage(), e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid URI: " + e.getMessage(), e);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid port number: " + port, e);
         }
     }
 

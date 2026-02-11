@@ -26,6 +26,8 @@ import org.apache.log.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 
@@ -44,11 +46,28 @@ public class SingleReadWebSocketSampler extends WebsocketSampler {
         if (getCreateNewConnection()) {
             dispose(threadLocalCachedConnection.get());
             try {
-                URL url = new URL(getTLS()? "https": "http", getServer(), Integer.parseInt(getPort()), getPath());   // java.net.URL does not support "ws" protocol....
+                String scheme = getTLS() ? "https" : "http";
+                String host = getServer();
+                int port = Integer.parseInt(getPort());
+                String rawPath = getPath();
+
+                String path = rawPath;
+                String query = null;
+
+                int queryIndex = rawPath.indexOf('?');
+                if (queryIndex != -1) {
+                    path = rawPath.substring(0, queryIndex);
+                    query = rawPath.substring(queryIndex + 1); // skip '?'
+                }
+
+                URI uri = new URI(scheme, null, host, port, "/" + path, query, null);
+                URL url = uri.toURL();
                 return new WebSocketClient(url);
             } catch (MalformedURLException e) {
                 // Impossible
-                throw new RuntimeException();
+                throw new RuntimeException("Invalid URL: " + e.getMessage(), e);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Invalid URI: " + e.getMessage(), e);
             }
         }
         else {
